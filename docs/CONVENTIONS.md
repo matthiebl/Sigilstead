@@ -15,10 +15,13 @@ Decisions that keep code consistent across sessions. If you break one of these, 
 | Mod id / namespace | `heartstead` |
 | Java package | `com.heartstead` |
 | Target | Minecraft **26.2**, Java **25**, Fabric Loader 0.19.3, Fabric API 0.156.0+26.2 |
-| Mappings | **Mojang official** (`loom.officialMojangMappings()`) — Yarn has nothing for 26.x |
+| Mappings | **None** — 26.x ships unobfuscated. `implementation`, not `modImplementation`; `jar`, not `remapJar` |
 
-Every `ResourceLocation` goes through `Heartstead.id(String)`. Never construct one inline; a typo'd
+Every `Identifier` goes through `Heartstead.id(String)`. Never construct one inline; a typo'd
 namespace fails at runtime, not compile time.
+
+> **Note:** the class is `net.minecraft.resources.Identifier` in 26.x. It was called
+> `ResourceLocation` through 1.21.x — see §9.
 
 ---
 
@@ -162,15 +165,29 @@ claim — but it is still not the same as "it feels right", which only playing c
 
 ---
 
-## 9. API churn
+## 9. API churn — and how to actually check
 
-Minecraft's internal API moves every version, and 26.x is moving fast. Before writing code against an
-unfamiliar class:
+26.1 was the first **unobfuscated** Minecraft release. The upside is large: the jar carries real
+names, so you can read the true API directly instead of trusting a tutorial.
 
 ```bash
+# list classes
+unzip -l ~/.gradle/caches/fabric-loom/26.2/minecraft-common.jar | grep -i <name>
+
+# read exact signatures
+javap -cp ~/.gradle/caches/fabric-loom/26.2/minecraft-common.jar net.minecraft.resources.Identifier
+
+# full decompiled bodies when signatures aren't enough
 ./gradlew genSources
 ```
 
-then read the actual decompiled signature. Item construction in particular changed repeatedly across
-1.21.x — items now need their `ResourceKey` set on the properties at construction. **Every tutorial
-older than 1.21.5 is wrong**, and the resulting compile error does not point at the real problem.
+**Do this before writing against an unfamiliar class.** 26.x renamed a lot, and the compile error
+never points at the real problem. Confirmed renames so far:
+
+| Through 1.21.x | In 26.2 |
+|---|---|
+| `net.minecraft.resources.ResourceLocation` | `net.minecraft.resources.Identifier` |
+| `FabricGameTest` interface, implemented | plain class + `@GameTest`-annotated methods, still under the `fabric-gametest` entrypoint |
+
+Item construction also changed repeatedly across 1.21.x — items need their `ResourceKey` set on the
+properties at construction. Treat any tutorial older than 26.1 as wrong about names *and* shapes.

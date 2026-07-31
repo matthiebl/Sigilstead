@@ -1,5 +1,8 @@
 plugins {
-    id 'fabric-loom' version "${loom_version}"
+    // MUST be the fully-qualified id. The bare 'fabric-loom' resolves to the legacy
+    // *remapping* plugin, which demands a `mappings` dependency that does not exist for
+    // unobfuscated 26.x. See docs/REFERENCES.md.
+    id 'net.fabricmc.fabric-loom' version "${loom_version}"
     id 'java'
 }
 
@@ -33,20 +36,24 @@ loom {
 }
 
 repositories {
-    maven { name = 'Fabric'; url = 'https://maven.fabricmc.net/' }
+    // Loom adds the Minecraft and Fabric repositories automatically.
+    // Only add entries here for third-party mod dependencies.
     mavenCentral()
 }
 
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
 
-    // Yarn has no 26.x mappings (newest is 1.21.11), so we use Mojang's official
-    // mappings. Note these carry Mojang's mappings licence — fine for a public mod,
-    // but read it before relicensing or vendoring. See docs/REFERENCES.md.
-    mappings loom.officialMojangMappings()
-
-    modImplementation "net.fabricmc:fabric-loader:${loader_version}"
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+    // NO mappings dependency, on purpose.
+    //
+    // 26.1 was the first unobfuscated Minecraft release, so there is nothing to map:
+    // Mojang stopped publishing official mappings after 1.21.11, Yarn stopped at the
+    // same version, and Fabric's intermediary for 26.x is the placeholder 0.0.0.
+    //
+    // Consequently nothing is remapped either — plain `implementation`, not
+    // `modImplementation`; plain `jar`, not `remapJar`. See docs/REFERENCES.md.
+    implementation "net.fabricmc:fabric-loader:${loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
 
     testImplementation platform('org.junit:junit-bom:5.11.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'

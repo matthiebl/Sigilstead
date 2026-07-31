@@ -6,9 +6,10 @@ Ready-to-paste prompts, in build order. Rules that apply to all of them:
 - **Reference wiki sections, don't re-describe features.** "Implement §4.2 Soul Cage per the wiki"
   keeps drift down; re-explaining invites a second, subtly different design.
 - **One phase per session.** Never ask for the whole mod.
-- **Before writing against an unfamiliar API, run `./gradlew genSources` and read the real
-  signature.** 26.x moves fast and item construction changed repeatedly across 1.21.x — every
-  tutorial older than 1.21.5 is wrong, and the compile error won't point at the real problem.
+- **Read the real API before writing against it.** 26.x ships unobfuscated, so the jar has true
+  names — `javap -cp ~/.gradle/caches/fabric-loom/26.2/minecraft-common.jar <class>`, or
+  `./gradlew genSources` for full bodies. Every tutorial predating 26.1 is wrong about names
+  (`ResourceLocation` is now `Identifier`) and usually about shapes too. See REFERENCES.md.
 - **Claude Code can verify its own work now** (`build`, `test`, `runGametest`). Expect it to. What it
   still can't judge is feel — balance and UI pleasantness need `runClient` and you.
 
@@ -21,9 +22,9 @@ Ready-to-paste prompts, in build order. Rules that apply to all of them:
 ```
 Read docs/DESIGN.md §1 and docs/CONVENTIONS.md §2.
 
-Run ./gradlew genSources first, then show me the real 26.2 Item.Properties construction
-signature before writing any registration code — I want to confirm the API shape rather
-than find out via a confusing compile error.
+Show me the real 26.2 Item.Properties construction signature before writing any
+registration code — read it out of the jar with javap (26.x is unobfuscated) or via
+./gradlew genSources. I want the API shape confirmed, not inferred from a tutorial.
 
 Then implement HsComponents and HsItems with the three §1 items: heart_shard,
 vital_heart, vault_sigil. Real registered items, creative tab entry, lang keys, item

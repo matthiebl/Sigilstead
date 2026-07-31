@@ -2,7 +2,7 @@ package com.heartstead;
 
 import com.heartstead.registry.HsItems;
 import net.fabricmc.api.ModInitializer;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,9 +21,9 @@ public class Heartstead implements ModInitializer {
     public static final String MOD_ID = "heartstead";
     public static final Logger LOG = LoggerFactory.getLogger("Heartstead");
 
-    /** Every id in the mod goes through here. Never build a ResourceLocation by hand. */
-    public static ResourceLocation id(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+    /** Every id in the mod goes through here. Never build an Identifier by hand. */
+    public static Identifier id(String path) {
+        return Identifier.fromNamespaceAndPath(MOD_ID, path);
     }
 
     @Override

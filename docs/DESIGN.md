@@ -87,8 +87,8 @@ before their first extra heart. The pack helps you before it charges you.
 
 ## 2. Storage — The Vault
 
-A player-bound virtual inventory held in `/data storage`. **Not** real blocks, so there is no dupe
-risk from container NBT juggling.
+A player-bound virtual inventory, persisted via a codec-backed attachment (CONVENTIONS.md §4).
+Storage is not backed by real containers, so there is no dupe risk from container NBT juggling.
 
 ### 2.1 Input side (blocks)
 
@@ -429,7 +429,7 @@ Being a mod is a licence to write Java where Java helps — not an instruction t
 | Fabric Loader | 0.19.3 |
 | Fabric API | 0.156.0+26.2 |
 | Loom | 1.17.17 |
-| Mappings | **Mojang official.** Yarn has no 26.x mappings at all — its newest is 1.21.11 |
+| Mappings | **None.** 26.1 was the first unobfuscated release — nothing to map, nothing remapped |
 | Data pack format (bundled JSON) | 107.1 |
 
 26.2 changed the **entity predicate format** to a component-style map and now **rejects unknown

@@ -30,25 +30,20 @@ lives compete with farm cores for the same currency.
 
 ## Setup
 
-Minecraft 26.2 requires **Java 25**, and Loom needs Gradle itself running on it — a Gradle toolchain
-alone is not enough.
+Nothing to install but a JDK-capable Gradle — `./gradlew` handles the rest.
+
+Minecraft 26.2 requires **Java 25**, and Loom needs Gradle *itself* running on it (a `java.toolchain`
+block is not enough). That's handled by `gradle/gradle-daemon-jvm.properties`, which pins
+`toolchainVersion=25` and lets Gradle auto-download a matching JDK per platform. A fresh clone builds
+without any manual JDK setup.
+
+If you'd rather use a local JDK 25:
 
 ```bash
 brew install openjdk@25
 ```
 
-Then point Gradle at it, either per-shell:
-
-```bash
-export JAVA_HOME=/opt/homebrew/opt/openjdk@25
-```
-
-or permanently, by adding this line to `gradle.properties` (it's gitignored-friendly to instead use
-`~/.gradle/gradle.properties` if your path differs):
-
-```
-org.gradle.java.home=/opt/homebrew/opt/openjdk@25
-```
+It installs keg-only, so it won't disturb an existing JDK 17/21.
 
 ## Build and run
 

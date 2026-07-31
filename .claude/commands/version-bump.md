@@ -10,7 +10,7 @@ reported the wrong Fabric Loader version during initial setup.
 ```
 https://meta.fabricmc.net/v2/versions/game
 https://meta.fabricmc.net/v2/versions/loader
-https://meta.fabricmc.net/v2/versions/yarn/<version>        # expect [] — mojmap is the plan
+# no mappings query needed — 26.x is unobfuscated
 https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/maven-metadata.xml
 https://maven.fabricmc.net/net/fabricmc/fabric-loom/maven-metadata.xml
 https://piston-meta.mojang.com/mc/game/version_manifest_v2.json   # javaVersion for the target

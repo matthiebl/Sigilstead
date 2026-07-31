@@ -22,8 +22,8 @@ wrong, fix the wiki in the same change.
 | | |
 |---|---|
 | Minecraft | 26.2 |
-| Java | **25** — Gradle itself must run on JDK 25, not just the toolchain |
-| Mappings | **Mojang official.** Yarn has no 26.x mappings (newest is 1.21.11). Do not add a `yarn_mappings` property |
+| Java | **25** — Gradle itself must run on it. Handled by `gradle/gradle-daemon-jvm.properties`; no manual install needed |
+| Mappings | **None.** 26.x is unobfuscated — no yarn, no mojmap, no remapping. Do not add a mappings dependency |
 | Fabric Loader / API / Loom | 0.19.3 / 0.156.0+26.2 / 1.17.17 |
 
 All versions live in `gradle.properties`. Verify against [docs/REFERENCES.md](docs/REFERENCES.md)
