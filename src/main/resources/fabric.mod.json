@@ -19,7 +19,8 @@
       "com.heartstead.client.HeartsteadClient"
     ],
     "fabric-gametest": [
-      "com.heartstead.gametest.HeartsteadGameTests"
+      "com.heartstead.gametest.HeartsteadGameTests",
+      "com.heartstead.gametest.VillagerTradePersistenceGameTests"
     ]
   },
   "mixins": [

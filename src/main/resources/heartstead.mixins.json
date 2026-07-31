@@ -3,7 +3,9 @@
   "minVersion": "0.8",
   "package": "com.heartstead.mixin",
   "compatibilityLevel": "JAVA_21",
-  "mixins": [],
+  "mixins": [
+    "VillagerTradePersistenceMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   }
