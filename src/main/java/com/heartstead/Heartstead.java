@@ -1,5 +1,7 @@
 package com.heartstead;
 
+import com.heartstead.registry.HsComponents;
+import com.heartstead.registry.HsCreativeTabs;
 import com.heartstead.registry.HsItems;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.resources.Identifier;
@@ -28,8 +30,9 @@ public class Heartstead implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        // TODO Phase 0: HsComponents.register();
+        HsComponents.register();
         HsItems.register();
+        HsCreativeTabs.register();
         // TODO Phase 3: HsBlocks.register();
         // TODO Phase 3: HsBlockEntities.register();
         // TODO Phase 3: HsScreenHandlers.register();
