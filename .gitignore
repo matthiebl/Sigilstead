@@ -1,0 +1,12 @@
+dist/
+*.zip
+
+# texture sources — keep them out of the shipped pack
+*.xcf
+*.aseprite
+*.psd
+
+.DS_Store
+__pycache__/
+*.pyc
+.venv/

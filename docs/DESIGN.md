@@ -1,0 +1,432 @@
+# Heartstead — Design Wiki
+
+> **Status:** reconstructed spec, v0.1 · **Target:** Minecraft Java 26.2 · **Data pack format:** `min_format 107`, `max_format [107, 1]`
+>
+> This document is the **ground truth** for the pack. Implementation work should reference sections
+> by number (e.g. "implement §6.2 Golem Core") rather than re-describing features. If reality and
+> this document disagree, fix this document in the same change.
+
+---
+
+## 0. Design pillars
+
+The pack exists to delete *technical Minecraft as a prerequisite* without deleting Minecraft.
+
+1. **Reward the fun loop.** Exploring, fighting and building should pay. Grinding, AFKing and
+   rectangle-farm-building should not be *required* to play efficiently.
+2. **One currency, three sinks.** Everything hangs off a single found item family (§1). Storage,
+   farms and extra lives all draw on the same exploration reward, so exploring is never wasted.
+3. **Convenience is earned, not free.** Early game is already easier than vanilla; the *scale* of
+   convenience unlocks through structures you have to travel to.
+4. **Never punish a struggling player twice.** Floors, not spirals. See §5.
+5. **Leave technical play intact.** Cores match a *small hand-built farm*, not a mega-farm. Players
+   who enjoy building the real thing still get more out of it — they just aren't forced into it.
+
+### 0.1 The hard wall (read this before designing any UI)
+
+Datapack `/dialog` (added 1.21.6) gives data-driven menus: text, item display, text fields, sliders,
+checkboxes, single-option cyclers, and buttons that run commands with the inputs passed as macro
+values. That is enough for the librarian picker, the Vault, and the crafting index.
+
+**Dialogs are not inventories.** Mojang designed them to display messages and take input, not to
+describe in-game UI. There are:
+
+- no draggable item slots
+- no way to force-open a chest GUI
+- no way to detect an inventory click
+
+So the Vault and the Artisan's Table are **searchable lists with buttons**, not grids. Design *for*
+that (pinned favourites, `withdraw 1 / 16 / 64` per row, a recents page) rather than fighting it.
+A grid requires the optional client mod (§12) and is explicitly a polish feature, not a content one.
+
+---
+
+## 1. The progression spine
+
+The most important decision in the pack. One item family feeds every system.
+
+| Item | Source | Notes |
+|---|---|---|
+| **Heart Shard** | Dungeon / mineshaft / temple / shipwreck chests (30%, 1–2), trial vaults, fishing treasure, 0.5% from any hostile mob, 10% from Evoker / Elder Guardian | The base currency |
+| **Vital Heart** | 4 Shards + Golden Apple | The universal core |
+| **Vault Sigil** | Ancient City, End City, Bastion, ominous vaults **only** — never craftable | Storage capacity only |
+
+```
+ S        S = Heart Shard
+SAS       A = Golden Apple
+ S        → Vital Heart
+```
+
+**Target acquisition rate:** ~1 Vital Heart per 30–40 min of active exploring at T1, ~1 per 15 min
+at T2. Tune the shard drop tables to hit that — it is the single biggest dial in the pack (§14).
+
+### 1.1 The central tension
+
+Vital Hearts feed **both** farm cores and extra lives. Spending three hearts on an iron core means
+three fewer hearts of health buffer. That choice is the best mechanic in this design.
+
+**Guardrail:** a death must never cost you your first core. Blank Core (§4) is deliberately *cheaper*
+than Life Heart (§5) — 4 iron + 8 gold vs 17 gold — so a new player builds their first farm core
+before their first extra heart. The pack helps you before it charges you.
+
+### 1.2 Tier definitions (used throughout)
+
+| Tier | Gate | Player state |
+|---|---|---|
+| **T1** | Pre-Nether → early Nether | Iron, copper, first villager, first dungeon |
+| **T2** | Nether established | Diamonds, fortress/bastion, trial chambers, monument, first raid |
+| **T3** | End access | Ancient city, End city, netherite, elytra |
+
+---
+
+## 2. Storage — The Vault
+
+A player-bound virtual inventory held in `/data storage`. **Not** real blocks, so there is no dupe
+risk from container NBT juggling.
+
+### 2.1 Input side (blocks)
+
+```
+ E        E = Ender Pearl        │  Linked Barrel (T1)
+CBC       C = Copper Ingot       │  Barrel + 2 Pearl + 2 Copper
+ E        B = Barrel             │  Vacuums contents into your Vault
+```
+
+| Block | Tier | Recipe | Role |
+|---|---|---|---|
+| **Linked Barrel** | T1 | Barrel + 2 Ender Pearl + 2 Copper Ingot | Vacuums its contents into your Vault |
+| **Vault Anchor** | T1 | Linked Barrel + Amethyst Shard | Creates your Vault; where Sigils are consumed. One per player |
+| **Linked Chest** | T2 | Chest + Amethyst Block + 2 Copper Block | Higher throughput; accepts from Cages / Quarry Nodes |
+| **Linked Funnel** | T2 | Hopper + Amethyst Shard + Echo Shard | Pipes mining or farm output straight in |
+
+### 2.2 Access side (items)
+
+| Tier | Item | Recipe | Capability |
+|---|---|---|---|
+| T1 | **Satchel** | Bundle + Ender Pearl + 2 Leather | Withdraw only; must be within 16 blocks of a Linked block |
+| T2 | **Vault Pouch** | Shulker Box + Ender Eye + Echo Shard | Withdraw + deposit, same dimension, search field |
+| T3 | **Void Satchel** | Vault Pouch + Netherite Ingot + Nether Star | Any dimension, sort, auto-restock hotbar/armour |
+
+### 2.3 Capacity — the real balancing lever
+
+| | Distinct types | Depth per type | Range | Remote deposit |
+|---|---|---|---|---|
+| T1 | 27 | 10 stacks | 16 blocks | ✗ |
+| T2 | 108 | 64 stacks | Same dimension | ✓ |
+| T3 | 512 | 2048 stacks | Anywhere | ✓ |
+
+Tiers advance by consuming **Vault Sigils** at the Anchor — **1 Sigil per +27 distinct types**.
+Sigils only come from late structures, so storage convenience scales exactly with how much you've
+explored. Early game is already easier than vanilla (no chest sorting) but you cannot yet dump 40
+distinct block types into a bottomless void.
+
+### 2.4 UI shape
+
+Dialog-driven: a scrollable list with counts, a text input to filter, withdraw buttons per row.
+Required affordances given §0.1: pinned favourites, `1 / 16 / 64` withdraw buttons, a recent-items
+page, and a page counter. Cap distinct types per network for performance regardless of tier.
+
+### 2.5 Risk
+
+Anything moving items via `/data` can void them on a crash or a malformed macro. Write the storage
+layer defensively, and test in a throwaway world. Assume it will eat someone's inventory at least
+once during development.
+
+---
+
+## 3. Enchantments
+
+### 3.1 Abundance I–III *(treasure)*
+
+Multiplies **non-ore bulk drops only**: stone, deepslate, sand, gravel, clay, netherrack,
+terracotta, logs. +1 drop per level at 60% chance each → ×1.6 / ×2.2 / ×2.8 average.
+
+- Deliberately **excludes ores** — that's Fortune's job, and stacking both is how the economy breaks.
+- Treasure-only, from mineshaft and trial chamber loot (T2). Not table-obtainable until archived (§3.4).
+- Implementation: `enchantment_level` conditions on block loot tables checking the tool. No new
+  effect component needed.
+
+### 3.2 Kiln Touch I *(treasure)*
+
+Autosmelt: raw ore → ingot, sand → glass, cobble → stone, clay → brick, log → charcoal. Grants the
+furnace's smelting XP on break.
+
+- **Stacks with Fortune** by applying `apply_bonus: ore_drops` to the ingot entry, so Fortune III on
+  iron behaves exactly as it would on raw iron. This is the version worth building — most mods lose
+  Fortune value on autosmelt.
+- Exclusive set with Silk Touch.
+- Source: Nether fortress and bastion loot (T2). Thematically right and geographically gated.
+
+### 3.3 Excavation *(treasure)* — **UNDERSPECIFIED, see [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md)**
+
+Chain-break / vein-mine. Flagged in the source conversation as one of the **two riskiest mechanics in
+the pack** (alongside §7.5 villager persistence) and explicitly scheduled to be built and tested
+**first, in isolation**, before anything depends on it.
+
+Needs a concrete spec before implementation: block budget per level, tool-durability cost model,
+what block sets it applies to, and recursion/entity-count safety limits.
+
+### 3.4 The Codex — the knowledge system
+
+```
+BBB       B = Bookshelf
+BLB       L = Lectern
+ A        A = Amethyst Shard    → Codex
+```
+
+| Step | Interaction | Effect |
+|---|---|---|
+| **Archive** | Right-click Codex holding an enchanted book or enchanted item | Dialog: *"Archive Efficiency IV? The item will be consumed."* Enchantment + level recorded permanently |
+| **Capacity** | — | T1: 3 enchantments · T2 (+Echo Shard): 9 · T3 (+Nether Star): unlimited |
+| **Seal** | Right-click Codex empty-handed | List of archived enchantments → **Seal Tome** for one chosen enchantment. Costs 1 Book + 1 Ink Sac + 3 XP levels |
+| **Teach** | Right-click a librarian holding the Sealed Tome | Confirm dialog → that librarian **permanently** sells that one book. One enchantment per librarian, forever. Consumes the Tome + a **Binding Contract** (Paper + Ink Sac + Emerald) |
+
+**Fixed prices by enchantment value, no rerolling:** Mending 32 emeralds, Efficiency V 28,
+Feather Falling IV 10, Silk Touch 24. Discounts and Hero of the Village still apply.
+
+**Why this balances well:** you permanently lose the Mending book you found in order to make Mending
+permanently purchasable. One lucky exploration payoff converts into lasting access — which is exactly
+the vanilla trade-hall reroll grind deleted and replaced with exploring.
+
+Implementation traps live in §7.5.
+
+---
+
+## 4. Farm replacement — Cores
+
+Craft a **Blank Core**, attune it by *playing*, then socket it into housing.
+
+```
+IRI       I = Iron Bars
+RHR       R = Redstone
+IRI       H = Vital Heart      → Blank Core
+```
+
+### 4.1 Attunement — rewards the activity it replaces
+
+| Core | Attunement |
+|---|---|
+| **Soul Core** | Hold Blank Core in offhand, kill 16 of one mob type → rewards fighting |
+| **Verdant Core** | Blank Core + 4 Bone Meal + 4 Moss Block, then feed it one of the crop |
+| **Pastoral Core** | Blank Core + 4 Hay Bale + 4 Leather, then right-click the animal |
+| **Lithic Core** | Blank Core + 4 Stone + 4 Flint, then feed it one block sample (cobble / stone / deepslate / sand / gravel) |
+
+### 4.2 Housing
+
+| Block | Recipe | Base rate |
+|---|---|---|
+| **Soul Cage** | 8 Iron Bars + Soul Core | 1 loot roll / 20s |
+| **Verdant Planter** | Composter + 4 Dirt + Verdant Core | 1 harvest / 30s |
+| **Paddock** | 4 Oak Fence + 4 Hay + Pastoral Core | 1 yield / 45s |
+| **Quarry Node** | 8 Deepslate Bricks + Lithic Core | 8 blocks / 20s |
+
+Output goes to any adjacent container — **or straight into your Vault if a Linked block is adjacent.**
+That is the integration payoff, and the moment the two flagship systems click together.
+
+### 4.3 Rate tiering (upgrade in place)
+
+| Tier | Cost | Effect |
+|---|---|---|
+| I | base | Roughly a small hand-built farm |
+| II | Blaze Powder + Copper Block | 2.5× rate, +Looting II equivalent on Cages |
+| III | Echo Shard + Netherite Scrap | 6× rate, Looting III, Cages start yielding rare drops (heads, totems at low rate) |
+
+### 4.4 Guardrails
+
+- **Active core cap per player:** 3 at T1, 6 at T2, 12 at T3. This is the anti-trivialisation valve
+  and it protects TPS.
+- **XP at 25% of normal** from Cages. Enchanting should still mean playing.
+- **No spawn eggs. No Wither / Dragon / Warden cores.** Blaze, Ghast and Guardian cores gated to T2
+  attunement (you have to go there anyway).
+- **Fertility bonus** — scan surroundings, grant up to **+50%**: a Planter ringed by real farmland and
+  water, a Cage inside an enclosed dark 5×5×3 room, a Quarry Node below y=0 in a hollowed chamber.
+  This is the single best way to make *construction* pay off, and it's cheap with block-count predicates.
+- **Offline accrual:** store a world-time stamp per core and settle on chunk load. **Never require
+  chunkloaders.**
+
+---
+
+## 5. Lives and death
+
+`keepInventory true`, XP kept. **The entire cost of dying moves to health.**
+
+```
+Life Heart = Vital Heart + 4 Gold Ingot
+Blank Core = Vital Heart + 4 Iron Bars + 4 Redstone
+```
+
+Same parent, cheap divergent children — the choice is real, but a death never destroys a farm.
+
+- Consume a Life Heart → +1 heart via a `max_health` attribute modifier.
+- **Cap 15 hearts (30 HP).** Escalating cost: hearts 11–12 cost 1 Life Heart each, 13–14 cost 2,
+  heart 15 costs 3.
+- **On death: −1 heart. Floor at 5 hearts (10 HP), never below.**
+- Recovery: consume more Life Hearts. The loop is *go explore, find shards, come back stronger.*
+- At the floor, a **cosmetic "Frail" indicator only** — no stacked debuff (pillar §0.4).
+- Config toggles for a harder mode: floor at 3 hearts, or −2 hearts for deaths in the End.
+
+Fully supported by vanilla: `attribute @s minecraft:max_health modifier add`, plus a `death`
+scoreboard criterion or an `entity died` advancement trigger.
+
+---
+
+## 6. Classic farm replacements
+
+Each entry replaces a specific vanilla technical build. Target rates are deliberately *small farm*,
+not *mega farm* (pillar §0.5).
+
+> **Detail level:** the source design doc had per-entry recipes and rates for all of these. Only the
+> two headline entries survived in full. The rest are named and scoped here and need their rates and
+> attunement conditions written before implementation — see [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md).
+
+| Core | Replaces | Attunement | Notes |
+|---|---|---|---|
+| **Golem Core** | Iron farm | Craft an iron golem | The single most-built technical farm in vanilla |
+| **Ominous Core** | Raid farm | Complete a level-5 ominous raid | **Capped at 1 per player.** ~1.6 totems/hr vs 30–60 for a real raid farm |
+| Barter Core | Gold / piglin barter farm | TBD | T2 |
+| Guardian Core | Guardian farm | TBD | T2, monument-gated |
+| Tidal Core | Drowned / trident farm | TBD | Trident rate must stay low |
+| Wither Skull Core | Wither skeleton skull farm | TBD | T2, fortress-gated |
+| Ender Core | Enderman XP farm | TBD | T3, End-gated |
+| Shulker Core | Shulker shell farm | TBD | T3. Interacts with §8 wandering-trader shells |
+| Slime Core | Slime farm | TBD | T1/T2 |
+| Apiary Core | Honey farm | TBD | T1 |
+| Geode Core | Amethyst farm | TBD | T1/T2 |
+
+The Ominous Core cap of 1 is load-bearing: totems are the pack's main "you can afford to die" item
+and lives are already the death currency (§5).
+
+---
+
+## 7. Crafting, smelting and the workbench layer
+
+### 7.1 Artisan's Table (T1 block) / Artisan's Kit (T2 portable)
+
+Craft from your inventory **and your Vault**, in one place.
+
+Two things that must not be forgotten:
+
+1. It is a **searchable recipe list** with `Craft ×1 / ×8 / ×64` buttons — **not a 3×3 grid.** No
+   datapack can give you a grid (§0.1).
+2. You **must ship a generated recipe index.** Functions cannot read the vanilla recipe registry at
+   runtime. Generate ~280 curated recipes with `scripts/generate_recipe_index.py`; **do not
+   hand-write it**, and build the generator *before* the Artisan's Table function that consumes it.
+
+### 7.2 The Foundry — smelting
+
+Core-powered and deliberately **fuel-free**. Bulk queue drawn from the Vault, gear recycling at 50%
+return, and a Dye Vat.
+
+Explicitly avoids building on vanilla furnace internals — fuel mechanics have moved around across
+recent versions and the fragility isn't worth it.
+
+### 7.3 Supporting quality-of-life changes
+
+| Change | Tier | Why |
+|---|---|---|
+| Remove the anvil **"Too Expensive"** cap | T1 | Pure tedium, no skill expression |
+| **Waystones** — Lodestone + Echo Shard, teleport between discovered ones | T2 | Rewards exploring, deletes walking |
+| **Shulker shells from wandering traders** (2 for 12 emeralds) | T2 | Storage shouldn't be gated behind an End city grind |
+| **XP Bank** — Bottle o' Enchanting recipe from stored levels | T2 | Banks exploration into enchanting |
+| **Recall Stone** — one-use return to death location | T1 | Cheap safety net now that inventory is kept |
+| Structure chests seeded with 1–2 Heart Shards | all | Makes every ruin worth opening |
+| **Bounty advancements** paying shards / emeralds / Sigil fragments | all | Explicit reward for exploring, fighting, building |
+
+### 7.4 Loot and reward overhaul
+
+- Mob drops broadened: gunpowder, string, blaze rods, ender pearls from ordinary combat at better rates
+- Advancement-triggered bounties (explore, fight, build) paying emeralds / XP / resource crates
+- Structure chests seeded with farm-substitute items
+- Wandering trader sells bulk goods rather than novelties
+
+### 7.5 Villager trade persistence — **build and test this first**
+
+Villagers **regenerate `Offers` on level-up and on restock**, which wipes any injected trade.
+
+- Store the taught enchantment as a scoreboard **`Tags`** entry on the villager entity (those
+  reliably persist) and **re-apply the offer on every reset detection.**
+- 26.2 specifically fixed a bug where an empty `Offers` tag failed to persist through a relog or data
+  merge. Trade manipulation is **version-sensitive** — pin the format range tightly and re-test the
+  villager path on every release.
+
+---
+
+## 8. Distribution — datapack vs mod
+
+**Decision: datapack-first, with an optional client mod. Not all-mod.**
+
+The datapack covers ~90% of this document. What genuinely needs a mod is **UI polish** — real
+slot-based screens, a keybind, live search — **not content.**
+
+Going all-mod buys the crafting grid but costs *"a friend joins your vanilla world and clicks
+nothing"*, which for a casual-focused pack is the wrong trade.
+
+### 8.1 The contract between layers
+
+| Layer | Owns | Must never |
+|---|---|---|
+| **Datapack** | All content, balance, state, item definitions, every mechanic | Depend on the mod being present |
+| **Resource pack** | Item models, textures, lang | Contain gameplay logic |
+| **Client mod** *(optional, later)* | Slot-based Vault screen, keybind, live search, drag-and-drop | Own any state, or change any balance number |
+
+The mod is a *renderer* over datapack state. If it's uninstalled mid-world, nothing is lost — the
+player falls back to the dialog UI.
+
+---
+
+## 9. Version targeting
+
+| | |
+|---|---|
+| Target release | **Java 26.2** (current release) |
+| Data pack format | `min_format: 107`, `max_format: [107, 1]` |
+| Resource pack format | `min_format: 88`, `max_format: [88, 0]` — **different number, same version** |
+| Field style | `min_format` / `max_format` — **not** the old `pack_format` |
+
+26.2 changed the **entity predicate format** to a component-style map and now **rejects unknown
+sub-predicates**. Any predicate example found from a 1.21.x tutorial will need rewriting.
+
+Pack formats bump most releases (26.3 snapshots are already at 108→113). Pin a narrow range and
+expect to re-verify villager `Offers` manipulation every version.
+
+---
+
+## 10. Build order
+
+Ship in this order. Each phase is independently playable.
+
+| Phase | Content | Why here |
+|---|---|---|
+| **0** | Heart economy + loot tables + bounty advancements | Pure JSON, zero risk, changes the feel immediately. **Ship this alone and it's already a good pack.** |
+| **0.5** | Spike: §3.3 Excavation chain-break + §7.5 villager persistence, in isolation | The two riskiest mechanics. Discover format quirks in week one, on throwaway features |
+| **1** | Lives system | Small, self-contained, high impact |
+| **2** | Codex + librarian teaching | The most novel feature, and the one most likely to attract users |
+| **3** | The Vault | Biggest engineering lift — do it once the economy is tuned |
+| **4** | Cores (incl. §6 classic farm replacements) | Needs the Vault for its best version |
+| **5** | Artisan's Table + Foundry | Depends on the recipe index generator and the Vault |
+| **6** | Optional client mod (§8) | Polish only, never content |
+
+---
+
+## 11. Tuning dials, ranked by impact
+
+1. **Heart Shard drop rates** — controls the pace of literally everything.
+2. **Active core cap per tier** — the difference between *"no farms needed"* and *"resources meaningless"*.
+3. **Vault type capacity per Sigil** — controls how long storage stays a puzzle.
+4. **Core base rates** — aim at *small hand-built farm*, not mega-farm.
+5. **Fixed librarian prices** — too cheap and enchanting collapses.
+
+**Ship `core_rate_multiplier` at 1.0, but expect to lower it after playtesting.** Everyone
+underestimates compounding passive income.
+
+---
+
+## 12. Known risks
+
+| Risk | Mitigation |
+|---|---|
+| **Item loss.** Anything moving items via `/data` can void them | Defensive storage layer; throwaway test world; never trust a macro path without a guard |
+| **Dialogs only reload on world/server restart, not `/reload`** | Expect slow UI iteration. Build dialog content generation into `scripts/` so a restart is the only manual step |
+| **Version churn.** Pack formats bump most releases | Pin `min_format`/`max_format` narrowly (§9); re-verify villager `Offers` every release |
+| **Textures.** Custom item appearances need a resource pack | A server can push one automatically; singleplayer cannot. Every custom item needs a readable fallback name/tooltip |
+| **Compounding passive income** | §11 — ship at 1.0, plan to lower |
