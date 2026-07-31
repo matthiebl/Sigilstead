@@ -1,0 +1,58 @@
+{
+  "parent": "heartstead:bounty/fight_t2",
+  "criteria": {
+    "warden": {
+      "conditions": {
+        "entity": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "minecraft:entity_type": "minecraft:warden"
+            }
+          }
+        ]
+      },
+      "trigger": "minecraft:player_killed_entity"
+    },
+    "ender_dragon": {
+      "conditions": {
+        "entity": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "minecraft:entity_type": "minecraft:ender_dragon"
+            }
+          }
+        ]
+      },
+      "trigger": "minecraft:player_killed_entity"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.heartstead.bounty.fight_capstone.description"
+    },
+    "icon": {
+      "id": "minecraft:netherite_sword"
+    },
+    "title": {
+      "translate": "advancements.heartstead.bounty.fight_capstone.title"
+    }
+  },
+  "requirements": [
+    [
+      "warden"
+    ],
+    [
+      "ender_dragon"
+    ]
+  ],
+  "rewards": {
+    "experience": 500,
+    "loot": [
+      "heartstead:bounty/capstone"
+    ]
+  }
+}

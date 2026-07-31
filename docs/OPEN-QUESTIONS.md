@@ -79,10 +79,11 @@ Anyone adding this to a live world starts with chests full of items and no shard
 migration/catch-up path, or is it new-worlds-only? Affects marketing more than code, but the answer
 shapes Phase 0's loot weighting.
 
-### [OPEN] Where do Sigil *fragments* come from?
-Design wiki §7.3 has bounty advancements paying "Sigil fragments", but §1 says Vault Sigils are
-"never craftable" and structure-only. Either fragments combine into Sigils (contradicting §1) or they
-are a separate currency. Pick one.
+### ~~[RESOLVED 2026-07-31] Where do Sigil fragments come from?~~
+Resolved: there are no fragments. §7.3/§7.4 bounty advancements can pay a real Vault Sigil directly,
+at the capstone tier of each chain only, one per player (guarded by advancement completion, same as
+the Ominous Core cap). §1 and §7.3 amended to list "capstone bounty advancement" alongside the
+structures as a Sigil source.
 
 ### [OPEN] How far to take the UI now that the ceiling is gone
 [DESIGN.md §0.1](DESIGN.md) lists three features that were compromises to the data pack UI limit and

@@ -1,0 +1,71 @@
+{
+  "parent": "heartstead:bounty/build_t1",
+  "criteria": {
+    "beacon": {
+      "conditions": {
+        "level": {
+          "min": 1
+        }
+      },
+      "trigger": "minecraft:construct_beacon"
+    },
+    "conduit": {
+      "conditions": {
+        "location": [
+          {
+            "condition": "minecraft:location_check",
+            "predicate": {
+              "block": {
+                "blocks": "minecraft:conduit"
+              }
+            }
+          }
+        ]
+      },
+      "trigger": "minecraft:placed_block"
+    },
+    "anvil": {
+      "conditions": {
+        "location": [
+          {
+            "condition": "minecraft:location_check",
+            "predicate": {
+              "block": {
+                "blocks": "#minecraft:anvil"
+              }
+            }
+          }
+        ]
+      },
+      "trigger": "minecraft:placed_block"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.heartstead.bounty.build_t2.description"
+    },
+    "icon": {
+      "id": "minecraft:conduit"
+    },
+    "title": {
+      "translate": "advancements.heartstead.bounty.build_t2.title"
+    }
+  },
+  "requirements": [
+    [
+      "beacon"
+    ],
+    [
+      "conduit"
+    ],
+    [
+      "anvil"
+    ]
+  ],
+  "rewards": {
+    "experience": 150,
+    "loot": [
+      "heartstead:bounty/crate_t2"
+    ]
+  }
+}

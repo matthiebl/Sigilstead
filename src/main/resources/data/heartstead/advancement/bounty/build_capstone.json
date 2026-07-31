@@ -1,0 +1,53 @@
+{
+  "parent": "heartstead:bounty/build_t2",
+  "criteria": {
+    "full_beacon": {
+      "conditions": {
+        "level": {
+          "min": 4
+        }
+      },
+      "trigger": "minecraft:construct_beacon"
+    },
+    "netherite_block": {
+      "conditions": {
+        "location": [
+          {
+            "condition": "minecraft:location_check",
+            "predicate": {
+              "block": {
+                "blocks": "minecraft:netherite_block"
+              }
+            }
+          }
+        ]
+      },
+      "trigger": "minecraft:placed_block"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.heartstead.bounty.build_capstone.description"
+    },
+    "icon": {
+      "id": "minecraft:netherite_block"
+    },
+    "title": {
+      "translate": "advancements.heartstead.bounty.build_capstone.title"
+    }
+  },
+  "requirements": [
+    [
+      "full_beacon"
+    ],
+    [
+      "netherite_block"
+    ]
+  ],
+  "rewards": {
+    "experience": 500,
+    "loot": [
+      "heartstead:bounty/capstone"
+    ]
+  }
+}

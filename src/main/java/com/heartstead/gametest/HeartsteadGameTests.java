@@ -1,8 +1,11 @@
 package com.heartstead.gametest;
 
+import com.heartstead.Heartstead;
 import com.heartstead.registry.HsItems;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -81,6 +84,32 @@ public class HeartsteadGameTests {
     public void heartShardNeverDropsFromPassiveMob(GameTestHelper helper) {
         double rate = heartShardRateInEntityTable(helper.getLevel(), EntityTypes.COW, 1000);
         helper.succeedIf(() -> assertInRange("cow shard rate", rate, 0.0, 0.0));
+    }
+
+    /** DESIGN.md §7.3.1 — the capstone bounty crate always grants exactly one Vault Sigil. */
+    @GameTest
+    public void bountyCapstoneGrantsOneVaultSigil(GameTestHelper helper) {
+        ResourceKey<LootTable> key = ResourceKey.create(Registries.LOOT_TABLE, Heartstead.id("bounty/capstone"));
+        LootTable table = helper.getLevel().getServer().reloadableRegistries().getLootTable(key);
+        ItemEntity dummy = new ItemEntity(helper.getLevel(), 0, 0, 0, new ItemStack(Items.STICK));
+        LootParams params = new LootParams.Builder(helper.getLevel())
+                .withParameter(LootContextParams.ORIGIN, Vec3.ZERO)
+                .withParameter(LootContextParams.THIS_ENTITY, dummy)
+                .create(LootContextParamSets.ADVANCEMENT_REWARD);
+
+        int sigils = 0;
+        for (ItemStack stack : table.getRandomItems(params)) {
+            if (stack.is(HsItems.VAULT_SIGIL)) {
+                sigils += stack.getCount();
+            }
+        }
+
+        int finalSigils = sigils;
+        helper.succeedIf(() -> {
+            if (finalSigils != 1) {
+                throw new AssertionError("bounty/capstone should grant exactly 1 Vault Sigil, got " + finalSigils);
+            }
+        });
     }
 
     private static double heartShardRateInChestTable(ServerLevel level, net.minecraft.resources.ResourceKey<LootTable> key, int draws) {

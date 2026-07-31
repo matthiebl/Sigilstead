@@ -55,7 +55,7 @@ The most important decision in the pack. One item family feeds every system.
 |---|---|---|
 | **Heart Shard** | Dungeon / mineshaft / temple / shipwreck chests (30%, 1–2), trial vaults, fishing treasure, 0.5% from any hostile mob, 10% from Evoker / Elder Guardian | The base currency |
 | **Vital Heart** | 4 Shards + Golden Apple | The universal core |
-| **Vault Sigil** | Ancient City, End City, Bastion, ominous vaults **only** — never craftable | Storage capacity only |
+| **Vault Sigil** | Ancient City, End City, Bastion, ominous vaults, or a capstone bounty advancement (§7.3) — never craftable | Storage capacity only |
 
 ```
  S        S = Heart Shard
@@ -354,14 +354,45 @@ recent versions and the fragility isn't worth it.
 | **XP Bank** — Bottle o' Enchanting recipe from stored levels | T2 | Banks exploration into enchanting |
 | **Recall Stone** — one-use return to death location | T1 | Cheap safety net now that inventory is kept |
 | Structure chests seeded with 1–2 Heart Shards | all | Makes every ruin worth opening |
-| **Bounty advancements** paying shards / emeralds / Sigil fragments | all | Explicit reward for exploring, fighting, building |
+| **Bounty advancements** paying shards / emeralds / XP / a Vault Sigil | all | Explicit reward for exploring, fighting, building |
+
+#### 7.3.1 Bounty advancement triggers
+
+Three independent chains — explore, fight, build — each rooted under `heartstead:bounty/root`
+(earned by picking up your first Heart Shard). Each chain is T1 → T2 → capstone, linear parentage.
+
+| Chain | Tier | Trigger shape | Reward |
+|---|---|---|---|
+| Explore | T1 | `location` — enter any of mineshaft / desert pyramid / jungle pyramid / igloo / swamp hut / shipwreck (OR) | Crate T1 |
+| Explore | T2 | `location` — enter any of ancient city / trial chambers / monument / fortress / bastion / stronghold (OR) | Crate T2 |
+| Explore | Capstone | `location` — enter end city **and** ancient city (AND) | Crate + **1 Vault Sigil** |
+| Fight | T1 | `player_killed_entity` — kill any of zombie / skeleton / spider / creeper (OR) | Crate T1 |
+| Fight | T2 | `player_killed_entity` — kill any of blaze / wither skeleton / evoker / elder guardian / ravager / piglin brute (OR) | Crate T2 |
+| Fight | Capstone | `player_killed_entity` — kill warden **and** the ender dragon (AND) | Crate + **1 Vault Sigil** |
+| Build | T1 | `placed_block` — place a bed **and** a chest/barrel **and** a light source (AND) | Crate T1 |
+| Build | T2 | `construct_beacon` (level ≥ 1) **and** `placed_block` conduit **and** anvil (AND) | Crate T2 |
+| Build | Capstone | `construct_beacon` (level 4, full beacon) **and** `placed_block` netherite block (AND) | Crate + **1 Vault Sigil** |
+
+**Why this shape:** vanilla has no "player constructed a structure" trigger, only single-block
+`placed_block` events and the existing `construct_beacon` criterion. Build bounties therefore reward
+*milestone construction* (meaningful blocks placed, once each) rather than volume — matching how
+"explore" rewards reaching a place rather than counting steps, and avoiding the counter/attachment
+infrastructure that "place N blocks" or "kill N of a type" would need. That infrastructure doesn't
+exist yet (attachments are Phase 1, §10) — Phase 0 bounties are deliberately built from stock advancement
+triggers only.
+
+The capstone-tier Vault Sigil is naturally capped at one per player: advancement completion is
+itself the guard, the same pattern §6's Ominous Core cap relies on. No extra code needed.
 
 ### 7.4 Loot and reward overhaul
 
-- Mob drops broadened: gunpowder, string, blaze rods, ender pearls from ordinary combat at better rates
 - Advancement-triggered bounties (explore, fight, build) paying emeralds / XP / resource crates
-- Structure chests seeded with farm-substitute items
 - Wandering trader sells bulk goods rather than novelties
+
+**Decided against (2026-07-31):** broadening ordinary mob drops (gunpowder/string/blaze rods/ender
+pearls from any hostile kill) and seeding structure chests with farm-substitute items. Both were
+implemented and reverted — leave mob and chest loot tables alone. Bounties and the wandering trader
+are the reward surface for this pillar, not blanket loot-table edits.
 
 ### 7.5 Villager trade persistence — **build and test this first**
 

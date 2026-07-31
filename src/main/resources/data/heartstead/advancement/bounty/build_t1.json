@@ -1,0 +1,85 @@
+{
+  "parent": "heartstead:bounty/root",
+  "criteria": {
+    "bed": {
+      "conditions": {
+        "location": [
+          {
+            "condition": "minecraft:location_check",
+            "predicate": {
+              "block": {
+                "blocks": "#minecraft:beds"
+              }
+            }
+          }
+        ]
+      },
+      "trigger": "minecraft:placed_block"
+    },
+    "storage": {
+      "conditions": {
+        "location": [
+          {
+            "condition": "minecraft:location_check",
+            "predicate": {
+              "block": {
+                "blocks": [
+                  "minecraft:chest",
+                  "minecraft:barrel"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "trigger": "minecraft:placed_block"
+    },
+    "light": {
+      "conditions": {
+        "location": [
+          {
+            "condition": "minecraft:location_check",
+            "predicate": {
+              "block": {
+                "blocks": [
+                  "minecraft:torch",
+                  "minecraft:soul_torch",
+                  "minecraft:lantern"
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "trigger": "minecraft:placed_block"
+    }
+  },
+  "display": {
+    "description": {
+      "translate": "advancements.heartstead.bounty.build_t1.description"
+    },
+    "icon": {
+      "id": "minecraft:red_bed"
+    },
+    "title": {
+      "translate": "advancements.heartstead.bounty.build_t1.title"
+    }
+  },
+  "requirements": [
+    [
+      "bed"
+    ],
+    [
+      "storage"
+    ],
+    [
+      "light"
+    ]
+  ],
+  "rewards": {
+    "experience": 50,
+    "loot": [
+      "heartstead:bounty/crate_t1"
+    ]
+  }
+}
