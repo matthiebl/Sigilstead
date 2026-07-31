@@ -9,7 +9,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * DESIGN.md §7.5 — vanilla regenerates {@code Offers} on level-up ({@code updateTrades}) and on
+ * DESIGN.md §7.2 — vanilla regenerates {@code Offers} on level-up ({@code updateTrades}) and on
  * restock. Both are hooked so a taught trade survives either.
  */
 @Mixin(Villager.class)

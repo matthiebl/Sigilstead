@@ -104,19 +104,50 @@ about shapes too.
 
 ---
 
+## Verified: the recipe book is reusable (DESIGN.md §7.1)
+
+Read out of `minecraft-common.jar` with `javap` on 2026-08-01. The Artisan's Table does **not** need
+a custom recipe browser — extending the vanilla crafting menu inherits the whole thing.
+
+```
+AbstractCraftingMenu extends RecipeBookMenu extends AbstractContainerMenu
+
+  RecipeBookType getRecipeBookType()
+  PostPlaceAction handlePlacement(boolean, boolean, RecipeHolder<?>, ServerLevel, Inventory)
+  void            fillCraftSlotsStackedContents(StackedItemContents)
+  List<Slot>      getInputGridSlots()      int getGridWidth() / getGridHeight()
+```
+
+`RecipeBookType` is a **plain enum** — `CRAFTING`, `FURNACE`, `BLAST_FURNACE`, `SMOKER` — and is not
+extensible. Return `CRAFTING`; a 3×3 grid is semantically exactly that, and it costs nothing.
+
+The two Vault hooks DESIGN.md §7.1 asks for land here:
+
+| Requirement | Hook | Trap |
+|---|---|---|
+| Recipes show craftable from Vault contents | override `fillCraftSlotsStackedContents`, `accountStack` the Vault as well as the grid | Craftability is computed **client-side**, so the client needs a synced Vault snapshot. §2.4 needs one too — build one sync path, not two |
+| Clicking a recipe pulls missing items from the Vault | override `handlePlacement`; withdraw, then delegate to `ServerPlaceRecipe.placeRecipe(...)` | `placeRecipe` takes a player `Inventory` and pulls only from it. Route every withdrawal through the §2.5-tested transfer code — a second item-moving path is how the Vault gets a dupe bug |
+
+Supporting classes, all in `minecraft-common.jar`: `net.minecraft.recipebook.ServerPlaceRecipe`
+(+ `$CraftingMenuAccess`), `net.minecraft.world.entity.player.StackedItemContents`,
+`net.minecraft.world.item.crafting.RecipeBookCategory` / `ExtendedRecipeBookCategory`.
+
+---
+
 ## Still needed (not yet gathered)
 
 | Topic | Needed for | Why it's risky |
 |---|---|---|
 | `Item.Properties` / `ResourceKey` construction | Phase 0, every item | Changed repeatedly across 1.21.x; check the real signature |
-| `DataComponentType` registration + codecs | Per-stack state | Replaces the data-pack `custom_data` approach |
-| Fabric `AttachmentRegistry` | Hearts, Vault, villager teaching | Respawn/dimension-change persistence semantics |
-| `ScreenHandler` / slot sync | Vault, Artisan, Foundry | The reason this is a mod; also where desync bugs live |
-| `SavedData` API | World-level core registry, waystones | Persistence shape |
+| `DataComponentType` registration + codecs | Per-stack state, core attunement (§4.1) | Typed, codec-backed, validated on load |
+| Fabric `AttachmentRegistry` | Hearts, Codex archive, villager teaching | Respawn/dimension-change persistence semantics |
+| `ScreenHandler` / slot sync | Vault, Artisan, Codex | The reason this is a mod; also where desync bugs live |
+| `SavedData` API | Vault contents (§2), active-core registry (§4.3) | Persistence shape; both are world-level |
+| Chunk-load event + world time | Core offline accrual (§4.2) | Settle from one timestamp; double-clocking is the bug this invites |
 | Custom enchantment definition format | §3 enchantments | Data-driven since 1.21, still churning |
 | 26.2 entity predicate format | Loot tables, advancements | Component-style map that **rejects unknown sub-predicates** |
 | Loot table modification callback vs JSON override | Phase 0.2 | Overriding vanilla tables conflicts with other mods |
-| Villager `Offers` persistence in 26.2 | §3.4, §7.5 | 26.2 fixed an empty-`Offers` bug; version-specific |
+| Villager `Offers` persistence in 26.2 | §3.3, §7.2 | 26.2 fixed an empty-`Offers` bug; version-specific |
 
 ---
 
@@ -129,8 +160,8 @@ about shapes too.
 - [fabric-example-mod](https://github.com/FabricMC/fabric-example-mod) — the authoritative
   `build.gradle` shape; this is what settled traps 2 and 3
 - [Fabric API](https://modrinth.com/mod/fabric-api)
-- [misode.github.io](https://misode.github.io/) — data pack generators/validators, version-aware
-  through 26.2. Still useful: recipes, loot tables and advancements are the same JSON inside a mod
+- [misode.github.io](https://misode.github.io/) — JSON generators/validators for recipes, loot
+  tables, advancements and tags, version-aware through 26.2
 
 ---
 
@@ -144,19 +175,9 @@ about shapes too.
 
 ---
 
-## Superseded
-
-Load-bearing while this was a data pack; kept only so older notes make sense: `/dialog` docs, the
-dialog command generator, GUI Maker on Modrinth, pack formats (data 107.1 / resource 88.0 for 26.2),
-and the `custom_data` marker + obscure-base-item conventions. None apply to a mod.
-
 ## Source conversation
 
 The design originated in a Claude conversation dated 30 Jul 2026, shared at
 `claude.ai/share/d51527d6-59e7-4433-9300-d00d908e92d0`. It produced a design wiki file **not
 retrievable from the share link** — [DESIGN.md](DESIGN.md) is a reconstruction from the conversation
 body. Remaining gaps are in [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md).
-
-That conversation recommended datapack-first with an optional client mod. **Reversed 2026-07-31**
-after the block and item-identity limits proved fatal in practice — reasoning in
-[DESIGN.md §8](DESIGN.md).

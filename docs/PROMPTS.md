@@ -13,6 +13,8 @@ Ready-to-paste prompts, in build order. Rules that apply to all of them:
 - **Claude Code can verify its own work now** (`build`, `test`, `runGametest`). Expect it to. What it
   still can't judge is feel — balance and UI pleasantness need `runClient` and you.
 
+Phase numbers match [DESIGN.md](DESIGN.md) §9.
+
 ---
 
 ## Phase 0 — Items and the heart economy
@@ -52,27 +54,19 @@ overriding vanilla loot table JSON outright — overriding conflicts with every 
 that touches the same table. Recommend one and say why.
 ```
 
-### 0.3 — Drops and bounties
-
-```
-Implement docs/DESIGN.md §7.4 (loot and reward overhaul) and the bounty advancements
-from §7.3 — explore, fight and build categories.
-
-Propose the specific advancement triggers before writing them; I want to sanity-check
-that "build" is actually detectable.
-```
+Phase 0 ends there. **There is no advancement or bounty work in this phase** — read DESIGN.md §7.3
+before proposing any. Advancements are deferred until the §1 economy has actually been played.
 
 ---
 
 ## Phase 0.5 — Risk spike
 
-Still the two most dangerous mechanics. The difference from the data pack plan: each ships with a
-GameTest instead of a manual checklist.
+Still the riskiest mechanic. It ships with a GameTest instead of a manual checklist.
 
 ### 0.5a — Villager trade persistence
 
 ```
-Build a proof of concept for docs/DESIGN.md §7.5 ONLY.
+Build a proof of concept for docs/DESIGN.md §7.2 ONLY.
 
 Inject a fixed trade onto a librarian and make it survive the villager regenerating
 Offers on level-up and restock. Then write GameTests asserting it survives: level-up,
@@ -82,28 +76,17 @@ Run ./gradlew runGametest and report real output. If the tests can't cover world
 say so and give me a manual checklist for that case only.
 ```
 
-### 0.5b — Excavation chain-break
-
-```
-docs/OPEN-QUESTIONS.md flags §3.3 Excavation as underspecified. Propose a concrete spec
-first — block budget per level, durability model, block sets, recursion safety cap, and
-interaction with Abundance and Kiln Touch on the same pickaxe.
-
-Once I've agreed the spec, implement it with a GameTest covering the worst case, and
-tell me the measured block count and tick cost.
-```
-
 ---
 
 ## Phase 1 — Lives
 
 ```
-Implement docs/DESIGN.md §5: Life Heart item and recipe, max_health attribute modifier
-on consume, the 15-heart cap with escalating costs, -1 heart on death with a floor of 5,
-and the cosmetic Frail indicator.
+Implement docs/DESIGN.md §6: Life Heart item and recipe, max_health attribute modifier
+on consume, the 20-heart cap, -1 heart on death with a floor of 5, and the harder-mode
+config toggles.
 
 Player state uses attachments per CONVENTIONS.md §2.2, with a versioned codec. Every
-number in §5 is a config field per §5 of CONVENTIONS.md, not a literal.
+number in §6 is a config field per §5 of CONVENTIONS.md, not a literal.
 
 GameTest the floor: die repeatedly, assert health never goes below it.
 
@@ -113,32 +96,23 @@ recipe without flagging it.
 
 ---
 
-## Phase 2 — Codex and librarian teaching
+## Phase 2 — The Vault
 
-```
-Implement docs/DESIGN.md §3.4 — the Codex block and block entity, Archive / Seal / Teach
-flows, tier capacities, and the fixed librarian prices.
-
-Reuse the Phase 0.5a persistence approach; read that code first rather than reinventing it.
-
-The Codex is the first real block in the project, so establish the block + block entity +
-screen handler patterns carefully here — cores and the Vault will copy them.
-```
-
----
-
-## Phase 3 — The Vault
-
-The biggest lift.
+The biggest lift, and the first real blocks and screen handlers in the project.
 
 ```
 Write the GameTest suite for docs/DESIGN.md §2.5 FIRST, before any Vault implementation:
 deposit N / withdraw N exact conservation, full inventory on withdraw, capacity boundary,
-mid-transfer shutdown, concurrent access. They should fail for the right reason
-(no implementation) when you run them.
+mid-transfer shutdown, and concurrent access from two players. They should fail for the
+right reason (no implementation) when you run them.
 
 Then implement the storage layer per §2.1-2.3 with a versioned codec, and make the tests
 pass. No UI in this task.
+
+The Vault is WORLD state, not player state — codec-backed SavedData per CONVENTIONS.md
+§4, one Anchor per world, shared contents and pooled Sigil capacity. Concurrent access is
+a first-class case here, not an edge case. Access-item range (§2.2) is the only per-player
+part.
 ```
 
 Then, separately:
@@ -150,8 +124,43 @@ search, click-to-withdraw, shift-click-to-deposit and sort.
 Screen classes go in src/client per CONVENTIONS.md §3; the screen handler itself is
 common. Watch the client/server split — a leak here crashes dedicated servers.
 
-Read §0.1 before you start: the UI ceiling is gone, but the pitch is casual convenience,
-not an ME terminal. Propose the scope before building it.
+The client needs a synced snapshot of Vault contents. Phase 3's Artisan needs the same
+thing (REFERENCES.md) — build ONE sync path and design it with that second consumer in
+mind.
+
+All mutation is server-side; the screen sends intents, never results.
+
+This is the first block + block entity + screen handler in the project. Establish those
+patterns carefully — the Codex and the cores will copy them.
+```
+
+---
+
+## Phase 3 — Codex and Artisan's Table
+
+```
+Implement docs/DESIGN.md §3.3 — the Codex block and block entity, Archive / Tome / Teach
+flows, tier capacities, and the fixed librarian prices.
+
+Reuse the Phase 0.5a persistence approach for the librarian side; read that code first
+rather than reinventing it.
+
+The archive is PER PLAYER (a codec-backed attachment), not per block — any Codex shows
+you your own archive. The capacity upgrades are consumed per player too.
+```
+
+Then, separately:
+
+```
+Implement docs/DESIGN.md §7.1 — Artisan's Table and Kit.
+
+Read REFERENCES.md "the recipe book is reusable" first. Do NOT build a recipe browser:
+extend the vanilla crafting menu and return RecipeBookType.CRAFTING, which inherits
+search, category tabs, craftable-only and click-to-fill off the live RecipeManager.
+
+The only new work is the two Vault hooks in that REFERENCES section. Route every
+withdrawal through the Phase 2 transfer code — a second item-moving path is how the
+Vault gets a dupe bug, and it would invalidate the §2.5 suite.
 ```
 
 ---
@@ -159,12 +168,21 @@ not an ME terminal. Propose the scope before building it.
 ## Phase 4 — Cores
 
 ```
-Implement docs/DESIGN.md §4: Blank Core, the four attunement paths, the four housing
-blocks, rate tiering, and every guardrail in §4.4 — especially the per-player active core
-cap and offline accrual via a stored time delta settled on chunk load. No chunkloaders.
+Implement docs/DESIGN.md §4: Blank Core, the prime -> imprint attunement in §4.1, the
+four housing blocks in §4.2, and rate tiering in §4.3.
 
-GameTest the accrual: advance the world clock, unload and reload the chunk, assert the
-yield matches the formula and doesn't double-count. That's the bug this design invites.
+Attunement state is a data component on the stack per §4.1. Get the hand rules exactly
+right: an un-attuned core only takes a target from the main hand or offhand, but once it
+HAS a target every carried core progresses in parallel from anywhere in the inventory.
+
+Offline accrual per §4.2: settle the whole elapsed delta from ONE stored timestamp on
+chunk load, capped at core_accrual_cap_hours. Never require a chunkloader. GameTest it —
+advance the world clock, unload and reload the chunk, assert the yield matches the
+formula and doesn't double-count. That's the bug this design invites.
+
+The one-active-core-per-target rule in §4.3 is world-level SavedData and is enforced by
+REFUSING the socket, not by placing something dormant. GameTest the duplicate-socket path
+including across a world reload.
 
 Vault integration from §4.2 is the payoff — build it in this phase.
 
@@ -174,23 +192,16 @@ core_rate_multiplier ships at 1.0 but is a config field; I expect to lower it.
 Then, separately:
 
 ```
-docs/OPEN-QUESTIONS.md has §6 classic farm cores 3-11 with names only. Write the missing
-spec — recipe, attunement condition, base rate, per-player cap — for each, matching the
-Golem and Ominous entries. Propose it in DESIGN.md first; don't implement until I've
-reviewed the rates.
-```
+Implement the eleven classic farm replacements in docs/DESIGN.md §5.
 
----
+These need NO new blocks — every one sockets into a §4.2 housing. The housing supplies
+the family, the core supplies the rate and the loot table. It should come out as eleven
+recipes and eleven loot tables plus the imprint conditions, and almost no new Java.
 
-## Phase 5 — Artisan's Table and Foundry
+Note the two imprint shapes in §5 (milestone vs counted) and which cores use which.
 
-```
-Implement docs/DESIGN.md §7.1. Note the pivot changed this feature substantially: read
-the live RecipeManager instead of shipping a generated index, and a real 3x3 grid is
-possible now.
-
-The open problem is filtering — "every recipe in the game" isn't a usable list. Propose
-the filtering and search UX before building it.
+Before implementing, check my tier-I and tier-III numbers against the comparison table at
+the end of §5 and tell me if any of them are wrong — those rates have never been played.
 ```
 
 ---
@@ -220,7 +231,6 @@ Loader during the initial setup. Query the meta APIs directly.
 
 ```
 Audit the repo for anything still using a placeholder: TODO markers, placeholder
-textures, hardcoded values that should be config, stale data-pack-era references
-(custom_data markers, /dialog, pack.mcmeta, base-item tables), and any file referencing
-a name other than heartstead. List them; don't fix them yet.
+textures, hardcoded values that should be config, and any file referencing a name other
+than heartstead. List them; don't fix them yet.
 ```

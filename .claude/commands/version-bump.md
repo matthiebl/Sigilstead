@@ -19,11 +19,11 @@ https://piston-meta.mojang.com/mc/game/version_manifest_v2.json   # javaVersion 
 Then:
 
 1. Update `gradle.properties` and the verified-facts table in `docs/REFERENCES.md`, plus the version
-   table in `docs/DESIGN.md` §9 and the toolchain table in `CLAUDE.md`.
+   table in `docs/DESIGN.md` §8 and the toolchain table in `CLAUDE.md`.
 2. **Check the required Java version.** Loom needs Gradle itself running on it, not just a toolchain
    — if it changed, the README setup instructions need updating too.
 3. Run `./gradlew build` and report what actually broke.
-4. Prioritise fixes by risk, leading with: villager `Offers` manipulation (DESIGN.md §7.5), anything
+4. Prioritise fixes by risk, leading with: villager `Offers` manipulation (DESIGN.md §7.2), anything
    persisting state through a codec, and the client/server split.
 
 Report before migrating code.

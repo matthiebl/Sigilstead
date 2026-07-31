@@ -24,7 +24,7 @@ import net.minecraft.world.level.storage.ValueInput;
 import java.lang.reflect.Method;
 
 /**
- * DESIGN.md §7.5 proof of concept — a taught trade injected onto a librarian must survive vanilla
+ * DESIGN.md §7.2 proof of concept — a taught trade injected onto a librarian must survive vanilla
  * {@code Offers} regeneration on level-up and restock, plus an entity save/load round trip standing
  * in for chunk unload/reload.
  *
@@ -77,7 +77,7 @@ public class VillagerTradePersistenceGameTests {
                 Boolean.TRUE.equals(((AttachmentTarget) reloadedVillager).getAttached(HsAttachments.TAUGHT_TRADE));
 
         // Simulate vanilla regenerating Offers after the chunk comes back (the exact failure mode
-        // DESIGN.md §7.5 calls out for 26.2's Offers persistence fix) and confirm the attachment,
+        // DESIGN.md §7.2 calls out for 26.2's Offers persistence fix) and confirm the attachment,
         // which did survive the NBT round trip, is enough to reapply the trade.
         reloadedVillager.setOffers(new MerchantOffers());
         invokeUpdateTrades(reloadedVillager, level);

@@ -3,9 +3,6 @@
 A **Fabric mod** for Minecraft Java 26.2 that removes the need for technical farms and chest-sorting,
 and rewards exploring, fighting and building instead.
 
-> Was a data pack until 2026-07-31. If you find advice about `custom_data` markers, obscure base
-> items, `/dialog` menus or `pack.mcmeta`, it is stale — see [docs/DESIGN.md](docs/DESIGN.md) §8.
-
 ## Ground truth
 
 **[docs/DESIGN.md](docs/DESIGN.md) is the spec.** Read the relevant section before implementing
@@ -35,15 +32,18 @@ before changing any of them.
    `Heartstead.id(String)`.
 2. **Items and blocks are real registered objects.** No `custom_data` identity markers, no marker
    entities standing in for blocks, no base-item table. That era is over.
-3. **Per-stack state uses data components; per-player state uses attachments.** Not scoreboards, not
-   raw `CompoundTag`. Everything persisted goes through a versioned Codec.
+3. **Per-stack state uses data components; per-player state uses attachments; world state uses
+   `SavedData`.** Not scoreboards, not raw `CompoundTag`. Everything persisted goes through a
+   versioned Codec. Which of the three a system uses is a design decision — CONVENTIONS.md §4 has
+   the table, and the Vault is world state while the Codex archive is not.
 4. **Respect the source-set split.** Anything that draws lives in `src/client`. A client-only class
    referenced from common code crashes dedicated servers, and it surfaces late.
 5. **Content stays data-driven.** Recipes, loot tables, advancements, tags and enchantments are JSON
    in `src/main/resources/data/`. Being a mod is a licence to write Java where Java helps, not an
    instruction to write it everywhere. Prefer a data generator over hand-written repetitive JSON.
 6. **Every tuning dial is a config field**, not a literal. (CONVENTIONS.md §5)
-7. **Never require chunkloaders.** Offline accrual settles from a stored time delta on chunk load.
+7. **Never require chunkloaders.** Core offline accrual settles the whole elapsed delta from one
+   stored timestamp on chunk load, capped (DESIGN.md §4.2). Never accrue from two clocks.
 8. **Check `genSources` before writing against an unfamiliar API.** 26.x moves fast and item
    construction changed repeatedly across 1.21.x — pre-1.21.5 tutorials are wrong.
 
@@ -68,6 +68,7 @@ main offender (DESIGN.md §2.5).
 ## Working style
 
 - One phase at a time, per [docs/PROMPTS.md](docs/PROMPTS.md). Don't run ahead.
-- The UI ceiling that shaped this design is gone (DESIGN.md §0.1) — but new capability is not a
-  mandate. The pitch is casual convenience, not an ME terminal.
-- Realms support is **undecided** (OPEN-QUESTIONS.md). Flag mod-only dependencies as you add them.
+- **Capability is not a mandate.** Being a mod means a real UI is possible everywhere; that is not a
+  reason to build one. The pitch is casual convenience, not an ME terminal. Where vanilla already
+  does the job — the recipe book behind the Artisan's Table (§7.1) — reuse it rather than reinvent.
+- **No Realms.** Realms takes data packs, not mods; settled, not a live trade-off (OPEN-QUESTIONS.md).

@@ -15,8 +15,8 @@ public class HeartsteadClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        // TODO Phase 3: HsScreens.register();   // Vault screen — the real slot-based one
-        // TODO Phase 5: Artisan / Foundry screens
-        // TODO Phase 1: heart HUD overlay for the Frail indicator (DESIGN.md §5)
+        // TODO Phase 2: HsScreens.register();   // Vault screen (DESIGN.md §2.4)
+        // TODO Phase 3: Codex screen (§3.3); Artisan extends the vanilla crafting menu (§7.1)
+        // TODO Phase 4: core attunement progress in the item tooltip (§4.1)
     }
 }

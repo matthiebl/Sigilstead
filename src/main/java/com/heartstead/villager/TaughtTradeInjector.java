@@ -10,10 +10,10 @@ import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.item.trading.MerchantOffers;
 
 /**
- * DESIGN.md §7.5 proof of concept — a single fixed trade injected onto one villager, kept alive
+ * DESIGN.md §7.2 proof of concept — a single fixed trade injected onto one villager, kept alive
  * across vanilla {@code Offers} regeneration.
  *
- * <p>The real feature (Codex "Teach", §3.4) will inject a taught enchanted book. That system doesn't
+ * <p>The real feature (Codex "Teach", §3.3) will inject a taught enchanted book. That system doesn't
  * exist yet, so this POC uses a fixed placeholder offer (1 Diamond for 12 Emeralds) to isolate and
  * prove the persistence mechanic in {@link HsAttachments#TAUGHT_TRADE} — whether the villager has
  * been taught is stored on the entity, not derived from the {@code Offers} list, so it can be

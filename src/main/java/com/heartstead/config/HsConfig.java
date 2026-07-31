@@ -4,7 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 /**
- * Every tuning dial in the pack (CONVENTIONS.md §5, DESIGN.md §11). One codec-backed record, loaded
+ * Every tuning dial in the pack (CONVENTIONS.md §5, DESIGN.md §10). One codec-backed record, loaded
  * from a JSON file in the Fabric config directory by {@link HsConfigManager}.
  *
  * <p>Server-authoritative: clients never decide balance, only render what the server tells them.

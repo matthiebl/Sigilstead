@@ -13,8 +13,8 @@
 | **Cores** — attune a core by *playing*, socket it into housing, get passive yield | Mob farms, iron farms, raid farms, quarries |
 | **The Codex** — archive an enchanted book, teach a librarian to sell that enchantment forever | Trade-hall reroll grinding |
 | **Lives** — keep inventory, lose a heart instead; earn hearts back by exploring | Losing your stuff to a creeper at y=-58 |
-| **Abundance / Kiln Touch / Excavation** — bulk-drop, autosmelt-with-Fortune, chain-break | Manual bulk gathering |
-| **Artisan's Table & Foundry** — craft and smelt from inventory *and* Vault | Furnace arrays, walking to a bench |
+| **Abundance / Kiln Touch** — bulk-drop multiplication, autosmelt that keeps Fortune | Manual bulk gathering |
+| **Artisan's Table** — craft from inventory *and* Vault, vanilla recipe book included | Walking to a bench, hunting for materials |
 
 Everything hangs off one found item — the **Heart Shard** — so exploring is never wasted, and extra
 lives compete with farm cores for the same currency.
@@ -83,14 +83,14 @@ heartstead/
 
 ## Why a mod and not a data pack
 
-Short version: a data pack cannot register a block, and this design has twelve of them. Three of the
-five flagship systems are inventory UIs that data packs can't draw. And the mod can test itself.
+Short version: a data pack cannot register a block, and this design has a dozen of them. Several
+flagship systems are inventory UIs that data packs can't draw. And the mod can test itself.
 
-Full reasoning, including what it costs: [DESIGN.md §8](docs/DESIGN.md).
+The cost, accepted: **no Realms** (it takes data packs, not mods), both sides must install for
+multiplayer, and releases trail new Minecraft versions.
 
-## Naming
+## Adding it to an existing world
 
-`Heartstead` is taken from the repo directory and has **not** been availability-checked against
-existing Minecraft projects. Alternatives that were checked clean: *Wanderhoard*, *Cairnkeep*,
-*Tallyheart*, *Farstead*. See [OPEN-QUESTIONS.md](docs/OPEN-QUESTIONS.md) — the mod id is baked into
-every registry call, so settle this before publishing.
+It works, but there is **no catch-up path**. A world with chests full of diamonds still has zero
+Heart Shards, and the only way to get them is to go exploring — same as a fresh world. That's
+deliberate: the economy is the point of the mod.

@@ -1,11 +1,8 @@
 package com.heartstead.gametest;
 
-import com.heartstead.Heartstead;
 import com.heartstead.registry.HsItems;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.gametest.framework.GameTestHelper;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -41,14 +38,16 @@ import net.minecraft.world.phys.Vec3;
  *   <li><b>§2.5 Vault item conservation</b> — the highest-value tests in the project. Deposit N,
  *       withdraw N, assert nothing was created or destroyed. Include the nasty cases: server
  *       shutdown mid-transfer, full inventory on withdraw, capacity boundary, concurrent access.
- *       The data pack version of this system could only be tested by hand and was expected to eat
- *       someone's inventory; here it does not have to be.</li>
- *   <li><b>§4.4 core offline accrual</b> — advance the world clock, unload and reload the chunk,
- *       assert yield matches the elapsed-time formula and does not double-count.</li>
- *   <li><b>§4.4 per-player core caps</b> — assert the cap actually blocks placement.</li>
- *   <li><b>§7.5 villager trade persistence</b> — level up, restock, reload, assert the taught offer
+ *       The Vault is world state shared by every player, so concurrent access is a first-class
+ *       case here, not an edge case.</li>
+ *   <li><b>§4.2 core offline accrual</b> — advance the world clock, unload and reload the chunk,
+ *       assert yield matches the elapsed-time formula, does not double-count, and respects the
+ *       configured catch-up ceiling.</li>
+ *   <li><b>§4.3 one active core per target</b> — assert a duplicate core is refused at the point of
+ *       socketing, and that the refusal survives a world reload.</li>
+ *   <li><b>§7.2 villager trade persistence</b> — level up, restock, reload, assert the taught offer
  *       survives all three.</li>
- *   <li><b>§5 lives floor</b> — die repeatedly, assert health never drops below the configured floor.</li>
+ *   <li><b>§6 lives floor</b> — die repeatedly, assert health never drops below the configured floor.</li>
  * </ul>
  *
  * <p>Pure logic with no world dependency belongs in {@code src/test} as plain JUnit instead — it
@@ -84,32 +83,6 @@ public class HeartsteadGameTests {
     public void heartShardNeverDropsFromPassiveMob(GameTestHelper helper) {
         double rate = heartShardRateInEntityTable(helper.getLevel(), EntityTypes.COW, 1000);
         helper.succeedIf(() -> assertInRange("cow shard rate", rate, 0.0, 0.0));
-    }
-
-    /** DESIGN.md §7.3.1 — the capstone bounty crate always grants exactly one Vault Sigil. */
-    @GameTest
-    public void bountyCapstoneGrantsOneVaultSigil(GameTestHelper helper) {
-        ResourceKey<LootTable> key = ResourceKey.create(Registries.LOOT_TABLE, Heartstead.id("bounty/capstone"));
-        LootTable table = helper.getLevel().getServer().reloadableRegistries().getLootTable(key);
-        ItemEntity dummy = new ItemEntity(helper.getLevel(), 0, 0, 0, new ItemStack(Items.STICK));
-        LootParams params = new LootParams.Builder(helper.getLevel())
-                .withParameter(LootContextParams.ORIGIN, Vec3.ZERO)
-                .withParameter(LootContextParams.THIS_ENTITY, dummy)
-                .create(LootContextParamSets.ADVANCEMENT_REWARD);
-
-        int sigils = 0;
-        for (ItemStack stack : table.getRandomItems(params)) {
-            if (stack.is(HsItems.VAULT_SIGIL)) {
-                sigils += stack.getCount();
-            }
-        }
-
-        int finalSigils = sigils;
-        helper.succeedIf(() -> {
-            if (finalSigils != 1) {
-                throw new AssertionError("bounty/capstone should grant exactly 1 Vault Sigil, got " + finalSigils);
-            }
-        });
     }
 
     private static double heartShardRateInChestTable(ServerLevel level, net.minecraft.resources.ResourceKey<LootTable> key, int draws) {

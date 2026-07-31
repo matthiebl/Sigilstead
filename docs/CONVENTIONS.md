@@ -2,9 +2,6 @@
 
 Decisions that keep code consistent across sessions. If you break one of these, change it here first.
 
-> **Rewritten 2026-07-31** when the project moved from a data pack to a Fabric mod. The data-pack-era
-> `custom_data` marker conventions and base-item workarounds are gone — see §2.
-
 ---
 
 ## 1. Identity
@@ -30,12 +27,10 @@ namespace fails at runtime, not compile time.
 Items and blocks are **real registered objects with their own ids**. This is the whole reason the
 project is a mod.
 
-Consequences, all of which reverse a data-pack-era workaround:
+Consequences:
 
 - **Recipes gate correctly.** An ingredient of `heartstead:heart_shard` matches *only* a Heart Shard.
-  The old "recipes match by item id so a currency item can be faked" problem is gone, along with the
-  "pick an obscure base item nobody has" mitigation. There is no base-item table any more; do not
-  reintroduce one.
+  There is no base-item table; do not reintroduce one.
 - **Blocks are blocks.** Vault Anchor, Soul Cage, Quarry Node and the rest are real blocks with their
   own block states, textures, and block entities. No marker entities shadowing a vanilla barrel, and
   no desync when a piston or explosion moves the block out from under a marker.
@@ -59,9 +54,12 @@ Use **custom data components** (`DataComponentType`), registered in `HsComponent
 component, not a loose `CompoundTag`. Components are typed, codec-backed and validated on load; raw
 NBT is none of those things.
 
-Per-*player* state (hearts, Vault contents, Codex archive) uses **attachments**
-(`AttachmentRegistry`), not scoreboards and not a global map — attachments serialise with the player
-and survive dimension change and respawn.
+Per-*player* state (hearts, Codex archive) uses **attachments** (`AttachmentRegistry`), not
+scoreboards and not a global map — attachments serialise with the player and survive dimension
+change and respawn.
+
+Not everything is per-player. The Vault (DESIGN.md §2) and the active-core registry (§4.3) are
+**world** state and belong in `SavedData` — see §4.
 
 ---
 
@@ -84,7 +82,7 @@ item/         item classes
 block/        block classes
 blockentity/  block entities
 vault/ core/ codex/ lives/ economy/ enchantment/    one package per design-wiki system
-config/       the tuning dials (§6)
+config/       the tuning dials (§5)
 util/         shared helpers, owned by no system
 gametest/     in-world automated tests
 ```
@@ -93,12 +91,15 @@ gametest/     in-world automated tests
 
 ## 4. Persistence
 
-| State | Mechanism |
-|---|---|
-| Per-stack | Data components (§2.2) |
-| Per-player | Attachments on the player |
-| Per-block | Block entity NBT |
-| World-level (core registry, waystones) | `SavedData` |
+| State | Mechanism | Examples |
+|---|---|---|
+| Per-stack | Data components (§2.2) | Core attunement family / target / progress (DESIGN.md §4.1) |
+| Per-player | Attachments on the player | Heart count (§6), Codex archive (§3.3) |
+| Per-block | Block entity NBT | Housing tier, last-settled timestamp (§4.2) |
+| World-level | `SavedData` | Vault contents and capacity (§2), active-core registry (§4.3) |
+
+**Whether something is per-player or world-level is a design decision, not a technical one** — it's
+recorded in DESIGN.md and this table follows it. The Vault is shared; the Codex archive is not.
 
 Everything persisted goes through a **Codec**. No hand-rolled `read`/`write` NBT pairs — codecs give
 you validation and a versioning story, and this project has a lot of state that must survive a crash.
@@ -111,11 +112,14 @@ what an unversioned blob meant is not.
 ## 5. Config
 
 Config is a real config file (JSON, codec-backed) loaded on server start, **not** scoreboards.
-Every tuning dial in design wiki §11 must be a config field, not a literal.
+Every tuning dial in design wiki §10 must be a config field, not a literal.
 
 ```
-core_rate_multiplier   default 1.0    // DESIGN.md §11 — expect to lower after playtesting
-heart_floor            default 5      // DESIGN.md §5
+core_rate_multiplier      default 1.0    // DESIGN.md §10 — expect to lower after playtesting
+core_accrual_cap_hours    default 24     // DESIGN.md §4.2 — ceiling on a settled offline delta
+heart_floor               default 5      // DESIGN.md §6
+attune_threshold_soul     default 16     // DESIGN.md §4.1 — one per core family
+bundle_slots              default 9      // DESIGN.md §2.2 — largest unvalidated T1 buff
 ```
 
 Server-authoritative. Clients receive what they need to render, never to decide.
@@ -127,8 +131,6 @@ Server-authoritative. Clients receive what they need to render, never to decide.
 **Being a mod does not mean writing everything in Java.** Recipes, loot tables, advancements, tags
 and enchantments are still JSON, shipped in `src/main/resources/data/heartstead/`. Vanilla loot table
 overrides go in `data/minecraft/`.
-
-This is why the Phase 0 economy work carries over from the data pack era essentially unchanged.
 
 Prefer a **data generator** (Fabric's `DataGeneratorEntrypoint`) over hand-written JSON for anything
 structurally repetitive — loot tables, recipes, models, tags. The generator is the artifact; the JSON
@@ -147,20 +149,19 @@ is build output. Generated JSON is never hand-edited.
 
 ## 8. Verification
 
-**This is the part that changed most.** The mod can verify its own work:
+The mod can verify its own work:
 
 | Layer | Command | Use for |
 |---|---|---|
-| Compile | `./gradlew build` | Catches the majority of mistakes the data pack couldn't catch at all |
+| Compile | `./gradlew build` | Catches most mistakes before they reach a test |
 | Unit | `./gradlew test` | Pure logic — accrual maths, capacity, cost curves |
 | In-world | `./gradlew runGametest` | Item conservation, persistence, offline accrual, trade survival |
 | By hand | `./gradlew runClient` | Feel, UI, balance — the things tests can't judge |
 
 **Write the GameTest before the system it covers** for anything that moves items. The Vault is
-expected to have item-loss bugs (design wiki §2.5); the difference now is that they can be caught by
-a test instead of by a player.
+expected to have item-loss bugs (design wiki §2.5); catch them with a test instead of a player.
 
-Claude Code **can** run all three of the first rows. "It compiles and the tests pass" is now a real
+Claude Code **can** run all three of the first rows. "It compiles and the tests pass" is a real
 claim — but it is still not the same as "it feels right", which only playing can tell you.
 
 ---

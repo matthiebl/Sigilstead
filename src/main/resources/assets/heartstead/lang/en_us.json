@@ -2,29 +2,5 @@
   "itemGroup.heartstead.main": "Heartstead",
   "item.heartstead.heart_shard": "Heart Shard",
   "item.heartstead.vital_heart": "Vital Heart",
-  "item.heartstead.vault_sigil": "Vault Sigil",
-
-  "advancements.heartstead.bounty.root.title": "Bounties",
-  "advancements.heartstead.bounty.root.description": "Explore, fight, build — it all pays",
-
-  "advancements.heartstead.bounty.explore_t1.title": "Ruin Diver",
-  "advancements.heartstead.bounty.explore_t1.description": "Find a mineshaft, temple, hut, igloo or shipwreck",
-  "advancements.heartstead.bounty.explore_t2.title": "Deep Explorer",
-  "advancements.heartstead.bounty.explore_t2.description": "Reach an ancient city, trial chambers, monument, fortress, bastion or stronghold",
-  "advancements.heartstead.bounty.explore_capstone.title": "World's Edge",
-  "advancements.heartstead.bounty.explore_capstone.description": "Set foot in both an End City and an Ancient City",
-
-  "advancements.heartstead.bounty.fight_t1.title": "First Blood",
-  "advancements.heartstead.bounty.fight_t1.description": "Kill a zombie, skeleton, spider or creeper",
-  "advancements.heartstead.bounty.fight_t2.title": "Monster Hunter",
-  "advancements.heartstead.bounty.fight_t2.description": "Kill a blaze, wither skeleton, evoker, elder guardian, ravager or piglin brute",
-  "advancements.heartstead.bounty.fight_capstone.title": "Apex Predator",
-  "advancements.heartstead.bounty.fight_capstone.description": "Slay the Warden and the Ender Dragon",
-
-  "advancements.heartstead.bounty.build_t1.title": "Homestead",
-  "advancements.heartstead.bounty.build_t1.description": "Place a bed, a chest or barrel, and a light source",
-  "advancements.heartstead.bounty.build_t2.title": "Serious Build",
-  "advancements.heartstead.bounty.build_t2.description": "Light a beacon, place a conduit, and place an anvil",
-  "advancements.heartstead.bounty.build_capstone.title": "Monument to Excess",
-  "advancements.heartstead.bounty.build_capstone.description": "Light a full-power beacon and place a block of netherite"
+  "item.heartstead.vault_sigil": "Vault Sigil"
 }

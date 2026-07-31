@@ -1,9 +1,9 @@
 # Heartstead — Design Wiki
 
-> **Status:** reconstructed spec, v0.2 · **Target:** Minecraft Java 26.2 · **Fabric mod**, Java 25 · see §9
+> **Status:** reconstructed spec, v0.3 · **Target:** Minecraft Java 26.2 · **Fabric mod**, Java 25 · see §8
 >
 > This document is the **ground truth** for the pack. Implementation work should reference sections
-> by number (e.g. "implement §6.2 Golem Core") rather than re-describing features. If reality and
+> by number (e.g. "implement §5 Golem Core") rather than re-describing features. If reality and
 > this document disagree, fix this document in the same change.
 
 ---
@@ -18,32 +18,13 @@ The pack exists to delete *technical Minecraft as a prerequisite* without deleti
    farms and extra lives all draw on the same exploration reward, so exploring is never wasted.
 3. **Convenience is earned, not free.** Early game is already easier than vanilla; the *scale* of
    convenience unlocks through structures you have to travel to.
-4. **Never punish a struggling player twice.** Floors, not spirals. See §5.
+4. **Never punish a struggling player twice.** Floors, not spirals. See §6.
 5. **Leave technical play intact.** Cores match a *small hand-built farm*, not a mega-farm. Players
    who enjoy building the real thing still get more out of it — they just aren't forced into it.
+6. **Not an overhaul mod.** This doesn't redefine how you play Minecraft, it reshapes the tedium
+   and rewards the above pillars.
 
-### 0.1 The hard wall — **LIFTED** (2026-07-31)
-
-This section used to describe the data pack UI ceiling: `/dialog` menus have no draggable item slots,
-no way to force-open a container GUI, and no way to detect an inventory click — so the Vault and the
-Artisan's Table had to be searchable lists with buttons rather than grids.
-
-**The project is now a Fabric mod (§8), and none of that applies.** Real `ScreenHandler` screens with
-real slots, drag-and-drop, scroll, and live search are all available.
-
-Several decisions in this document were **concessions to that ceiling** and are now reversible. Each
-is flagged inline, but the three that matter:
-
-| Was constrained to | Can now be |
-|---|---|
-| §2.4 Vault as a scrollable text list with withdraw 1/16/64 buttons | A real slot grid with search and drag-out |
-| §7.1 Artisan's Table as a searchable recipe list, "no datapack can give you a grid" | A real 3×3 grid backed by inventory **and** Vault |
-| §7.1 a shipped, pre-generated ~280-recipe index, because functions can't read the recipe registry at runtime | Read the live recipe manager directly — **the index and its generator are unnecessary** |
-
-That last one deletes a whole build-time dependency and the "curate 280 recipes" problem with it.
-
-**The real constraint now is scope, not capability.** Don't rebuild these as maximal UIs just because
-you can; the pack's pitch is casual convenience, not an ME terminal.
+Pillars are cited by number throughout — "pillar 5" means the fifth entry above.
 
 ---
 
@@ -55,7 +36,7 @@ The most important decision in the pack. One item family feeds every system.
 |---|---|---|
 | **Heart Shard** | Dungeon / mineshaft / temple / shipwreck chests (30%, 1–2), trial vaults, fishing treasure, 0.5% from any hostile mob, 10% from Evoker / Elder Guardian | The base currency |
 | **Vital Heart** | 4 Shards + Golden Apple | The universal core |
-| **Vault Sigil** | Ancient City, End City, Bastion, ominous vaults, or a capstone bounty advancement (§7.3) — never craftable | Storage capacity only |
+| **Vault Sigil** | Ancient City, End City, Bastion, ominous vaults — never craftable | Storage capacity, and one gate item (§2.2) |
 
 ```
  S        S = Heart Shard
@@ -64,31 +45,52 @@ SAS       A = Golden Apple
 ```
 
 **Target acquisition rate:** ~1 Vital Heart per 30–40 min of active exploring at T1, ~1 per 15 min
-at T2. Tune the shard drop tables to hit that — it is the single biggest dial in the pack (§14).
+at T2. Tune the shard drop tables to hit that — it is the single biggest dial in the pack (§10).
 
 ### 1.1 The central tension
 
 Vital Hearts feed **both** farm cores and extra lives. Spending three hearts on an iron core means
 three fewer hearts of health buffer. That choice is the best mechanic in this design.
 
-**Guardrail:** a death must never cost you your first core. Blank Core (§4) is deliberately *cheaper*
-than Life Heart (§5) — 4 iron + 8 gold vs 17 gold — so a new player builds their first farm core
+**Guardrail:** a death must never cost you your first core. Both children of the Vital Heart cost one
+heart plus a cheap surcharge, and Blank Core (§4) is deliberately the *cheaper* surcharge —
+4 iron + 4 redstone against Life Heart's (§6) 4 gold — so a new player builds their first farm core
 before their first extra heart. The pack helps you before it charges you.
 
+> The Vault Sigil carries the same tension in miniature: one spent on your own **Vault Pouch** (§2.2)
+> is one not spent on the world's **capacity** (§2.3). On a server that is personal reach against
+> shared storage — deliberately the sharpest version of the choice in the pack.
+
 ### 1.2 Tier definitions (used throughout)
+
+These define the rough stage of the game, and are not unlockables or steps.
 
 | Tier | Gate | Player state |
 |---|---|---|
 | **T1** | Pre-Nether → early Nether | Iron, copper, first villager, first dungeon |
-| **T2** | Nether established | Diamonds, fortress/bastion, trial chambers, monument, first raid |
-| **T3** | End access | Ancient city, End city, netherite, elytra |
+| **T2** | Nether established | Diamonds, fortress/bastion, trial chambers, monument, first raid, **ancient city** |
+| **T3** | End access | End city, netherite, elytra |
+
+**Ancient city sits at T2, not T3** — the deep dark needs no End access, and two T2 items (the Linked
+Funnel and the Codex T2 upgrade) depend on Echo Shards. Getting there is still the hardest thing a T2
+player does; that's the point.
 
 ---
 
 ## 2. Storage — The Vault
 
-A player-bound virtual inventory, persisted via a codec-backed attachment (CONVENTIONS.md §4).
+A **world-level** virtual inventory, persisted via codec-backed `SavedData` (CONVENTIONS.md §4).
 Storage is not backed by real containers, so there is no dupe risk from container NBT juggling.
+
+**One Vault per world, shared by everyone on it.** Anyone can deposit, anyone can withdraw, and a
+Sigil spent by one player raises capacity for all. This matches §4.3 — cores are world state too —
+so the whole "what does this look like on a server" question has one answer: the base is shared, the
+*access* is personal. What each player owns is their Satchel or Pouch (§2.2) and how far they can
+reach with it.
+
+The trade-off is real and accepted: on a public server, a shared Vault is grief-able in the same way
+a shared chest room is. That is a server-administration problem, not a design one, and the alternative
+— a private Vault per player — makes the flagship system invisible to the people you play with.
 
 ### 2.1 Input side (blocks)
 
@@ -100,39 +102,54 @@ CBC       C = Copper Ingot       │  Barrel + 2 Pearl + 2 Copper
 
 | Block | Tier | Recipe | Role |
 |---|---|---|---|
+| **Vault Anchor** | T1 | Linked Barrel + Amethyst Shard | Creates the Vault; where Sigils are consumed. **One per world** — a second one cannot be placed |
 | **Linked Barrel** | T1 | Barrel + 2 Ender Pearl + 2 Copper Ingot | Vacuums its contents into your Vault |
-| **Vault Anchor** | T1 | Linked Barrel + Amethyst Shard | Creates your Vault; where Sigils are consumed. One per player |
 | **Linked Chest** | T2 | Chest + Amethyst Block + 2 Copper Block | Higher throughput; accepts from Cages / Quarry Nodes |
-| **Linked Funnel** | T2 | Hopper + Amethyst Shard + Echo Shard | Pipes mining or farm output straight in |
+| **Linked Funnel** | T2 | Hopper + Amethyst Shard + Echo Shard | Pipes mining or farm output straight into the Vault, or can be set to output a specific item from the Vault. All at hopper speed |
 
 ### 2.2 Access side (items)
 
-| Tier | Item | Recipe | Capability |
-|---|---|---|---|
-| T1 | **Satchel** | Bundle + Ender Pearl + 2 Leather | Withdraw only; must be within 16 blocks of a Linked block |
-| T2 | **Vault Pouch** | Shulker Box + Ender Eye + Echo Shard | Withdraw + deposit, same dimension, search field |
-| T3 | **Void Satchel** | Vault Pouch + Netherite Ingot + Nether Star | Any dimension, sort, auto-restock hotbar/armour |
+| Tier | Item | Recipe | Capability | Range |
+|---|---|---|---|---|
+| T1 | **Bundle** | Unchanged | Replaces bundle behaviour with a UI-based inventory that holds 9 slots | — |
+| T1 | **Satchel** | Bundle + Ender Pearl + 2 Leather | Withdraw only | 5×5 chunks centred on the Vault Anchor |
+| T2 | **Vault Pouch** | Satchel + Vault Sigil + Ender Eye | Withdraw + deposit, search field | Same dimension |
+| T3 | **Void Satchel** | Vault Pouch + Netherite Ingot + Nether Star | Sort, auto-restock hotbar/armour | Anywhere |
+
+**Range and remote deposit are properties of the access item, not the Vault.** Capacity (§2.3) is a
+property of the Vault, and therefore of the world. Keeping those two axes separate is what lets
+Sigils be a clean single dial — and it is what makes a shared Vault work, because the thing each
+player progresses individually is the reach of their own pouch.
+
+> **Balance flag — the Bundle override.** This is the one place the design overwrites a vanilla item's
+> behaviour, which brushes against pillar 6. Nine slots is ~9× vanilla bundle capacity, granted at T1
+> for a vanilla-cost item, and the Bundle is also the Satchel's crafting base. Slot count is a config
+> field; expect to lower it before it competes with the Vault itself. See OPEN-QUESTIONS.md.
 
 ### 2.3 Capacity — the real balancing lever
 
-| | Distinct types | Depth per type | Range | Remote deposit |
-|---|---|---|---|---|
-| T1 | 27 | 10 stacks | 16 blocks | ✗ |
-| T2 | 108 | 64 stacks | Same dimension | ✓ |
-| T3 | 512 | 2048 stacks | Anywhere | ✓ |
+Capacity advances by consuming **Vault Sigils** at the Anchor, in three tiers with explicit costs. It
+is a property of the world, so Sigils pool: on a server, four players each bringing back two Sigils
+gets everyone to T2.
 
-Tiers advance by consuming **Vault Sigils** at the Anchor — **1 Sigil per +27 distinct types**.
+| Vault tier | Sigils (cumulative) | Distinct types | Depth per type |
+|---|---|---|---|
+| **T1** — Anchor only | 0 | 27 | 10 stacks |
+| **T2** | 3 | 108 | 64 stacks |
+| **T3** | 8 | 512 | 2048 stacks (effectively unbounded) |
+
+Past T3, each further Sigil buys **+27 distinct types** and nothing else.
+
 Sigils only come from late structures, so storage convenience scales exactly with how much you've
-explored. Early game is already easier than vanilla (no chest sorting) but you cannot yet dump 40
-distinct block types into a bottomless void.
+explored. Ominous vaults are repeatable, so the supply is not hard-capped and 8 is reachable without
+grinding — but each one is a trip. Early game is already easier than vanilla (no chest sorting) but
+you cannot yet dump 40 distinct block types into a bottomless void.
 
 ### 2.4 UI shape
 
-A real `ScreenHandler` screen (§0.1): a scrollable slot grid showing stored stacks with counts, a
-live search field, click-to-withdraw and shift-click-to-deposit, and sort. Pinned favourites and a
-recents page are still worth having — they were good ideas independent of the old constraint.
-
-Cap distinct types per network for performance regardless of tier.
+A real `ScreenHandler` screen: a scrollable slot grid showing stored stacks with counts, a live
+search field, click-to-withdraw and shift-click-to-deposit, and sort. Pinned favourites and a
+recents page are still worth having.
 
 Scope discipline: this is a *convenience* store, not a logistics network. No autocrafting from the
 Vault screen, no wireless multi-network routing.
@@ -146,9 +163,11 @@ voids them, and players will not forgive either.
 assert exact conservation, across a full inventory on withdraw, a capacity boundary, a mid-transfer
 server shutdown, and concurrent access. All state goes through a versioned Codec (CONVENTIONS.md §4).
 
-This risk used to be unavoidable and untestable — the data pack version could only be checked by
-hand. It is now the single most testable part of the project, so there is no excuse for shipping it
-untested.
+**Concurrent access is now a first-class case, not an edge case** — a shared Vault means two players
+can withdraw the same stack in the same tick. All mutation is server-side and serialised through the
+`SavedData`; the screen handler sends intents, never results.
+
+This is the single most testable part of the project, so there is no excuse for shipping it untested.
 
 ---
 
@@ -160,11 +179,11 @@ Multiplies **non-ore bulk drops only**: stone, deepslate, sand, gravel, clay, ne
 terracotta, logs. +1 drop per level at 60% chance each → ×1.6 / ×2.2 / ×2.8 average.
 
 - Deliberately **excludes ores** — that's Fortune's job, and stacking both is how the economy breaks.
-- Treasure-only, from mineshaft and trial chamber loot (T2). Not table-obtainable until archived (§3.4).
+- Treasure-only, from mineshaft and trial chamber loot (T2). Not table-obtainable until archived (§3.3).
 - Implementation: `enchantment_level` conditions on block loot tables checking the tool. No new
   effect component needed.
 
-### 3.2 Kiln Touch I *(treasure)*
+### 3.2 Kiln Touch *(treasure)*
 
 Autosmelt: raw ore → ingot, sand → glass, cobble → stone, clay → brick, log → charcoal. Grants the
 furnace's smelting XP on break.
@@ -175,16 +194,7 @@ furnace's smelting XP on break.
 - Exclusive set with Silk Touch.
 - Source: Nether fortress and bastion loot (T2). Thematically right and geographically gated.
 
-### 3.3 Excavation *(treasure)* — **UNDERSPECIFIED, see [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md)**
-
-Chain-break / vein-mine. Flagged in the source conversation as one of the **two riskiest mechanics in
-the pack** (alongside §7.5 villager persistence) and explicitly scheduled to be built and tested
-**first, in isolation**, before anything depends on it.
-
-Needs a concrete spec before implementation: block budget per level, tool-durability cost model,
-what block sets it applies to, and recursion/entity-count safety limits.
-
-### 3.4 The Codex — the knowledge system
+### 3.3 The Codex — the knowledge system
 
 ```
 BBB       B = Bookshelf
@@ -194,10 +204,22 @@ BLB       L = Lectern
 
 | Step | Interaction | Effect |
 |---|---|---|
-| **Archive** | Right-click Codex holding an enchanted book or enchanted item | Dialog: *"Archive Efficiency IV? The item will be consumed."* Enchantment + level recorded permanently |
-| **Capacity** | — | T1: 3 enchantments · T2 (+Echo Shard): 9 · T3 (+Nether Star): unlimited |
-| **Seal** | Right-click Codex empty-handed | List of archived enchantments → **Seal Tome** for one chosen enchantment. Costs 1 Book + 1 Ink Sac + 3 XP levels |
-| **Teach** | Right-click a librarian holding the Sealed Tome | Confirm dialog → that librarian **permanently** sells that one book. One enchantment per librarian, forever. Consumes the Tome + a **Binding Contract** (Paper + Ink Sac + Emerald) |
+| **Archive** | Place an enchanted book or enchanted item in the archive UI slot | Enchantment + level recorded permanently. The item is consumed |
+| **Capacity** | — | T1: 8 enchantments · T2 (+Echo Shard): 16 · T3 (+Nether Star): unlimited |
+| **Tome** | Place an empty Tome in the empower slot | List of archived enchantments → **Sealed Tome** for one chosen enchantment. Tome recipe: Book + Lapis + Iron Ingot |
+| **Teach** | Enter the Sealed Tome in a librarian trade | Consumes the Tome + 1 emerald. That librarian now permanently sells that book |
+
+Two costs, don't confuse them: **teaching** costs a Sealed Tome plus one emerald, once per librarian.
+**Buying** the taught book afterwards costs the fixed price below, every time.
+
+**The archive belongs to the player, not to the block** — a codec-backed player attachment
+(CONVENTIONS.md §4). Any Codex you walk up to shows *your* archive and *your* capacity, so the block
+is a workbench rather than a container, and there is nothing to lose if someone breaks it. This is
+the one system that stays personal while the Vault (§2) and the core registry (§4.3) are world state,
+and deliberately so: what you have found and archived is a record of your own play, and two players
+on a server should each have to earn their own Mending.
+
+The Echo Shard and Nether Star capacity upgrades are therefore consumed **per player**, at any Codex.
 
 **Fixed prices by enchantment value, no rerolling:** Mending 32 emeralds, Efficiency V 28,
 Feather Falling IV 10, Silk Touch 24. Discounts and Hero of the Village still apply.
@@ -206,7 +228,7 @@ Feather Falling IV 10, Silk Touch 24. Discounts and Hero of the Village still ap
 permanently purchasable. One lucky exploration payoff converts into lasting access — which is exactly
 the vanilla trade-hall reroll grind deleted and replaced with exploring.
 
-Implementation traps live in §7.5.
+Implementation traps live in §7.2.
 
 ---
 
@@ -215,21 +237,62 @@ Implementation traps live in §7.5.
 Craft a **Blank Core**, attune it by *playing*, then socket it into housing.
 
 ```
-IRI       I = Iron Bars
+IRI       I = Iron Ingot
 RHR       R = Redstone
 IRI       H = Vital Heart      → Blank Core
 ```
 
 ### 4.1 Attunement — rewards the activity it replaces
 
-| Core | Attunement |
-|---|---|
-| **Soul Core** | Hold Blank Core in offhand, kill 16 of one mob type → rewards fighting |
-| **Verdant Core** | Blank Core + 4 Bone Meal + 4 Moss Block, then feed it one of the crop |
-| **Pastoral Core** | Blank Core + 4 Hay Bale + 4 Leather, then right-click the animal |
-| **Lithic Core** | Blank Core + 4 Stone + 4 Flint, then feed it one block sample (cobble / stone / deepslate / sand / gravel) |
+Two steps, the same shape for every core.
+
+**Step 1 — Prime (crafting).** A shaped recipe combines the Blank Core with family reagents and
+yields a **Primed Core**. The *family* is now fixed; the *target* is not. The stack carries a
+`heartstead:attunement` component — `{ family, target: null, progress: 0 }`.
+
+**Step 2 — Imprint (playing).** Hold the Primed Core and do the thing the core will replace. The
+first qualifying event writes the target; every later one of the same target increments progress. At
+the threshold the stack converts into the finished Core, named for what it learned —
+*Verdant Core (Wheat)*.
+
+| Family | Prime recipe | Imprint action | Threshold |
+|---|---|---|---|
+| **Soul Core** | Blank Core + 4 Rotten Flesh + 4 Bone | Kill a hostile mob | 16 kills of the first type killed |
+| **Verdant Core** | Blank Core + 4 Bone Meal + 4 Moss Block | Harvest a mature crop | 32 of the first crop harvested |
+| **Pastoral Core** | Blank Core + 4 Hay Bale + 4 Leather | Breed two animals | 8 breeds of the first species bred |
+| **Lithic Core** | Blank Core + 4 Stone + 4 Flint | Mine a stone or earth block | 64 of the first block type mined |
+
+The numbers are one session of the activity, not a grind: 16 kills is a few minutes in a dark room,
+32 crops is one small field, 8 breeds is the pen you were going to build anyway, 64 blocks is a
+stack of mining. All four are config fields (§10, CONVENTIONS.md §5).
+
+**How it behaves in the hand:**
+
+- **A target only locks from the hand.** An un-attuned Primed Core has to be in your **main hand or
+  offhand** to take a target — sitting in the inventory it is inert. Deliberate: you should never
+  discover that a core in your backpack quietly became a chicken core. If un-attuned cores of the
+  same family are in both hands, the main hand takes the lock.
+- **The lock happens on the first qualifying event, not at craft time.** Kill a zombie holding a
+  Primed Soul Core and it is a zombie core from that moment. The tooltip updates on that first
+  event — `Attuning: Zombie 1/16` — so the lock is never a surprise you discover at 16/16.
+- **Once a core has a target, everything you carry progresses at once.** Attuned Primed Cores count
+  from anywhere in the inventory, and any number of them advance in parallel — carry a zombie Soul
+  Core, a wheat Verdant Core and a deepslate Lithic Core and one afternoon of ordinary play feeds all
+  three. Nothing is queued and nothing waits its turn.
+- **Progress lives on the stack.** Drop it, chest it, die with it — the counter is a data component,
+  so it survives everything a stack survives. There is no player-side counter to desync.
+- **Wrong-target events are inert.** Mining dirt with a stone-locked Lithic Core does nothing at all.
+  No penalty, no reset — pillar 4.
+- **The tooltip is the entire UI.** No screen, no block, no ritual. That is the point: attunement is
+  something you finish without noticing you were doing it.
+- **Priming is reversible until the target locks.** A Primed Core at any progress reverts to a Blank
+  Core in the crafting grid; the reagents are not refunded. Once a target is locked it is locked, and
+  that irreversibility is what gives the choice weight.
 
 ### 4.2 Housing
+
+Socket the finished Core into its matching housing block. Cores can be pulled back out and
+re-socketed elsewhere; they never degrade.
 
 | Block | Recipe | Base rate |
 |---|---|---|
@@ -238,50 +301,141 @@ IRI       H = Vital Heart      → Blank Core
 | **Paddock** | 4 Oak Fence + 4 Hay + Pastoral Core | 1 yield / 45s |
 | **Quarry Node** | 8 Deepslate Bricks + Lithic Core | 8 blocks / 20s |
 
-Output goes to any adjacent container — **or straight into your Vault if a Linked block is adjacent.**
+Housings are deliberately cheap — the Core is the cost, and it already ate a Vital Heart.
+
+**The housing supplies the family; the core supplies the rate and the loot table.** The rates above
+are what a §4.1 core yields; a §5 core overrides them with its own (§5). That is why eleven classic
+farm replacements need no new blocks.
+
+Output goes to small internal storage — **or straight into your Vault if a Linked Funnel is below.**
 That is the integration payoff, and the moment the two flagship systems click together.
 
-### 4.3 Rate tiering (upgrade in place)
+**Cores accrue while unloaded, and must never require a chunkloader.** A housing block stores the
+world-time stamp of its last settled yield. On chunk load — and on any interaction — it settles the
+whole elapsed delta in one calculation rather than ticking. Nothing about a core rewards keeping a
+chunk alive, and walking away costs you nothing.
+
+The two bugs this design invites, and both are GameTestable (CONVENTIONS.md §8):
+
+- **Double-counting** — settling on chunk load *and* ticking while loaded. Settle from the timestamp
+  and update the timestamp in the same operation; never accrue from two clocks.
+- **Unbounded catch-up** — a chunk untouched for forty in-game days dumps its whole backlog at once.
+  Cap the settled delta at a configurable ceiling (default: 24 in-game hours of yield) so internal
+  storage limits are meaningful and the first chunk load after a long absence isn't a jackpot.
+
+### 4.3 Rate tiering
+
+Upgrade via upgrade slots within the housing, which consume the resource.
 
 | Tier | Cost | Effect |
 |---|---|---|
 | I | base | Roughly a small hand-built farm |
-| II | Blaze Powder + Copper Block | 2.5× rate, +Looting II equivalent on Cages |
-| III | Echo Shard + Netherite Scrap | 6× rate, Looting III, Cages start yielding rare drops (heads, totems at low rate) |
+| II | 4 Blaze Powder | 2.5× rate, +Looting II equivalent on Cages |
+| III | 2 Netherite Scrap | 6× rate, Looting III, Cages start yielding rare drops (heads, totems at low rate) |
 
-### 4.4 Guardrails
+**Tiering is the only way to scale. Building more of the same core is not.**
 
-- **Active core cap per player:** 3 at T1, 6 at T2, 12 at T3. This is the anti-trivialisation valve
-  and it protects TPS.
-- **XP at 25% of normal** from Cages. Enchanting should still mean playing.
-- **No spawn eggs. No Wither / Dragon / Warden cores.** Blaze, Ghast and Guardian cores gated to T2
-  attunement (you have to go there anyway).
-- **Fertility bonus** — scan surroundings, grant up to **+50%**: a Planter ringed by real farmland and
-  water, a Cage inside an enclosed dark 5×5×3 room, a Quarry Node below y=0 in a hollowed chamber.
-  This is the single best way to make *construction* pay off, and it's cheap with block-count predicates.
-- **Offline accrual:** store a world-time stamp per core and settle on chunk load. **Never require
-  chunkloaders.**
+**One active core per target, per world.** A zombie Soul Core cannot be socketed while another zombie
+Soul Core is active anywhere in the world — the socket is **refused at the point of insertion**, with
+the reason shown to the player. Nothing is ever placed and then silently switched off, so there is no
+dormancy, no wake-up ordering, and no "which of my four does the game pick" question to answer.
+
+Breadth is free and encouraged: zombie *and* skeleton, wheat *and* carrot, cobble *and* deepslate are
+all fine. It is only the duplicate that is refused. Depth costs Blaze Powder and Netherite Scrap.
+
+This is the anti-trivialisation valve, and it does the job a per-player core cap would have done —
+better, because it points players at the interesting axis instead of a number. It also bounds tick
+cost: live housings are bounded by the number of distinct things anyone bothered to attune.
+
+The registry of active cores is **world-level `SavedData`** (CONVENTIONS.md §4), not player state:
+the constraint is on the world, so on a server twenty players share one set of cores. That is the
+same shape as the Nether portal or the world spawn — a place the server has, not a thing each player
+owns — and it removes any question about what happens when a player leaves.
 
 ---
 
-## 5. Lives and death
+## 5. Classic farm replacements
+
+Each entry replaces a specific vanilla technical build. Target rates are deliberately *small farm*,
+not *mega farm* (pillar 5).
+
+They use the same **prime → imprint** shape as §4.1 and the same **one active core per target, per
+world** rule as §4.3 — they share one registry with the §4 cores, so a Golem Core and a zombie Soul
+Core are two different targets and both may run.
+
+**No new housing blocks.** Every core here sockets into one of the four §4.2 housings. The housing
+supplies the family and the shape; the **core** supplies the rate and the loot table, overriding the
+§4.2 base rate. That keeps §5 pure data — eleven recipes and eleven loot tables, no new block
+entities, no new models.
+
+**Two imprint shapes**, chosen per core by whether anything already gates it:
+
+- **Milestone** where a structure, dimension or boss is the gate. Doing the thing once *is* the
+  attunement, because getting there was the cost.
+- **Counted** where the activity can be done anywhere from T1. These use the §4.1 rule — the first
+  qualifying event locks nothing (the target is implied by the core), it just counts.
+
+Prime recipes **consume a trophy from the thing they automate** wherever one exists — a Wither
+Skeleton Skull, a Shulker Shell, a Nautilus Shell. You pay one of the drop you are about to make
+passive, which is the fairest possible gate and needs no extra code.
+
+| Core | Replaces | Tier | Housing | Prime recipe (+ Blank Core) | Imprint | Base rate, tier I |
+|---|---|---|---|---|---|---|
+| **Golem** | Iron farm | T1 | Soul Cage | 4 Iron Block + Poppy | *Counted:* build 4 iron golems while carrying it | 1 ingot / 40s — **90/hr** |
+| **Ominous** | Raid farm | T2 | Soul Cage | 4 Emerald Block + Ominous Bottle | *Milestone:* complete a level-5 ominous raid | 1 roll / 90s, totem 4% — **1.6 totems/hr** |
+| **Barter** | Piglin barter farm | T2 | Soul Cage | 4 Gold Block + Crying Obsidian | *Milestone:* barter with a piglin | 1 barter / 30s — **120/hr** |
+| **Guardian** | Guardian farm | T2 | Soul Cage | 4 Prismarine Brick + Sponge | *Milestone:* kill an Elder Guardian | 1 roll / 25s — **144/hr** |
+| **Tidal** | Drowned / trident farm | T2 | Soul Cage | 4 Prismarine + Nautilus Shell | *Counted:* kill 16 drowned | 1 roll / 30s, trident 0.5% — **0.6 tridents/hr** |
+| **Wither Skull** | Skull farm | T2 | Soul Cage | 4 Nether Brick + Wither Skeleton Skull | *Milestone:* kill a wither skeleton in a fortress | 1 roll / 45s, skull 2% — **1.6 skulls/hr** |
+| **Ender** | Enderman XP farm | T3 | Soul Cage | 4 Obsidian + 4 Ender Pearl | *Milestone:* kill the Ender Dragon | 1 roll / 20s + XP — **180 pearls/hr** |
+| **Shulker** | Shulker shell farm | T3 | Soul Cage | 4 Purpur Block + Shulker Shell | *Milestone:* kill a shulker in an End city | **10 shells/hr** |
+| **Slime** | Slime farm | T1 | Soul Cage | 4 Slime Block + Moss Block | *Counted:* kill 16 slimes | 1 slimeball / 30s — **120/hr** |
+| **Apiary** | Honey farm | T1 | Paddock | 4 Honeycomb + 4 Flowers | *Counted:* breed 8 bees | 1 comb or bottle / 60s — **60/hr** |
+| **Geode** | Amethyst farm | T1 | Quarry Node | 4 Amethyst Block + Calcite | *Counted:* mine 32 amethyst clusters | 4 shards / 60s — **240/hr** |
+
+**How far below a real farm these sit**, which is the number that matters for pillar 5 — tier I
+against a competent technical build:
+
+| Core | Tier I | Tier III (6×) | Real technical farm |
+|---|---|---|---|
+| Golem | 90 ingots/hr | 540 | 600+ |
+| Ominous | 1.6 totems/hr | 9.6 | 30–60 |
+| Barter | 120/hr | 720 | ~1000 |
+| Guardian | 144/hr | 864 | 300+ |
+| Tidal | 0.6 tridents/hr | 3.6 | 20+ |
+| Wither Skull | 1.6 skulls/hr | 9.6 | 10–20 |
+| Ender | 180 pearls/hr | 1080 | 2000+ |
+| Shulker | 10 shells/hr | 60 | 100+ |
+| Slime | 120/hr | 720 | 1000+ |
+| Apiary | 60/hr | 360 | ~200 |
+| Geode | 240 shards/hr | 1440 | ~1000 |
+
+Tier I lands at roughly a tenth to a third of a real farm, and **fully upgraded lands near parity**
+— which is the intended shape. A player who has explored enough to buy tier III has earned a real
+farm's output; a player who builds the actual farm still gets there sooner and cheaper. Two entries
+overshoot at tier III (Apiary, Geode, both above their vanilla equivalent) because their real farms
+are cheap to build — lower those two first if tier III proves too strong.
+
+All rates are config fields and all are multiplied by `core_rate_multiplier` (§10).
+
+---
+
+## 6. Lives and death
 
 `keepInventory true`, XP kept. **The entire cost of dying moves to health.**
 
 ```
 Life Heart = Vital Heart + 4 Gold Ingot
-Blank Core = Vital Heart + 4 Iron Bars + 4 Redstone
+Blank Core = Vital Heart + 4 Iron Ingot + 4 Redstone
 ```
 
 Same parent, cheap divergent children — the choice is real, but a death never destroys a farm.
 
 - Consume a Life Heart → +1 heart via a `max_health` attribute modifier.
-- **Cap 15 hearts (30 HP).** Escalating cost: hearts 11–12 cost 1 Life Heart each, 13–14 cost 2,
-  heart 15 costs 3.
+- **Cap 20 hearts (40 HP).**
 - **On death: −1 heart. Floor at 5 hearts (10 HP), never below.**
 - Recovery: consume more Life Hearts. The loop is *go explore, find shards, come back stronger.*
-- At the floor, a **cosmetic "Frail" indicator only** — no stacked debuff (pillar §0.4).
-- Config toggles for a harder mode: floor at 3 hearts, or −2 hearts for deaths in the End.
+- Config toggles for a harder mode: floor at 3 hearts, or −2 hearts for deaths.
 
 Implementation: a `max_health` attribute modifier applied from a player attachment holding the
 current heart count, with the death hook on `ServerPlayerEvents.AFTER_RESPAWN` (or equivalent —
@@ -290,168 +444,64 @@ exactly what attachments are for and what a scoreboard would have got subtly wro
 
 ---
 
-## 6. Classic farm replacements
-
-Each entry replaces a specific vanilla technical build. Target rates are deliberately *small farm*,
-not *mega farm* (pillar §0.5).
-
-> **Detail level:** the source design doc had per-entry recipes and rates for all of these. Only the
-> two headline entries survived in full. The rest are named and scoped here and need their rates and
-> attunement conditions written before implementation — see [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md).
-
-| Core | Replaces | Attunement | Notes |
-|---|---|---|---|
-| **Golem Core** | Iron farm | Craft an iron golem | The single most-built technical farm in vanilla |
-| **Ominous Core** | Raid farm | Complete a level-5 ominous raid | **Capped at 1 per player.** ~1.6 totems/hr vs 30–60 for a real raid farm |
-| Barter Core | Gold / piglin barter farm | TBD | T2 |
-| Guardian Core | Guardian farm | TBD | T2, monument-gated |
-| Tidal Core | Drowned / trident farm | TBD | Trident rate must stay low |
-| Wither Skull Core | Wither skeleton skull farm | TBD | T2, fortress-gated |
-| Ender Core | Enderman XP farm | TBD | T3, End-gated |
-| Shulker Core | Shulker shell farm | TBD | T3. Interacts with §8 wandering-trader shells |
-| Slime Core | Slime farm | TBD | T1/T2 |
-| Apiary Core | Honey farm | TBD | T1 |
-| Geode Core | Amethyst farm | TBD | T1/T2 |
-
-The Ominous Core cap of 1 is load-bearing: totems are the pack's main "you can afford to die" item
-and lives are already the death currency (§5).
-
----
-
-## 7. Crafting, smelting and the workbench layer
+## 7. Other
 
 ### 7.1 Artisan's Table (T1 block) / Artisan's Kit (T2 portable)
 
-Craft from your inventory **and your Vault**, in one place.
+A real 3×3 crafting grid that draws from your inventory **and the Vault**, with the ordinary vanilla
+recipe book on the side. Recipes count as craftable when the ingredients are in the Vault, and
+clicking one pulls what's missing out of it.
 
-Both constraints that shaped this feature are **gone** (§0.1):
-
-1. It can be a **real 3×3 crafting grid** plus a searchable recipe list — the "no datapack can give
-   you a grid" limitation no longer applies.
-2. There is **no shipped recipe index and no generator.** A mod reads the live `RecipeManager` at
-   runtime, so the Artisan sees every recipe in the game including those added by other mods and data
-   packs — strictly better than the ~280 hand-curated entries, and it never goes stale.
-   `scripts/generate_recipe_index.py` was deleted with the data pack scaffold.
-
-What remains genuinely undesigned is the *filtering* — "every recipe in the game" is not a useful
-list. Craftable-now-first, favourites, and a search field are the minimum.
-
-### 7.2 The Foundry — smelting
-
-Core-powered and deliberately **fuel-free**. Bulk queue drawn from the Vault, gear recycling at 50%
-return, and a Dye Vat.
-
-Explicitly avoids building on vanilla furnace internals — fuel mechanics have moved around across
-recent versions and the fragility isn't worth it.
-
-### 7.3 Supporting quality-of-life changes
-
-| Change | Tier | Why |
+| Item | Tier | Recipe |
 |---|---|---|
-| Remove the anvil **"Too Expensive"** cap | T1 | Pure tedium, no skill expression |
-| **Waystones** — Lodestone + Echo Shard, teleport between discovered ones | T2 | Rewards exploring, deletes walking |
-| **Shulker shells from wandering traders** (2 for 12 emeralds) | T2 | Storage shouldn't be gated behind an End city grind |
-| **XP Bank** — Bottle o' Enchanting recipe from stored levels | T2 | Banks exploration into enchanting |
-| **Recall Stone** — one-use return to death location | T1 | Cheap safety net now that inventory is kept |
-| Structure chests seeded with 1–2 Heart Shards | all | Makes every ruin worth opening |
-| **Bounty advancements** paying shards / emeralds / XP / a Vault Sigil | all | Explicit reward for exploring, fighting, building |
+| **Artisan's Table** | T1 | Crafting Table + 4 Copper Ingot + Amethyst Shard |
+| **Artisan's Kit** | T2 | Artisan's Table + 2 Leather + Ender Pearl — the same menu, opened from the hand |
 
-#### 7.3.1 Bounty advancement triggers
+The recipe book is **vanilla's, reused as-is** — search, category tabs, craftable-only toggle and
+click-to-fill all come with it, live off the `RecipeManager`, including other mods' recipes. There is
+no filtering problem to solve here and no browser to design; matching vanilla behaviour beats
+inventing a second convention players have to learn. Implementation shapes are in
+[REFERENCES.md](REFERENCES.md).
 
-Three independent chains — explore, fight, build — each rooted under `heartstead:bounty/root`
-(earned by picking up your first Heart Shard). Each chain is T1 → T2 → capstone, linear parentage.
-
-| Chain | Tier | Trigger shape | Reward |
-|---|---|---|---|
-| Explore | T1 | `location` — enter any of mineshaft / desert pyramid / jungle pyramid / igloo / swamp hut / shipwreck (OR) | Crate T1 |
-| Explore | T2 | `location` — enter any of ancient city / trial chambers / monument / fortress / bastion / stronghold (OR) | Crate T2 |
-| Explore | Capstone | `location` — enter end city **and** ancient city (AND) | Crate + **1 Vault Sigil** |
-| Fight | T1 | `player_killed_entity` — kill any of zombie / skeleton / spider / creeper (OR) | Crate T1 |
-| Fight | T2 | `player_killed_entity` — kill any of blaze / wither skeleton / evoker / elder guardian / ravager / piglin brute (OR) | Crate T2 |
-| Fight | Capstone | `player_killed_entity` — kill warden **and** the ender dragon (AND) | Crate + **1 Vault Sigil** |
-| Build | T1 | `placed_block` — place a bed **and** a chest/barrel **and** a light source (AND) | Crate T1 |
-| Build | T2 | `construct_beacon` (level ≥ 1) **and** `placed_block` conduit **and** anvil (AND) | Crate T2 |
-| Build | Capstone | `construct_beacon` (level 4, full beacon) **and** `placed_block` netherite block (AND) | Crate + **1 Vault Sigil** |
-
-**Why this shape:** vanilla has no "player constructed a structure" trigger, only single-block
-`placed_block` events and the existing `construct_beacon` criterion. Build bounties therefore reward
-*milestone construction* (meaningful blocks placed, once each) rather than volume — matching how
-"explore" rewards reaching a place rather than counting steps, and avoiding the counter/attachment
-infrastructure that "place N blocks" or "kill N of a type" would need. That infrastructure doesn't
-exist yet (attachments are Phase 1, §10) — Phase 0 bounties are deliberately built from stock advancement
-triggers only.
-
-The capstone-tier Vault Sigil is naturally capped at one per player: advancement completion is
-itself the guard, the same pattern §6's Ominous Core cap relies on. No extra code needed.
-
-### 7.4 Loot and reward overhaul
-
-- Advancement-triggered bounties (explore, fight, build) paying emeralds / XP / resource crates
-- Wandering trader sells bulk goods rather than novelties
-
-**Decided against (2026-07-31):** broadening ordinary mob drops (gunpowder/string/blaze rods/ender
-pearls from any hostile kill) and seeding structure chests with farm-substitute items. Both were
-implemented and reverted — leave mob and chest loot tables alone. Bounties and the wandering trader
-are the reward surface for this pillar, not blanket loot-table edits.
-
-### 7.5 Villager trade persistence — **build and test this first**
+### 7.2 Villager trade persistence — **build and test this first**
 
 Villagers **regenerate `Offers` on level-up and on restock**, which wipes any injected trade.
 
 - Store the taught enchantment in an **attachment on the villager entity** and **re-apply the offer
-  whenever a reset is detected.** (The data pack plan used scoreboard `Tags` because it had nothing
-  better; an attachment is typed, codec-backed and holds the enchantment *and* level directly.)
+  whenever a reset is detected.** An attachment is typed, codec-backed, and holds the enchantment
+  *and* level directly.
 - 26.2 specifically fixed a bug where an empty `Offers` tag failed to persist through a relog or data
   merge. Trade manipulation is **version-sensitive** — pin the format range tightly and re-test the
   villager path on every release.
 
----
+### 7.3 Advancements — **deliberately deferred**
 
-## 8. Distribution — **Fabric mod** (decided 2026-07-31)
+The pack will have an advancement tree. It is **not designed yet, and that is on purpose.**
 
-**Decision: a single Fabric mod. Not a data pack, and not a datapack + optional-mod hybrid.**
+An earlier draft specified a "bounty" system: three advancement chains — explore, fight, build —
+paying reward crates of emeralds and Heart Shards, with a Vault Sigil at each capstone. **Cut
+2026-08-01.** The reasoning is worth keeping, because it is the test any future version has to pass:
 
-### 8.1 Why
+Bounties were a *second* reward channel bolted alongside the first. §1 already pays you for exploring,
+fighting and building — that is the entire point of the Heart Shard. Paying twice for the same
+activity doesn't reinforce the loop, it obscures how well the loop works, and it makes the pack's
+core economy impossible to tune honestly. Sigils dropping out of an advancement tree also quietly
+undercut §2.3, where storage capacity is supposed to be the thing you travel for.
 
-The data pack path was abandoned two items into Phase 0.1. Ranked by weight:
+So: **ship the economy first, play it, then decide.** If normal progression turns out to under-reward
+exploring, fighting or building, that is a §1 drop-rate problem before it is an advancement problem —
+and §10 ranks shard rates as the highest-impact dial for exactly this reason.
 
-1. **Blocks.** The design has 12+ custom blocks (Vault Anchor, Linked Chest/Barrel/Funnel, Soul Cage,
-   Verdant Planter, Paddock, Quarry Node, Codex, Artisan's Table, Foundry, Dye Vat). A data pack
-   cannot register a block; each would be a vanilla block shadowed by a marker entity that desyncs on
-   piston/explosion/chunk-edge, can't have its own texture without repainting *all* barrels, and
-   loses identity on break. There is no workaround, obscure-base-block or otherwise.
-2. **Three of five flagship systems are inventory UIs.** Vault, Artisan, Foundry. The old plan
-   already conceded these needed a mod — which meant building each *twice*, dialog and screen, with
-   the state layer stuck in `/data storage` regardless. The hybrid was more work than either pure path.
-3. **Item identity.** Data pack recipes match ingredients by item id, not `custom_data`, so any
-   currency item can be faked with a plain copy of its base item. The mitigation — pick a base item
-   with no other survival source — does not scale to ~25 custom items. It was already strained at two.
-4. **Verification.** This is the underrated one. The data pack could only be tested by hand. The mod
-   has compile checking, JUnit and GameTest, which turns §2.5 from an accepted risk into a tested one.
+What advancements should be when they arrive: **recognition, not currency.** Vanilla advancements
+mark that you did a thing; they don't pay you for it. A Heartstead tree that names milestones —
+your first Vault Sigil, a fully attuned core, a T3 Vault — costs nothing to balance and can be
+designed at the end, once the systems it describes have stopped moving.
 
-Confirmed 2026-07-31: 26.2 still has **no** data-pack item or block registration. It is vanilla-item-
-plus-components, same as 1.21.x. This is not a limitation that is about to lift.
-
-### 8.2 What it costs
-
-| Cost | Note |
-|---|---|
-| **No Realms** | Realms takes data packs, not mods. Currently **undecided** whether this matters — see OPEN-QUESTIONS.md. Every mod-only dependency should be flagged until it's settled |
-| **Both sides install** | Server *and* client for multiplayer |
-| **Release lag** | Mods trail new Minecraft versions; data packs mostly need a format bump |
-| **Zero-install lost** | Partly theoretical — custom item textures already required a resource pack, and singleplayer can't auto-push one |
-
-### 8.3 What did *not* change
-
-**Content stays data-driven.** Recipes, loot tables, advancements, tags and enchantments are still
-JSON, now shipped inside the mod jar at `src/main/resources/data/heartstead/`. Vanilla loot overrides
-still go in `data/minecraft/`. The Phase 0 economy work carries over essentially unchanged.
-
-Being a mod is a licence to write Java where Java helps — not an instruction to write Java everywhere.
+Design them last, and only after playtesting. Nothing in the build order (§9) depends on them.
 
 ---
 
-## 9. Version targeting
+## 8. Version targeting
 
 | | |
 |---|---|
@@ -461,59 +511,55 @@ Being a mod is a licence to write Java where Java helps — not an instruction t
 | Fabric API | 0.156.0+26.2 |
 | Loom | 1.17.17 |
 | Mappings | **None.** 26.1 was the first unobfuscated release — nothing to map, nothing remapped |
-| Data pack format (bundled JSON) | 107.1 |
+| Data format (bundled JSON: recipes, loot tables, advancements, tags) | 107.1 |
 
 26.2 changed the **entity predicate format** to a component-style map and now **rejects unknown
 sub-predicates**. Any predicate example found from a 1.21.x tutorial will need rewriting.
 
-26.3 snapshots are already live (data pack formats 108→113), so expect a version bump soon. Mods
-break on version bumps via mappings and API changes; run `./gradlew genSources` and read the real
-signatures rather than trusting a tutorial. Item construction in particular changed several times
-across 1.21.x.
+26.3 snapshots are already live (data formats 108→113), so expect a version bump soon. Mods break on
+version bumps via mappings and API changes; run `./gradlew genSources` and read the real signatures
+rather than trusting a tutorial. Item construction in particular changed several times across 1.21.x.
 
 ---
 
-## 10. Build order
+## 9. Build order
 
 Ship in this order. Each phase is independently playable.
 
 | Phase | Content | Why here |
 |---|---|---|
-| **0** | Item registration + heart economy + loot tables + bounty advancements | Mostly JSON as before, plus real item registration. **Ship this alone and it's already a good mod.** |
-| **0.5** | Spike: §3.3 Excavation chain-break + §7.5 villager persistence | Still the two riskiest mechanics — but now each ships with a GameTest instead of a manual checklist |
-| **1** | Lives system | Small, self-contained, high impact. First use of player attachments |
-| **2** | Codex + librarian teaching | The most novel feature, and the one most likely to attract users |
-| **3** | The Vault | Biggest lift. **Write the conservation GameTests first** (§2.5) |
-| **4** | Cores (incl. §6 classic farm replacements) | Needs the Vault for its best version. First real block entities with offline accrual |
-| **5** | Artisan's Table + Foundry | Needs the Vault. No longer needs a recipe index generator (§7.1) |
-
-The old Phase 6 ("optional client mod") is gone — it *is* the mod now.
-
-Phase 0 is slightly larger than in the data pack plan, because items and blocks now need registering
-before any JSON references them. Everything after Phase 0 is smaller.
+| **0** | Item registration + heart economy + loot tables | Mostly JSON, plus real item registration. Ship this and play it before adding reward systems on top (§7.3) |
+| **0.5** | Spike: §7.2 villager persistence | Still the riskiest remaining mechanic — but now ships with a GameTest instead of a manual checklist |
+| **1** | Lives system (§6) | Small, self-contained, high impact. First use of player attachments |
+| **2** | The Vault (§2) | Biggest lift. **Write the conservation GameTests first** (§2.5). First real blocks and screen handlers — establish those patterns here |
+| **3** | Codex (§3.3) + Artisan's Table (§7.1) + librarian teaching | The most novel feature, and the one most likely to attract users. Reuses Phase 2's block and screen patterns |
+| **4** | Cores (§4, incl. §5 classic farm replacements) | Needs the Vault for its best version |
 
 ---
 
-## 11. Tuning dials, ranked by impact
+## 10. Tuning dials, ranked by impact
 
 1. **Heart Shard drop rates** — controls the pace of literally everything.
-2. **Active core cap per tier** — the difference between *"no farms needed"* and *"resources meaningless"*.
-3. **Vault type capacity per Sigil** — controls how long storage stays a puzzle.
-4. **Core base rates** — aim at *small hand-built farm*, not mega-farm.
+2. **Core base rates and `core_rate_multiplier`** — aim at *small hand-built farm*, not mega-farm.
+   With one core per target (§4.3), tier III at 6× is the whole scaling curve.
+3. **Vault Sigil cost per capacity tier** — controls how long storage stays a puzzle.
+4. **Attunement thresholds** (§4.1) — the difference between "earned while playing" and "a grind".
 5. **Fixed librarian prices** — too cheap and enchanting collapses.
+6. **Bundle slot count** (§2.2) — currently 9; the largest unvalidated T1 buff in the pack.
 
 **Ship `core_rate_multiplier` at 1.0, but expect to lower it after playtesting.** Everyone
 underestimates compounding passive income.
 
 ---
 
-## 12. Known risks
+## 11. Known risks
 
 | Risk | Mitigation |
 |---|---|
 | **Item loss / duplication** in the Vault | GameTest conservation suite written *before* the Vault (§2.5). Versioned Codecs for all persisted state |
+| **Compounding passive income** | §4.3 caps cores at one per target per world, so breadth is bounded by what's been attuned and depth by tier cost — §10, ship `core_rate_multiplier` at 1.0 and plan to lower |
+| **Offline accrual double-counting or backlog dumps** (§4.2) | Settle from a single stored timestamp, never from two clocks; cap the settled delta. GameTest it: advance the clock, unload and reload, assert the yield matches the formula exactly |
+| **Socket refusal desync** (§4.3) | The active-core registry is world `SavedData` and the refusal is server-authoritative; the client never decides. GameTest the duplicate-socket path including across a world reload |
 | **Version churn.** Mappings and API move every release | Pin versions in `gradle.properties`; `./gradlew genSources` before writing against an unfamiliar class; never trust a pre-1.21.5 tutorial |
 | **Client/server split leaks.** A client-only class in common code crashes dedicated servers | Split source sets (CONVENTIONS.md §3); run `runGametest` (server-side) in CI, not just `runClient` |
-| **Compounding passive income** | §11 — ship at 1.0, plan to lower |
-| **Scope creep now that the UI ceiling is gone** | §0.1 — the pitch is casual convenience, not an ME terminal. New capability is not a mandate |
-| **Villager `Offers` regeneration** (§7.5) | Still a real risk, but now testable — GameTest it across level-up, restock and reload |
+| **Villager `Offers` regeneration** (§7.2) | Still a real risk, but now testable — GameTest it across level-up, restock and reload |

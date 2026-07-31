@@ -1,99 +1,107 @@
-# Heartstead — Open questions and reconstruction gaps
+# Heartstead — Open questions
 
-Two kinds of entry: **[GAP]** = detail existed in the original design wiki but wasn't recoverable
-from the shared conversation. **[OPEN]** = never decided.
+**[OPEN]** = not yet decided. Resolve one by writing the spec into [DESIGN.md](DESIGN.md), then
+delete the entry here.
 
-Resolve a **[GAP]** by writing the missing spec into [DESIGN.md](DESIGN.md), then delete the entry here.
+A design pass on 2026-08-01 closed most of this file. What's left is genuinely open, not merely
+unwritten.
 
 ---
 
 ## Blocking — must be resolved before the phase that needs them
 
-### [OPEN] Pack name
-Directory is `heartstead`, so this scaffold uses `heartstead:` everywhere. The source conversation
-ended mid-naming with an unpicked shortlist: **Wanderhoard** (Claude's pick), **Cairnkeep**,
-**Tallyheart**, **Farstead** — all checked as unused by existing Minecraft projects. `Heartstead`
-itself was **not** availability-checked. Confirm before anything is published — the mod id is baked
-into every registry call, every asset path and the Java package name.
-
-### [GAP] §3.3 Excavation
-Named in the conversation as one of the two riskiest mechanics and scheduled for the week-one spike,
-but its spec was in the wiki file only. Needs:
-- Block budget per level, and levels available
-- Durability cost model (per block? flat?)
-- Which block sets it chains across, and whether it respects tool material
-- Recursion depth / entity-count safety cap
-- Interaction with §3.1 Abundance and §3.2 Kiln Touch (all three on one pickaxe is a real case)
-
-### [GAP] §6 classic farm cores, entries 3–11
-Golem Core and Ominous Core survived with attunement and rates. **Barter, Guardian, Tidal, Wither
-Skull, Ender, Shulker, Slime, Apiary and Geode cores have names and scope only** — no recipes,
-attunement conditions, base rates, or per-player caps. Each needs the same four fields the headline
-entries have.
-
-### [GAP] §7.1 Artisan's Table — full spec
-Known: T1 block + T2 portable Kit, draws from inventory + Vault. **Not known:** the recipes for the
-Table and Kit themselves, and the UX.
-
-Reduced in scope by the mod pivot — the ~280-recipe curation problem and its generator are gone
-(a mod reads the live `RecipeManager`). What replaces it is a *filtering* question: "every recipe in
-the game" is not a usable list. Needs a decision on craftable-now-first, favourites, and search.
-
-### [GAP] §7.2 The Foundry — full spec
-Known: core-powered, fuel-free, bulk queue from Vault, 50% gear recycling, a Dye Vat, avoids vanilla
-furnace internals. **Not known:** recipe, which core powers it, smelt rate, queue depth, and whether
-recycling is 50% of *inputs* or 50% by *material value*.
+*(none)*
 
 ---
 
 ## Non-blocking — decide during the phase
 
-### [OPEN] Realms support — undecided, keep reversible
-The move to a Fabric mod rules out Realms, which accepts data packs but not mods. Deliberately left
-open rather than settled. **Flag mod-only dependencies as they're added** so the cost of reversing is
-visible; if Realms later turns out to matter, the honest options are a cut-down data pack companion
-(economy and loot only — no Vault, no cores, no blocks) or dropping Realms.
-
-### ~~[RESOLVED 2026-07-31] Recipe ingredients can't check custom_data~~
-Resolved by becoming a Fabric mod. Items are now real registered ids, so an ingredient of
-`heartstead:heart_shard` matches only a Heart Shard. The `echo_shard` / `heart_of_the_sea` base-item
-mitigation is obsolete and was removed from CONVENTIONS.md — **do not reintroduce a base-item table.**
-
 ### [OPEN] Heart Shard drop tuning is unvalidated
 The ~1 Vital Heart / 30–40 min at T1 target is a design intent, not a measured number. The listed
-rates (30% in chests, 0.5% mobs, 10% Evoker/Elder Guardian) have never been played. Expect Phase 0
-to end in retuning, and instrument it — log shard acquisitions with timestamps in the dev world.
+rates (30% in chests, 0.5% mobs, 10% Evoker/Elder Guardian) have never been played. **This one cannot
+be closed at a desk** — it needs playtime. Expect Phase 0 to end in retuning, and instrument it: log
+shard acquisitions with timestamps in the dev world.
 
-### [OPEN] Multiplayer scope
-Vault is player-bound and Anchor is "one per player" — but nothing specifies shared/team vaults,
-whether cores are owned by a player or a world, or how the per-player core cap behaves on a server
-with 20 players. This changes the storage schema, so decide before Phase 3.
+The same caveat applies to every rate in [DESIGN.md](DESIGN.md) §5 and the attunement thresholds in
+§4.1. They are internally consistent and reasoned; none of them has been played.
 
 ### [OPEN] Config surface
 [CONVENTIONS.md](CONVENTIONS.md) §5 puts config in a codec-backed JSON file loaded on server start.
-Undecided: whether operators get an in-game config screen, a command, or just the file. The file
-alone is the cheap answer and probably right for v1.
+Undecided: whether operators get an in-game config screen, a command, or just the file. **The file
+alone is the v1 answer** unless playtesting makes editing it painful — recorded here rather than
+resolved because it costs nothing to defer.
 
-### [OPEN] Existing-world migration
-Anyone adding this to a live world starts with chests full of items and no shards. Is there a
-migration/catch-up path, or is it new-worlds-only? Affects marketing more than code, but the answer
-shapes Phase 0's loot weighting.
+### [OPEN] Bundle slot count
+[DESIGN.md](DESIGN.md) §2.2 overrides the vanilla Bundle to a 9-slot UI inventory — ~9× vanilla
+capacity at T1 for vanilla cost, and the only place the mod rewrites a vanilla item (pillar 6).
+**Decided 2026-08-01: keep 9 and ship it as a config field** (`bundle_slots`). Flagged here because
+it is the largest unvalidated buff in the pack and the first thing to lower if the early game feels
+weightless.
 
-### ~~[RESOLVED 2026-07-31] Where do Sigil fragments come from?~~
-Resolved: there are no fragments. §7.3/§7.4 bounty advancements can pay a real Vault Sigil directly,
-at the capstone tier of each chain only, one per player (guarded by advancement completion, same as
-the Ominous Core cap). §1 and §7.3 amended to list "capstone bounty advancement" alongside the
-structures as a Sigil source.
+---
 
-### [OPEN] How far to take the UI now that the ceiling is gone
-[DESIGN.md §0.1](DESIGN.md) lists three features that were compromises to the data pack UI limit and
-are now reversible: the Vault as a real slot grid, the Artisan as a real 3×3, and live recipe-registry
-reading. All three are strictly better. **But new capability is not a mandate** — the pack's pitch is
-casual convenience, not an ME terminal. Decide the ceiling deliberately before Phase 3 rather than
-letting it drift upward feature by feature.
+## Resolved
 
-### [GAP] Original section numbering
-The source conversation referenced the wiki as §8 (classic farms), §10.5 (villager persistence),
-§13.1 (heart shard loot), §14 (mod split), §15 (roadmap), §16.2 (core_rate_multiplier). The
-reconstruction renumbers these. **Old section references from that conversation will not match
-[DESIGN.md](DESIGN.md).** Use the new numbers.
+Kept briefly so that older notes and prompts make sense. Delete once nothing references them.
+
+### ~~[RESOLVED 2026-08-01] Where do Sigil fragments come from?~~
+There are no fragments, and no advancement pays one either. Vault Sigils come only from Ancient City,
+End City, Bastion and ominous vaults (§1) — you travel for them. Ominous vaults are repeatable, so
+supply isn't hard-capped.
+
+### ~~[RESOLVED 2026-08-01] Bounty advancements~~
+**Cut**, along with the reward crates and the capstone Sigils. Reasoning is preserved in
+[DESIGN.md](DESIGN.md) §7.3: bounties were a second reward channel paying for the same activities §1
+already pays for, which makes the core economy impossible to tune honestly. Advancements return later
+as **recognition, not currency**, designed once the systems they describe have stopped moving. If
+exploring/fighting/building feels under-rewarded, that is a §1 drop-rate problem first.
+
+### ~~[RESOLVED 2026-08-01] §5 classic farm cores, entries 3–11~~
+All eleven entries now have tier, housing, prime recipe, imprint condition and base rate in
+[DESIGN.md](DESIGN.md) §5, plus a table comparing tier I and tier III against real technical farms.
+They reuse the four §4.2 housings — no new blocks.
+
+### ~~[RESOLVED 2026-08-01] §7.1 Artisan's Table — full spec~~
+Recipes written into §7.1. The filtering problem dissolved: extending the vanilla crafting menu
+inherits the whole recipe book (search, tabs, craftable-only, click-to-fill) off the live
+`RecipeManager`. Verified class shapes are in [REFERENCES.md](REFERENCES.md). Only the two Vault
+hooks are new work.
+
+### ~~[RESOLVED 2026-08-01] The Foundry~~
+**Cut.** Smelting stays vanilla. Removed from §7, the build order and PROMPTS.md.
+
+### ~~[RESOLVED 2026-08-01] Multiplayer scope~~
+The Vault (§2) and the active-core registry (§4.3) are **world** state — one Anchor per world, shared
+contents, pooled Sigils, one active core per target for everyone. The Codex archive (§3.3) stays
+**per player**. What each player owns individually is their access item's reach (§2.2).
+
+### ~~[RESOLVED 2026-08-01] Per-player core cap~~
+Replaced by **one active core per target, per world**, refused at the point of socketing (§4.3).
+Tiering is the scaling axis, not core count.
+
+### ~~[RESOLVED 2026-08-01] Existing-world migration~~
+**No catch-up path.** The mod works in an existing world, but the economy starts at zero — you
+explore for shards like anyone else. Nothing to build and nothing to balance; say so in the README.
+
+### ~~[RESOLVED 2026-08-01] How far to take the UI~~
+Settled per feature in DESIGN.md rather than as a global ceiling: the Vault is a slot grid with
+search and sort and explicitly **not** a logistics network (§2.4); the Artisan reuses vanilla's
+recipe book rather than inventing a browser (§7.1); core attunement is a tooltip and nothing else
+(§4.1). The pitch is casual convenience, not an ME terminal.
+
+### ~~[RESOLVED 2026-08-01] Realms support~~
+**No Realms.** Realms takes data packs, not mods, and the block registration that forced the mod
+decision isn't reversible. Accepted cost, not an open trade-off.
+
+### ~~[RESOLVED 2026-08-01] Pack name~~
+**Heartstead**, committed. `heartstead` namespace, `com.heartstead` package. Availability against
+existing Minecraft projects was never formally checked — worth a look before publishing, but not a
+blocker on anything being built.
+
+### ~~[RESOLVED 2026-08-01] Excavation~~
+**Cut** when the enchantment was trimmed out of §3. Chain-break/vein-mine is not in the pack. (It was
+§3.3 under the old numbering; §3.3 is now the Codex.)
+
+### ~~[RESOLVED 2026-07-31] Recipe ingredients can't check custom_data~~
+Resolved by becoming a Fabric mod. Items are real registered ids, so an ingredient of
+`heartstead:heart_shard` matches only a Heart Shard. **Do not reintroduce a base-item table.**
