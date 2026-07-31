@@ -9,17 +9,23 @@ Before writing anything:
 1. Read the named section(s) of `docs/DESIGN.md` in full, plus `docs/CONVENTIONS.md`.
 2. Check `docs/OPEN-QUESTIONS.md` for a `[GAP]` or `[OPEN]` covering this area. If one exists, **stop
    and resolve it with me first** — don't invent the missing spec and proceed.
-3. State back, in three or four lines: what you're building, which files you'll create, and any place
-   the wiki is ambiguous. Then build it.
+3. If it touches an API you haven't confirmed for 26.2, run `./gradlew genSources` and read the real
+   signature. Item construction and component registration both changed across 1.21.x; pre-1.21.5
+   tutorials are wrong and the compile error won't say so.
+4. State back in three or four lines: what you're building, which files, and any place the wiki is
+   ambiguous. Then build it.
 
 While building:
 
-- Namespace `heartstead:`, `hs.` for scores/tags. Custom items identified via `custom_data` only.
-- Every tuning number is a config scoreboard, not a literal.
-- If you hit an unfamiliar JSON shape (a predicate, a dialog, an enchantment definition), show me
-  **one** example and get it confirmed before generating the rest of the batch. 26.2 rejects unknown
-  predicate sub-predicates, so a wrong shape fails silently across forty files.
-- Prefer a generator in `scripts/` over emitting many near-identical files by hand.
+- Namespace `heartstead`, package `com.heartstead`. Ids via `Heartstead.id()`.
+- Real registered items and blocks — no `custom_data` identity markers, no marker entities standing
+  in for blocks, no base-item table.
+- Per-stack state → data components. Per-player → attachments. All persisted state → versioned codec.
+- Respect the source-set split: anything that draws goes in `src/client`.
+- Keep content data-driven — recipes, loot tables, advancements and tags stay JSON.
+- Every tuning number is a config field, not a literal.
+- Anything that moves items gets its GameTest written **first**.
 
-When done, tell me exactly what to test in the dev world — and whether it needs a `/reload` or a full
-world restart. Do not claim it works; you can't run Minecraft.
+When done, run `./gradlew build` and — if you added GameTests — `./gradlew runGametest`. **Report the
+real output.** If something failed, say so; don't describe intent as if it were a result. Then tell me
+what still needs a human in `runClient`, since feel and balance aren't testable.

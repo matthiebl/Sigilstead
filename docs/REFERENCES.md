@@ -1,78 +1,101 @@
 # Heartstead — References
 
-Sources cited in the design conversation, plus the ones needed to actually build this.
-
 ---
 
-## Verified facts (checked 2026-07-31)
+## Verified toolchain facts (checked 2026-07-31)
 
-| Fact | Value | Source |
+Everything here was queried directly from the source of truth, not from a tutorial or a search
+snippet. Re-verify the same way when bumping versions — several popular mod-listing sites carry stale
+numbers, and one of them reported the wrong Fabric Loader version during this check.
+
+| Fact | Value | How to re-check |
 |---|---|---|
-| Current Java release | **26.2** ("Chaos Cubed", 16 Jun 2026) | [Pack format – Minecraft Wiki](https://minecraft.wiki/w/Pack_format) |
-| 26.2 **data** pack format | **107.1** | [Pack format – Minecraft Wiki](https://minecraft.wiki/w/Pack_format) |
-| 26.2 **resource** pack format | **88.0** | [Pack format – Minecraft Wiki](https://minecraft.wiki/w/Pack_format) |
-| 26.1 data / resource | 101.1 / 84.0 | [Pack format – Minecraft Wiki](https://minecraft.wiki/w/Pack_format) |
-| 26.3 snapshots | data 108.0 → 113.0, resource 89 → 94.0, still moving | [Java Edition 26.3 Snapshot 5](https://minecraft.wiki/w/Java_Edition_26.3_Snapshot_5) |
-| `min_format`/`max_format` | Replaced `pack_format` as of 25w31a | [Pack format – Minecraft Wiki](https://minecraft.wiki/w/Pack_format) |
+| Current Java release | **26.2**, released 2026-06-16 | `meta.fabricmc.net/v2/versions/game` |
+| Java required by 26.2 | **25** (`java-runtime-epsilon`) | `piston-meta.mojang.com` version manifest → `javaVersion` |
+| Fabric Loader | **0.19.3** (stable) | `meta.fabricmc.net/v2/versions/loader` |
+| Fabric API for 26.2 | **0.156.0+26.2** | `maven.fabricmc.net/.../fabric-api/maven-metadata.xml` |
+| Fabric Loom | **1.17.17** (1.18.0 is alpha) | `maven.fabricmc.net/net/fabricmc/fabric-loom/maven-metadata.xml` |
+| Gradle | **9.6.1** | `services.gradle.org/versions/current` |
+| Yarn mappings for 26.x | **DO NOT EXIST** — newest yarn is 1.21.11 | `meta.fabricmc.net/v2/versions/yarn/26.2` returns `[]` |
+| Bundled data pack format | 107.1 | [Pack format – Minecraft Wiki](https://minecraft.wiki/w/Pack_format) |
 
-**Implication:** pin narrowly and expect to re-verify on the 26.3 release — formats moved six times
-inside a single snapshot cycle.
+### Three traps this project already hit
 
-> **The two pack formats are numbered independently.** For 26.2 the datapack is `107` and the resource
-> pack is `88`. Copying one `pack.mcmeta` into the other folder silently produces an incompatible pack.
-> Since 69.0 (1.21.9) both use minor versions, incremented instead of the major for non-breaking changes.
-
----
-
-## Dialogs (`/dialog`)
-
-The whole UI layer depends on this. Added in 1.21.6.
-
-- [Dialogs — Datapack Wiki](https://datapack.wiki/wiki/files/dialogs) — the reference for dialog file
-  shape, input types, and how inputs become macro values.
-- [Dialog command generator — MinecraftMaps](https://www.minecraftmaps.com/tools/dialog-command-generator)
-  — useful for scaffolding a dialog JSON quickly.
-- [Minecraft snapshot 25w20a](https://www.minecraft.net/en-us/article/minecraft-snapshot-25w20a) —
-  Mojang's own framing: dialogs are for **simple messages and input**, explicitly *not* for describing
-  in-game UI. This is the source of the hard wall in design wiki §0.1.
-- [GUI Maker — Modrinth](https://modrinth.com/datapack/gui-maker) — prior art worth reading before
-  building the Vault UI. Also the source of the "dialogs only reload on world/server restart" note.
+1. **Yarn has no 26.x mappings.** Use `loom.officialMojangMappings()`. A `build.gradle` written from
+   any standard Fabric tutorial will specify yarn and simply fail to resolve. Mojang's mappings carry
+   their own licence — fine for a public mod, but read it before relicensing or vendoring.
+2. **Loom requires Gradle itself to run on JDK 25.** A `java.toolchain` block is *not* enough; it
+   covers compilation, not the Gradle JVM. The error is explicit:
+   `Minecraft 26.2 requires Java 25 but Gradle is using 21`.
+3. **26.2 has no data-pack item or block registration.** Confirmed 2026-07-31. It is still
+   vanilla-item-plus-components, exactly as in 1.21.x. This is why the project is a mod
+   ([DESIGN.md §8](DESIGN.md)).
 
 ---
 
 ## Still needed (not yet gathered)
 
-These matter and are not yet pinned down. Gather before the phase that needs them.
+Gather before the phase that needs them. **Read the decompiled source (`./gradlew genSources`) rather
+than a tutorial** — this is the single most reliable way to avoid 1.21.x-era wrong answers.
 
 | Topic | Needed for | Why it's risky |
 |---|---|---|
-| 26.2 entity predicate format | Everything with a predicate | Changed to a component-style map; **rejects unknown sub-predicates**. Every 1.21.x example on the internet is wrong |
-| `enchantment_level` predicate shape | §3.1 Abundance, §3.2 Kiln Touch | Shape changed in recent versions |
-| `apply_bonus: ore_drops` semantics | §3.2 Kiln Touch × Fortune stacking | The whole point of Kiln Touch is that it *keeps* Fortune value |
-| Villager `Offers` / `Tags` persistence in 26.2 | §7.5, §3.4 | 26.2 fixed an empty-`Offers` persistence bug. Behaviour is version-specific |
-| Custom enchantment definition format | §3 all | Datapack enchantments are relatively new and still churning |
-| `minecraft:item_model` component | Resource pack | Replaced the old CustomModelData predicate workflow |
-| Macro command limits / escaping | §2 Vault, §7.1 Artisan | Macro injection via `/data` is where item loss will come from |
+| `Item.Properties` / `ResourceKey` construction | Phase 0, every item | Changed repeatedly across 1.21.x; items now need their key set at construction. Every older tutorial is wrong |
+| `DataComponentType` registration + codecs | Per-stack state | The replacement for the data-pack `custom_data` approach |
+| Fabric `AttachmentRegistry` | Per-player hearts, Vault | Serialisation and respawn-persistence semantics need checking |
+| `ScreenHandler` / slot sync | Vault, Artisan, Foundry | The reason the project is a mod; also where desync bugs live |
+| `SavedData` API | World-level core registry, waystones | Persistence shape |
+| Custom enchantment definition format | §3 enchantments | Data-driven since 1.21, still churning |
+| 26.2 entity predicate format | Loot tables, advancements | Component-style map that **rejects unknown sub-predicates** |
+| Villager `Offers`/`Tags` persistence in 26.2 | §3.4, §7.5 | 26.2 fixed an empty-`Offers` persistence bug; behaviour is version-specific |
+| Fabric GameTest entrypoint API | All testing | The verification story depends on it |
+
+---
+
+## Fabric documentation
+
+- [Fabric Documentation](https://docs.fabricmc.net/) — the official developer guide
+- [Custom Data Components](https://docs.fabricmc.net/develop/items/custom-data-components) — the
+  replacement for data-pack `custom_data`
+- [Fabric API](https://modrinth.com/mod/fabric-api) · [fabricapi.org](https://fabricapi.org/)
+- [Fabric for Minecraft 26.1](https://fabricmc.net/2026/03/14/261.html) — release-note style, useful
+  for seeing what breaks between versions
+
+## Minecraft data reference
+
+- [Pack format – Minecraft Wiki](https://minecraft.wiki/w/Pack_format)
+- [misode.github.io](https://misode.github.io/) — data pack generators and validators, version-aware
+  through 26.2. Still useful: the mod's recipes, loot tables and advancements are the same JSON
+- [Data pack – Minecraft Wiki](https://minecraft.wiki/w/Data_pack)
 
 ---
 
 ## Prior art worth studying
 
-Read these before designing the equivalent system — not to copy, but to know what players already
-expect and what has already gone wrong.
+Read before designing the equivalent system — not to copy, but to know what players expect and what
+has already gone wrong.
 
-- **Storage:** Applied Energistics / Refined Storage (the terminal metaphor the Vault is imitating
-  with a list instead of a grid).
-- **Farm replacement:** Mob Grinding Utils, Industrial Foregoing, Woot — specifically how they handle
-  "no mobs actually spawn" balance.
-- **Lives:** Hardcore Hearts / Origins-style life systems, and the Lifesteal SMP heart-item economy.
-- **Datapack-side:** any pack shipping a `/dialog` UI at scale, for iteration-speed workarounds.
+- **Storage:** Applied Energistics / Refined Storage — the terminal metaphor the Vault imitates.
+  Now that a real slot grid is possible, their UI affordances are directly relevant.
+- **Farm replacement:** Mob Grinding Utils, Industrial Foregoing, Woot — especially how they balance
+  "no mobs actually spawn".
+- **Lives:** Hardcore Hearts, Origins-style life systems, the Lifesteal SMP heart economy.
 
 ---
+
+## Superseded
+
+The following were load-bearing while this was a data pack and are kept only so old notes make sense:
+`/dialog` documentation, the dialog command generator, GUI Maker on Modrinth, and the resource pack
+format table (88.0 for 26.2). None apply to a mod.
 
 ## Source conversation
 
 The design originated in a Claude conversation dated 30 Jul 2026, shared at
-`claude.ai/share/d51527d6-59e7-4433-9300-d00d908e92d0`. That conversation produced a design wiki file
-which is **not retrievable from the share link** — [DESIGN.md](DESIGN.md) is a reconstruction from
-the conversation body. Gaps are tracked in [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md).
+`claude.ai/share/d51527d6-59e7-4433-9300-d00d908e92d0`. It produced a design wiki file that is **not
+retrievable from the share link** — [DESIGN.md](DESIGN.md) is a reconstruction from the conversation
+body. Remaining gaps are tracked in [OPEN-QUESTIONS.md](OPEN-QUESTIONS.md).
+
+That conversation recommended datapack-first with an optional client mod. That recommendation was
+**reversed** on 2026-07-31 after the block and item-identity limits proved fatal in practice; the
+reasoning is in [DESIGN.md §8](DESIGN.md).

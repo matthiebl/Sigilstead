@@ -1,6 +1,6 @@
 # Heartstead — Design Wiki
 
-> **Status:** reconstructed spec, v0.1 · **Target:** Minecraft Java 26.2 · **Data pack format:** `min_format 107`, `max_format [107, 1]`
+> **Status:** reconstructed spec, v0.2 · **Target:** Minecraft Java 26.2 · **Fabric mod**, Java 25 · see §9
 >
 > This document is the **ground truth** for the pack. Implementation work should reference sections
 > by number (e.g. "implement §6.2 Golem Core") rather than re-describing features. If reality and
@@ -22,22 +22,28 @@ The pack exists to delete *technical Minecraft as a prerequisite* without deleti
 5. **Leave technical play intact.** Cores match a *small hand-built farm*, not a mega-farm. Players
    who enjoy building the real thing still get more out of it — they just aren't forced into it.
 
-### 0.1 The hard wall (read this before designing any UI)
+### 0.1 The hard wall — **LIFTED** (2026-07-31)
 
-Datapack `/dialog` (added 1.21.6) gives data-driven menus: text, item display, text fields, sliders,
-checkboxes, single-option cyclers, and buttons that run commands with the inputs passed as macro
-values. That is enough for the librarian picker, the Vault, and the crafting index.
+This section used to describe the data pack UI ceiling: `/dialog` menus have no draggable item slots,
+no way to force-open a container GUI, and no way to detect an inventory click — so the Vault and the
+Artisan's Table had to be searchable lists with buttons rather than grids.
 
-**Dialogs are not inventories.** Mojang designed them to display messages and take input, not to
-describe in-game UI. There are:
+**The project is now a Fabric mod (§8), and none of that applies.** Real `ScreenHandler` screens with
+real slots, drag-and-drop, scroll, and live search are all available.
 
-- no draggable item slots
-- no way to force-open a chest GUI
-- no way to detect an inventory click
+Several decisions in this document were **concessions to that ceiling** and are now reversible. Each
+is flagged inline, but the three that matter:
 
-So the Vault and the Artisan's Table are **searchable lists with buttons**, not grids. Design *for*
-that (pinned favourites, `withdraw 1 / 16 / 64` per row, a recents page) rather than fighting it.
-A grid requires the optional client mod (§12) and is explicitly a polish feature, not a content one.
+| Was constrained to | Can now be |
+|---|---|
+| §2.4 Vault as a scrollable text list with withdraw 1/16/64 buttons | A real slot grid with search and drag-out |
+| §7.1 Artisan's Table as a searchable recipe list, "no datapack can give you a grid" | A real 3×3 grid backed by inventory **and** Vault |
+| §7.1 a shipped, pre-generated ~280-recipe index, because functions can't read the recipe registry at runtime | Read the live recipe manager directly — **the index and its generator are unnecessary** |
+
+That last one deletes a whole build-time dependency and the "curate 280 recipes" problem with it.
+
+**The real constraint now is scope, not capability.** Don't rebuild these as maximal UIs just because
+you can; the pack's pitch is casual convenience, not an ME terminal.
 
 ---
 
@@ -122,15 +128,27 @@ distinct block types into a bottomless void.
 
 ### 2.4 UI shape
 
-Dialog-driven: a scrollable list with counts, a text input to filter, withdraw buttons per row.
-Required affordances given §0.1: pinned favourites, `1 / 16 / 64` withdraw buttons, a recent-items
-page, and a page counter. Cap distinct types per network for performance regardless of tier.
+A real `ScreenHandler` screen (§0.1): a scrollable slot grid showing stored stacks with counts, a
+live search field, click-to-withdraw and shift-click-to-deposit, and sort. Pinned favourites and a
+recents page are still worth having — they were good ideas independent of the old constraint.
+
+Cap distinct types per network for performance regardless of tier.
+
+Scope discipline: this is a *convenience* store, not a logistics network. No autocrafting from the
+Vault screen, no wireless multi-network routing.
 
 ### 2.5 Risk
 
-Anything moving items via `/data` can void them on a crash or a malformed macro. Write the storage
-layer defensively, and test in a throwaway world. Assume it will eat someone's inventory at least
-once during development.
+The Vault holds thousands of items in persisted state. Any bug in the transfer path duplicates or
+voids them, and players will not forgive either.
+
+**Write the GameTest suite before the Vault itself** (CONVENTIONS.md §8): deposit N / withdraw N and
+assert exact conservation, across a full inventory on withdraw, a capacity boundary, a mid-transfer
+server shutdown, and concurrent access. All state goes through a versioned Codec (CONVENTIONS.md §4).
+
+This risk used to be unavoidable and untestable — the data pack version could only be checked by
+hand. It is now the single most testable part of the project, so there is no excuse for shipping it
+untested.
 
 ---
 
@@ -265,8 +283,10 @@ Same parent, cheap divergent children — the choice is real, but a death never 
 - At the floor, a **cosmetic "Frail" indicator only** — no stacked debuff (pillar §0.4).
 - Config toggles for a harder mode: floor at 3 hearts, or −2 hearts for deaths in the End.
 
-Fully supported by vanilla: `attribute @s minecraft:max_health modifier add`, plus a `death`
-scoreboard criterion or an `entity died` advancement trigger.
+Implementation: a `max_health` attribute modifier applied from a player attachment holding the
+current heart count, with the death hook on `ServerPlayerEvents.AFTER_RESPAWN` (or equivalent —
+confirm the 26.2 event name). The attachment must survive respawn and dimension change, which is
+exactly what attachments are for and what a scoreboard would have got subtly wrong.
 
 ---
 
@@ -304,13 +324,17 @@ and lives are already the death currency (§5).
 
 Craft from your inventory **and your Vault**, in one place.
 
-Two things that must not be forgotten:
+Both constraints that shaped this feature are **gone** (§0.1):
 
-1. It is a **searchable recipe list** with `Craft ×1 / ×8 / ×64` buttons — **not a 3×3 grid.** No
-   datapack can give you a grid (§0.1).
-2. You **must ship a generated recipe index.** Functions cannot read the vanilla recipe registry at
-   runtime. Generate ~280 curated recipes with `scripts/generate_recipe_index.py`; **do not
-   hand-write it**, and build the generator *before* the Artisan's Table function that consumes it.
+1. It can be a **real 3×3 crafting grid** plus a searchable recipe list — the "no datapack can give
+   you a grid" limitation no longer applies.
+2. There is **no shipped recipe index and no generator.** A mod reads the live `RecipeManager` at
+   runtime, so the Artisan sees every recipe in the game including those added by other mods and data
+   packs — strictly better than the ~280 hand-curated entries, and it never goes stale.
+   `scripts/generate_recipe_index.py` was deleted with the data pack scaffold.
+
+What remains genuinely undesigned is the *filtering* — "every recipe in the game" is not a useful
+list. Craftable-now-first, favourites, and a search field are the minimum.
 
 ### 7.2 The Foundry — smelting
 
@@ -343,34 +367,56 @@ recent versions and the fragility isn't worth it.
 
 Villagers **regenerate `Offers` on level-up and on restock**, which wipes any injected trade.
 
-- Store the taught enchantment as a scoreboard **`Tags`** entry on the villager entity (those
-  reliably persist) and **re-apply the offer on every reset detection.**
+- Store the taught enchantment in an **attachment on the villager entity** and **re-apply the offer
+  whenever a reset is detected.** (The data pack plan used scoreboard `Tags` because it had nothing
+  better; an attachment is typed, codec-backed and holds the enchantment *and* level directly.)
 - 26.2 specifically fixed a bug where an empty `Offers` tag failed to persist through a relog or data
   merge. Trade manipulation is **version-sensitive** — pin the format range tightly and re-test the
   villager path on every release.
 
 ---
 
-## 8. Distribution — datapack vs mod
+## 8. Distribution — **Fabric mod** (decided 2026-07-31)
 
-**Decision: datapack-first, with an optional client mod. Not all-mod.**
+**Decision: a single Fabric mod. Not a data pack, and not a datapack + optional-mod hybrid.**
 
-The datapack covers ~90% of this document. What genuinely needs a mod is **UI polish** — real
-slot-based screens, a keybind, live search — **not content.**
+### 8.1 Why
 
-Going all-mod buys the crafting grid but costs *"a friend joins your vanilla world and clicks
-nothing"*, which for a casual-focused pack is the wrong trade.
+The data pack path was abandoned two items into Phase 0.1. Ranked by weight:
 
-### 8.1 The contract between layers
+1. **Blocks.** The design has 12+ custom blocks (Vault Anchor, Linked Chest/Barrel/Funnel, Soul Cage,
+   Verdant Planter, Paddock, Quarry Node, Codex, Artisan's Table, Foundry, Dye Vat). A data pack
+   cannot register a block; each would be a vanilla block shadowed by a marker entity that desyncs on
+   piston/explosion/chunk-edge, can't have its own texture without repainting *all* barrels, and
+   loses identity on break. There is no workaround, obscure-base-block or otherwise.
+2. **Three of five flagship systems are inventory UIs.** Vault, Artisan, Foundry. The old plan
+   already conceded these needed a mod — which meant building each *twice*, dialog and screen, with
+   the state layer stuck in `/data storage` regardless. The hybrid was more work than either pure path.
+3. **Item identity.** Data pack recipes match ingredients by item id, not `custom_data`, so any
+   currency item can be faked with a plain copy of its base item. The mitigation — pick a base item
+   with no other survival source — does not scale to ~25 custom items. It was already strained at two.
+4. **Verification.** This is the underrated one. The data pack could only be tested by hand. The mod
+   has compile checking, JUnit and GameTest, which turns §2.5 from an accepted risk into a tested one.
 
-| Layer | Owns | Must never |
-|---|---|---|
-| **Datapack** | All content, balance, state, item definitions, every mechanic | Depend on the mod being present |
-| **Resource pack** | Item models, textures, lang | Contain gameplay logic |
-| **Client mod** *(optional, later)* | Slot-based Vault screen, keybind, live search, drag-and-drop | Own any state, or change any balance number |
+Confirmed 2026-07-31: 26.2 still has **no** data-pack item or block registration. It is vanilla-item-
+plus-components, same as 1.21.x. This is not a limitation that is about to lift.
 
-The mod is a *renderer* over datapack state. If it's uninstalled mid-world, nothing is lost — the
-player falls back to the dialog UI.
+### 8.2 What it costs
+
+| Cost | Note |
+|---|---|
+| **No Realms** | Realms takes data packs, not mods. Currently **undecided** whether this matters — see OPEN-QUESTIONS.md. Every mod-only dependency should be flagged until it's settled |
+| **Both sides install** | Server *and* client for multiplayer |
+| **Release lag** | Mods trail new Minecraft versions; data packs mostly need a format bump |
+| **Zero-install lost** | Partly theoretical — custom item textures already required a resource pack, and singleplayer can't auto-push one |
+
+### 8.3 What did *not* change
+
+**Content stays data-driven.** Recipes, loot tables, advancements, tags and enchantments are still
+JSON, now shipped inside the mod jar at `src/main/resources/data/heartstead/`. Vanilla loot overrides
+still go in `data/minecraft/`. The Phase 0 economy work carries over essentially unchanged.
+
+Being a mod is a licence to write Java where Java helps — not an instruction to write Java everywhere.
 
 ---
 
@@ -378,16 +424,21 @@ player falls back to the dialog UI.
 
 | | |
 |---|---|
-| Target release | **Java 26.2** (current release) |
-| Data pack format | `min_format: 107`, `max_format: [107, 1]` |
-| Resource pack format | `min_format: 88`, `max_format: [88, 0]` — **different number, same version** |
-| Field style | `min_format` / `max_format` — **not** the old `pack_format` |
+| Target release | **Minecraft 26.2** (released 2026-06-16) |
+| Java | **25** (`java-runtime-epsilon`) — Gradle itself must run on JDK 25, not just the toolchain |
+| Fabric Loader | 0.19.3 |
+| Fabric API | 0.156.0+26.2 |
+| Loom | 1.17.17 |
+| Mappings | **Mojang official.** Yarn has no 26.x mappings at all — its newest is 1.21.11 |
+| Data pack format (bundled JSON) | 107.1 |
 
 26.2 changed the **entity predicate format** to a component-style map and now **rejects unknown
 sub-predicates**. Any predicate example found from a 1.21.x tutorial will need rewriting.
 
-Pack formats bump most releases (26.3 snapshots are already at 108→113). Pin a narrow range and
-expect to re-verify villager `Offers` manipulation every version.
+26.3 snapshots are already live (data pack formats 108→113), so expect a version bump soon. Mods
+break on version bumps via mappings and API changes; run `./gradlew genSources` and read the real
+signatures rather than trusting a tutorial. Item construction in particular changed several times
+across 1.21.x.
 
 ---
 
@@ -397,14 +448,18 @@ Ship in this order. Each phase is independently playable.
 
 | Phase | Content | Why here |
 |---|---|---|
-| **0** | Heart economy + loot tables + bounty advancements | Pure JSON, zero risk, changes the feel immediately. **Ship this alone and it's already a good pack.** |
-| **0.5** | Spike: §3.3 Excavation chain-break + §7.5 villager persistence, in isolation | The two riskiest mechanics. Discover format quirks in week one, on throwaway features |
-| **1** | Lives system | Small, self-contained, high impact |
+| **0** | Item registration + heart economy + loot tables + bounty advancements | Mostly JSON as before, plus real item registration. **Ship this alone and it's already a good mod.** |
+| **0.5** | Spike: §3.3 Excavation chain-break + §7.5 villager persistence | Still the two riskiest mechanics — but now each ships with a GameTest instead of a manual checklist |
+| **1** | Lives system | Small, self-contained, high impact. First use of player attachments |
 | **2** | Codex + librarian teaching | The most novel feature, and the one most likely to attract users |
-| **3** | The Vault | Biggest engineering lift — do it once the economy is tuned |
-| **4** | Cores (incl. §6 classic farm replacements) | Needs the Vault for its best version |
-| **5** | Artisan's Table + Foundry | Depends on the recipe index generator and the Vault |
-| **6** | Optional client mod (§8) | Polish only, never content |
+| **3** | The Vault | Biggest lift. **Write the conservation GameTests first** (§2.5) |
+| **4** | Cores (incl. §6 classic farm replacements) | Needs the Vault for its best version. First real block entities with offline accrual |
+| **5** | Artisan's Table + Foundry | Needs the Vault. No longer needs a recipe index generator (§7.1) |
+
+The old Phase 6 ("optional client mod") is gone — it *is* the mod now.
+
+Phase 0 is slightly larger than in the data pack plan, because items and blocks now need registering
+before any JSON references them. Everything after Phase 0 is smaller.
 
 ---
 
@@ -425,8 +480,9 @@ underestimates compounding passive income.
 
 | Risk | Mitigation |
 |---|---|
-| **Item loss.** Anything moving items via `/data` can void them | Defensive storage layer; throwaway test world; never trust a macro path without a guard |
-| **Dialogs only reload on world/server restart, not `/reload`** | Expect slow UI iteration. Build dialog content generation into `scripts/` so a restart is the only manual step |
-| **Version churn.** Pack formats bump most releases | Pin `min_format`/`max_format` narrowly (§9); re-verify villager `Offers` every release |
-| **Textures.** Custom item appearances need a resource pack | A server can push one automatically; singleplayer cannot. Every custom item needs a readable fallback name/tooltip |
+| **Item loss / duplication** in the Vault | GameTest conservation suite written *before* the Vault (§2.5). Versioned Codecs for all persisted state |
+| **Version churn.** Mappings and API move every release | Pin versions in `gradle.properties`; `./gradlew genSources` before writing against an unfamiliar class; never trust a pre-1.21.5 tutorial |
+| **Client/server split leaks.** A client-only class in common code crashes dedicated servers | Split source sets (CONVENTIONS.md §3); run `runGametest` (server-side) in CI, not just `runClient` |
 | **Compounding passive income** | §11 — ship at 1.0, plan to lower |
+| **Scope creep now that the UI ceiling is gone** | §0.1 — the pitch is casual convenience, not an ME terminal. New capability is not a mandate |
+| **Villager `Offers` regeneration** (§7.5) | Still a real risk, but now testable — GameTest it across level-up, restock and reload |

@@ -1,19 +1,29 @@
 ---
-description: Retarget the pack at a new Minecraft version
+description: Retarget the mod at a new Minecraft version
 ---
 
 Retarget Heartstead at: $ARGUMENTS
 
-1. Look up the **data pack** and **resource pack** format numbers for that version on
-   <https://minecraft.wiki/w/Pack_format>. They are numbered **independently** — do not reuse one for
-   the other.
-2. Update `docs/REFERENCES.md` (the verified-facts table), `datapack/pack.mcmeta` and
-   `resourcepack/pack.mcmeta`, and the version row in `docs/DESIGN.md` §9.
-3. Check the version's changelog for breaking changes to: entity predicates, the `enchantment_level`
-   predicate shape, loot table condition ordering, villager `Offers`/`Tags` persistence, dialog
-   schema, and the `custom_data` / `item_model` components. Report what changed.
-4. Produce a **re-test checklist** ordered by risk, leading with the two known-fragile mechanics:
-   villager trade persistence (DESIGN.md §7.5) and anything that moves items through `/data`
-   (DESIGN.md §2.5).
+**Query the meta APIs directly — do not trust search results or mod-listing sites.** One of them
+reported the wrong Fabric Loader version during initial setup.
 
-Do not migrate any code yet — report first.
+```
+https://meta.fabricmc.net/v2/versions/game
+https://meta.fabricmc.net/v2/versions/loader
+https://meta.fabricmc.net/v2/versions/yarn/<version>        # expect [] — mojmap is the plan
+https://maven.fabricmc.net/net/fabricmc/fabric-api/fabric-api/maven-metadata.xml
+https://maven.fabricmc.net/net/fabricmc/fabric-loom/maven-metadata.xml
+https://piston-meta.mojang.com/mc/game/version_manifest_v2.json   # javaVersion for the target
+```
+
+Then:
+
+1. Update `gradle.properties` and the verified-facts table in `docs/REFERENCES.md`, plus the version
+   table in `docs/DESIGN.md` §9 and the toolchain table in `CLAUDE.md`.
+2. **Check the required Java version.** Loom needs Gradle itself running on it, not just a toolchain
+   — if it changed, the README setup instructions need updating too.
+3. Run `./gradlew build` and report what actually broke.
+4. Prioritise fixes by risk, leading with: villager `Offers` manipulation (DESIGN.md §7.5), anything
+   persisting state through a codec, and the client/server split.
+
+Report before migrating code.

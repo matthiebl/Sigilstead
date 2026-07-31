@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "heartstead",
+  "version": "${version}",
+  "name": "Heartstead",
+  "description": "Explore, don't grind. Removes the need for technical farms and chest-sorting, and pays you for exploring, fighting and building instead.",
+  "authors": [
+    "Matt"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/heartstead/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.heartstead.Heartstead"
+    ],
+    "client": [
+      "com.heartstead.client.HeartsteadClient"
+    ],
+    "fabric-gametest": [
+      "com.heartstead.gametest.HeartsteadGameTests"
+    ]
+  },
+  "mixins": [
+    "heartstead.mixins.json",
+    {
+      "config": "heartstead.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "minecraft": "~${minecraft_version}",
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}

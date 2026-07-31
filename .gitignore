@@ -1,12 +1,25 @@
-dist/
-*.zip
+# Gradle / build
+.gradle/
+build/
+out/
+!gradle/wrapper/gradle-wrapper.jar
 
-# texture sources — keep them out of the shipped pack
+# Loom
+run/
+.fabric/
+remappedSrc/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# texture sources — keep them out of the shipped jar
 *.xcf
 *.aseprite
 *.psd
 
 .DS_Store
-__pycache__/
-*.pyc
-.venv/
