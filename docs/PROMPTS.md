@@ -19,24 +19,31 @@ Phase numbers match [DESIGN.md](DESIGN.md) §9.
 
 | Phase | Status |
 |---|---|
-| 0.1 — Registration foundation | ✅ Done — **against spec v0.3, superseded** |
-| 0.2 — Loot tables | ✅ Done — **against spec v0.3, superseded** |
+| 0.1 — Registration foundation | ✅ Done — redone against v0.4 by 2.5a |
+| 0.2 — Loot tables | ✅ Done — redone against v0.4 by 2.5b |
 | 0.5a — Villager trade persistence | ✅ Done |
-| 1 — Lives | ✅ Done — **item renamed in v0.4** |
+| 1 — Lives | ✅ Done — item renamed to Heart Sigil by 2.5a |
 | 2 — The Vault (storage) | ✅ Done — **reworked in v0.4** |
 | 2 — The Vault (screen) | ✅ Done — **reworked in v0.4** |
-| 2.5 — Economy retrofit | ⬜ Not started |
+| 2.5a — Rename the spine | ✅ Done |
+| 2.5b — Redo the drop tables | ✅ Done |
+| 2.5c — Rework the Vault | ⬜ Not started |
 | 3 — Codex | ⬜ Not started |
 | 3 — Artisan's Table | ⬜ Not started |
 | 4 — Cores | ⬜ Not started |
 | 4 — Classic farm replacements | ⬜ Not started |
 
-**Up next: Phase 2.5 — the economy retrofit.**
+**Up next: Phase 2.5c — the Vault rework.**
 
 DESIGN.md moved to v0.4 after Phases 0–2 shipped. The spine went from two items (Heart Shard →
 Vital Heart) to one found Sigil with three children, and the Vault gained activation, reach tiers and
-container rules. **Phase 2.5 reconciles the code with the spec before Phase 3 builds on top of it** —
-doing Codex work first would mean writing it twice.
+container rules. 2.5a and 2.5b have landed: the §1 spine, the §12.1 drop table and the §12.2 recipes
+now match the spec. **2.5c still has to land before Phase 3** — the Codex and the Artisan both build
+on the Vault's transfer path, and doing them first would mean writing them twice.
+
+Not yet built, and deliberately out of scope for 2.5a/b: the §12.2 recipes for the Vault Anchor,
+Linked Funnel, Satchel and Pouch (2.5c), the Codex, Tome, Artisan's Table and Kit (Phase 3), and
+every §12.4 / §12.5 core prime and housing recipe (Phase 4). Their result items do not exist yet.
 
 ---
 

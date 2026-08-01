@@ -624,7 +624,7 @@ The one drop table that matters. Target: **~1 Sigil per 20–25 min of active ex
 | Source | Chance | Amount |
 |---|---|---|
 | Dungeon / mineshaft / desert temple / jungle temple / shipwreck treasure | 12% | 1 |
-| Stronghold library / altar | 25% | 1 |
+| Stronghold library / altar room | 25% | 1 |
 | Trial chamber vault (normal) | 20% | 1 |
 | Trial chamber vault (ominous) | 50% | 1 |
 | Bastion treasure | 50% | 1–2 |
@@ -656,6 +656,18 @@ The one drop table that matters. Target: **~1 Sigil per 20–25 min of active ex
 Boss and mini-boss rates are deliberately high — north of 50% — because those fights are the purest
 expression of pillar 1 and none of them is passively farmable under the two rules above.
 
+**How the two exclusions are actually enforced.** Every mob pool carries vanilla's
+`killed_by_player` condition. A core settles its yield by rolling the loot table of the thing it
+replaces, with no killing player in the loot context, so exclusion 1 holds structurally rather than
+by Phase 4 remembering a rule — *and Phase 4 must never supply a player parameter to a core's roll.*
+Exclusion 2 is a hard-coded deny-list, with no config field to switch the Wither back on.
+
+**Which vanilla tables each chest row maps to.** The stronghold row is the library and crossing
+(altar room) tables only — corridor chests are excluded so one stronghold does not roll a dozen
+times. The shipwreck row is the treasure chest only, not supply or map. The trial chamber rows are
+the two top-level vault reward tables. The Ender Dragon ships an *empty* loot table and its
+first-kill/respawn split is world state, so its Sigils are paid on the death event instead.
+
 ### 12.2 Recipes
 
 **The spine (§1).** The ordering constraint from §1.1 — Core cheapest — is satisfied by these three
@@ -671,11 +683,16 @@ and must survive any retuning.
 | **End Vault Sigil** | Vault Sigil + Dragon's Breath | Proof item: the End. Not producible by any §5 core |
 
 ```
-I R I      I = Iron Ingot   │  S A        (shapeless)       │  E A        A = Amethyst Shard
-R S R      R = Redstone     │             A = Golden Apple  │  A S A      E = Ender Eye (any free slot)
-I R I      S = Sigil        │             S = Sigil         │    A        S = Sigil
-           → Core Sigil     │             → Heart Sigil     │             → Vault Sigil
+I R I      I = Iron Ingot   │  S A        (shapeless)       │  S A A A A E   (shapeless)
+R S R      R = Redstone     │             A = Golden Apple  │                A = Amethyst Shard
+I R I      S = Sigil        │             S = Sigil         │                E = Ender Eye
+           → Core Sigil     │             → Heart Sigil     │                S = Sigil
+                            │                               │                → Vault Sigil
 ```
+
+Only the Core Sigil is shaped. Heart Sigil, Vault Sigil and the three dimensional Vault Sigils are
+all shapeless — Vault Sigil in particular has six ingredients and no arrangement worth memorising,
+and the earlier "Ender Eye in any free slot" phrasing was a shapeless recipe already.
 
 The three dimensional Vault Sigils are shapeless: Vault Sigil + proof item(s).
 

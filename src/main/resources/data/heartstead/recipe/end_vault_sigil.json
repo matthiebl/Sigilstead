@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "heartstead:vault_sigil",
+    "minecraft:dragon_breath"
+  ],
+  "result": {
+    "id": "heartstead:end_vault_sigil"
+  }
+}

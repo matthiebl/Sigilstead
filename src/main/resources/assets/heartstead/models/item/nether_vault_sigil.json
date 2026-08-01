@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "heartstead:item/heart_shard"
+    "layer0": "heartstead:item/nether_vault_sigil"
   }
 }

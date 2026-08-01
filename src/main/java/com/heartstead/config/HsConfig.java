@@ -9,15 +9,11 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
  *
  * <p>Server-authoritative: clients never decide balance, only render what the server tells them.
  *
- * <p>{@link VaultConfig} nests as its own record rather than nine flat fields here — a Mojang
- * {@code RecordCodecBuilder} group tops out at 16 entries, and this one was already at 8.
+ * <p>{@link SigilConfig} and {@link VaultConfig} nest as their own records rather than flattening
+ * to two dozen fields here — a Mojang {@code RecordCodecBuilder} group tops out at 16 entries.
  */
 public record HsConfig(
-    double heartShardChestChance,
-    int heartShardChestMinCount,
-    int heartShardChestMaxCount,
-    double heartShardHostileMobChance,
-    double heartShardEliteMobChance,
+    SigilConfig sigil,
     int heartCap,
     int heartFloor,
     int heartLossOnDeath,
@@ -28,21 +24,7 @@ public record HsConfig(
           instance ->
               instance
                   .group(
-                      Codec.doubleRange(0.0, 1.0)
-                          .fieldOf("heart_shard_chest_chance")
-                          .forGetter(HsConfig::heartShardChestChance),
-                      Codec.intRange(0, 64)
-                          .fieldOf("heart_shard_chest_min_count")
-                          .forGetter(HsConfig::heartShardChestMinCount),
-                      Codec.intRange(0, 64)
-                          .fieldOf("heart_shard_chest_max_count")
-                          .forGetter(HsConfig::heartShardChestMaxCount),
-                      Codec.doubleRange(0.0, 1.0)
-                          .fieldOf("heart_shard_hostile_mob_chance")
-                          .forGetter(HsConfig::heartShardHostileMobChance),
-                      Codec.doubleRange(0.0, 1.0)
-                          .fieldOf("heart_shard_elite_mob_chance")
-                          .forGetter(HsConfig::heartShardEliteMobChance),
+                      SigilConfig.CODEC.fieldOf("sigil").forGetter(HsConfig::sigil),
                       Codec.intRange(1, 40)
                           .fieldOf("heart_cap")
                           .forGetter(HsConfig::heartCap),
@@ -56,10 +38,10 @@ public record HsConfig(
                   .apply(instance, HsConfig::new));
 
   /**
-   * DESIGN.md §1: 30% for 1-2 in structure chests, 0.5% from hostile mobs, 10% from named elites.
-   *
-   * <p>DESIGN.md §6: 20-heart cap, floor of 5, -1 heart per death. Operators wanting the harder
-   * mode described in §6 lower {@code heart_floor} to 3 or raise {@code heart_loss_on_death} to 2.
+   * DESIGN.md §12.1 for the Sigil table; §12.6 for lives — 20-heart cap, floor of 5, -1 heart per
+   * death. Operators wanting §12.6's harder mode lower {@code heart_floor} to 3 or raise
+   * {@code heart_loss_on_death} to 2.
    */
-  public static final HsConfig DEFAULT = new HsConfig(0.30, 1, 2, 0.005, 0.10, 20, 5, 1, VaultConfig.DEFAULT);
+  public static final HsConfig DEFAULT =
+      new HsConfig(SigilConfig.DEFAULT, 20, 5, 1, VaultConfig.DEFAULT);
 }

@@ -57,11 +57,11 @@ public final class LivesSystem {
     }
 
     /**
-     * Consumes a Life Heart's worth of healing: +1 heart, capped. Returns {@code false} (and
+     * Consumes a Heart Sigil's worth of healing: +1 heart, capped. Returns {@code false} (and
      * changes nothing) if the player is already at the configured cap, so the item isn't wasted
      * on a no-op — the caller decides whether that refusal consumes the stack.
      */
-    public static boolean consumeLifeHeart(ServerPlayer player) {
+    public static boolean consumeHeartSigil(ServerPlayer player) {
         HsConfig config = HsConfigManager.get();
         HeartLevel level = player.getAttachedOrCreate(HsAttachments.HEART_LEVEL, HeartLevel::initial);
         if (level.hearts() >= config.heartCap()) {

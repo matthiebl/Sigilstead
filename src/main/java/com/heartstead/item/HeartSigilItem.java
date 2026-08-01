@@ -9,12 +9,13 @@ import net.minecraft.world.level.Level;
 import net.minecraft.server.level.ServerPlayer;
 
 /**
- * DESIGN.md §6: right-click to raise max health by one heart, up to the configured cap. Instant —
- * no eating animation — matching Totem of Undying's use pattern rather than food.
+ * DESIGN.md §1 / §6 — the Heart Sigil. Right-click to raise max health by one heart, up to the
+ * configured cap (§12.6). Instant — no eating animation — matching Totem of Undying's use pattern
+ * rather than food.
  */
-public class LifeHeartItem extends Item {
+public class HeartSigilItem extends Item {
 
-    public LifeHeartItem(Properties properties) {
+    public HeartSigilItem(Properties properties) {
         super(properties);
     }
 
@@ -24,7 +25,7 @@ public class LifeHeartItem extends Item {
             return InteractionResult.CONSUME;
         }
 
-        if (!LivesSystem.consumeLifeHeart(serverPlayer)) {
+        if (!LivesSystem.consumeHeartSigil(serverPlayer)) {
             return InteractionResult.FAIL;
         }
 

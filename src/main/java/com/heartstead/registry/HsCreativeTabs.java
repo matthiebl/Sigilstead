@@ -25,12 +25,17 @@ public final class HsCreativeTabs {
     public static void register() {
         Registry.register(BuiltInRegistries.CREATIVE_MODE_TAB, MAIN, FabricCreativeModeTab.builder()
                 .title(Component.translatable("itemGroup.heartstead.main"))
-                .icon(() -> new ItemStack(HsItems.VITAL_HEART))
+                .icon(() -> new ItemStack(HsItems.SIGIL))
                 .displayItems((parameters, output) -> {
-                    output.accept(HsItems.HEART_SHARD);
-                    output.accept(HsItems.VITAL_HEART);
-                    output.accept(HsItems.LIFE_HEART);
+                    // DESIGN.md §1, in spine order: the found Sigil, its three children, then the
+                    // three dimensional Vault Sigils.
+                    output.accept(HsItems.SIGIL);
+                    output.accept(HsItems.CORE_SIGIL);
+                    output.accept(HsItems.HEART_SIGIL);
                     output.accept(HsItems.VAULT_SIGIL);
+                    output.accept(HsItems.OVERWORLD_VAULT_SIGIL);
+                    output.accept(HsItems.NETHER_VAULT_SIGIL);
+                    output.accept(HsItems.END_VAULT_SIGIL);
                     output.accept(HsBlocks.VAULT_ANCHOR);
                 })
                 .build());

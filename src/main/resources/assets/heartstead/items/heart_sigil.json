@@ -1,6 +1,6 @@
 {
   "model": {
     "type": "minecraft:model",
-    "model": "heartstead:item/vital_heart"
+    "model": "heartstead:item/heart_sigil"
   }
 }

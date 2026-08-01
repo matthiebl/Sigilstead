@@ -61,32 +61,80 @@ import net.minecraft.world.phys.Vec3;
  */
 public class HeartsteadGameTests {
 
-    /** DESIGN.md §1 — dungeon chests roll Heart Shard at 30% for 1-2. Statistical, not exact. */
+    /** DESIGN.md §12.1 — dungeon chests roll a Sigil at 12% for 1. Statistical, not exact. */
     @GameTest
-    public void heartShardDungeonChestRate(GameTestHelper helper) {
-        double rate = heartShardRateInChestTable(helper.getLevel(), BuiltInLootTables.SIMPLE_DUNGEON, 4000);
-        helper.succeedIf(() -> assertInRange("simple_dungeon shard rate", rate, 0.20, 0.40));
+    public void sigilDungeonChestRate(GameTestHelper helper) {
+        double rate = sigilRateInChestTable(helper.getLevel(), BuiltInLootTables.SIMPLE_DUNGEON, 6000);
+        helper.succeedIf(() -> assertInRange("simple_dungeon sigil rate", rate, 0.08, 0.17));
     }
 
-    /** DESIGN.md §1 — 0.5% from an ordinary hostile mob (zombie), not the 10% elite rate. */
+    /** DESIGN.md §12.1 — the ancient city is the richest chest source at 60% for 1-2. */
     @GameTest
-    public void heartShardOrdinaryHostileMobRate(GameTestHelper helper) {
-        double rate = heartShardRateInEntityTable(helper.getLevel(), EntityTypes.ZOMBIE, 6000);
-        helper.succeedIf(() -> assertInRange("zombie shard rate", rate, 0.001, 0.02));
+    public void sigilAncientCityChestRate(GameTestHelper helper) {
+        double rate = sigilRateInChestTable(helper.getLevel(), BuiltInLootTables.ANCIENT_CITY, 3000);
+        helper.succeedIf(() -> assertInRange("ancient_city sigil rate", rate, 0.53, 0.67));
     }
 
-    /** DESIGN.md §1 — Evoker gets the 10% elite rate, not the 0.5% general hostile-mob rate. */
-    @GameTest
-    public void heartShardEvokerEliteRate(GameTestHelper helper) {
-        double rate = heartShardRateInEntityTable(helper.getLevel(), EntityTypes.EVOKER, 3000);
-        helper.succeedIf(() -> assertInRange("evoker shard rate", rate, 0.06, 0.16));
+    /** DESIGN.md §12.1 — 0.15% from an ordinary hostile mob, not a mini-boss rate. */
+    @GameTest(maxTicks = 400)
+    public void sigilOrdinaryHostileMobRate(GameTestHelper helper) {
+        double rate = sigilRateInEntityTable(helper, EntityTypes.ZOMBIE, 40000, true);
+        helper.succeedIf(() -> assertInRange("zombie sigil rate", rate, 0.0006, 0.0030));
     }
 
-    /** DESIGN.md §1 — passive mobs never drop Heart Shards. */
+    /** DESIGN.md §12.1 — the Evoker is a mini-boss at 60%, well north of the general hostile rate. */
     @GameTest
-    public void heartShardNeverDropsFromPassiveMob(GameTestHelper helper) {
-        double rate = heartShardRateInEntityTable(helper.getLevel(), EntityTypes.COW, 1000);
-        helper.succeedIf(() -> assertInRange("cow shard rate", rate, 0.0, 0.0));
+    public void sigilEvokerMiniBossRate(GameTestHelper helper) {
+        double rate = sigilRateInEntityTable(helper, EntityTypes.EVOKER, 3000, true);
+        helper.succeedIf(() -> assertInRange("evoker sigil rate", rate, 0.53, 0.67));
+    }
+
+    /** DESIGN.md §12.1 — the Warden always pays, and pays 2. */
+    @GameTest
+    public void sigilWardenAlwaysPaysTwo(GameTestHelper helper) {
+        LootParams params = entityParams(helper, EntityTypes.WARDEN, true);
+        LootTable table = lootTable(helper.getLevel(), EntityTypes.WARDEN);
+        for (int i = 0; i < 200; i++) {
+            if (countSigils(table, params) != 2) {
+                throw new AssertionError("warden drew " + countSigils(table, params) + " sigils, expected 2");
+            }
+        }
+        helper.succeed();
+    }
+
+    /** DESIGN.md §12.1 — passive mobs are not a Sigil source at all. */
+    @GameTest
+    public void sigilNeverDropsFromPassiveMob(GameTestHelper helper) {
+        double rate = sigilRateInEntityTable(helper, EntityTypes.COW, 2000, true);
+        helper.succeedIf(() -> assertInRange("cow sigil rate", rate, 0.0, 0.0));
+    }
+
+    /**
+     * DESIGN.md §12.1 exclusion 2 — the Wither is never a Sigil source, even on a player kill.
+     * Skulls -> Wither -> Sigils would be the bootstrap loop the §5 Wither Skull Core opens.
+     */
+    @GameTest
+    public void sigilNeverDropsFromWither(GameTestHelper helper) {
+        double rate = sigilRateInEntityTable(helper, EntityTypes.WITHER, 3000, true);
+        helper.succeedIf(() -> assertInRange("wither sigil rate", rate, 0.0, 0.0));
+    }
+
+    /**
+     * DESIGN.md §4.2 / §12.1 exclusion 1 — no mob killed by a core ever drops a Sigil. A core rolls
+     * an inherited loot table with no killing player in the context, so every mob pool must come up
+     * empty without one. This is the invariant §11 warns a loot-table refactor will silently break;
+     * Phase 4 must not start passing a player parameter to make it "work".
+     */
+    @GameTest
+    public void sigilNeverDropsWithoutAPlayerKiller(GameTestHelper helper) {
+        for (net.minecraft.world.entity.EntityType<?> type :
+                java.util.List.of(EntityTypes.ZOMBIE, EntityTypes.EVOKER, EntityTypes.WARDEN, EntityTypes.RAVAGER)) {
+            double rate = sigilRateInEntityTable(helper, type, 4000, false);
+            if (rate != 0.0) {
+                throw new AssertionError("core-rolled " + type.toShortString() + " produced sigils at " + rate);
+            }
+        }
+        helper.succeed();
     }
 
     /**
@@ -117,37 +165,59 @@ public class HeartsteadGameTests {
         helper.succeed();
     }
 
-    private static double heartShardRateInChestTable(ServerLevel level, net.minecraft.resources.ResourceKey<LootTable> key, int draws) {
+    private static double sigilRateInChestTable(ServerLevel level, net.minecraft.resources.ResourceKey<LootTable> key, int draws) {
         LootTable table = level.getServer().reloadableRegistries().getLootTable(key);
         LootParams params = new LootParams.Builder(level)
                 .withParameter(LootContextParams.ORIGIN, Vec3.ZERO)
                 .create(LootContextParamSets.CHEST);
-        return heartShardRate(table, params, draws);
+        return sigilRate(table, params, draws);
     }
 
-    private static double heartShardRateInEntityTable(ServerLevel level, net.minecraft.world.entity.EntityType<?> entityType, int draws) {
-        net.minecraft.resources.ResourceKey<LootTable> key = entityType.getDefaultLootTable().orElseThrow();
-        LootTable table = level.getServer().reloadableRegistries().getLootTable(key);
+    private static double sigilRateInEntityTable(
+            GameTestHelper helper, net.minecraft.world.entity.EntityType<?> entityType, int draws, boolean killedByPlayer) {
+        return sigilRate(lootTable(helper.getLevel(), entityType), entityParams(helper, entityType, killedByPlayer), draws);
+    }
+
+    private static LootTable lootTable(ServerLevel level, net.minecraft.world.entity.EntityType<?> entityType) {
+        return level.getServer().reloadableRegistries().getLootTable(entityType.getDefaultLootTable().orElseThrow());
+    }
+
+    /**
+     * Entity loot params. {@code killedByPlayer} is the whole point of the §12.1 exclusion tests:
+     * with a player it is an ordinary kill, without one it is what a §5 core's roll looks like.
+     */
+    private static LootParams entityParams(
+            GameTestHelper helper, net.minecraft.world.entity.EntityType<?> entityType, boolean killedByPlayer) {
+        ServerLevel level = helper.getLevel();
         ItemEntity dummy = new ItemEntity(level, 0, 0, 0, new ItemStack(Items.STICK));
-        LootParams params = new LootParams.Builder(level)
+        LootParams.Builder builder = new LootParams.Builder(level)
                 .withParameter(LootContextParams.ORIGIN, Vec3.ZERO)
                 .withParameter(LootContextParams.THIS_ENTITY, dummy)
-                .withParameter(LootContextParams.DAMAGE_SOURCE, level.damageSources().generic())
-                .create(LootContextParamSets.ENTITY);
-        return heartShardRate(table, params, draws);
+                .withParameter(LootContextParams.DAMAGE_SOURCE, level.damageSources().generic());
+        if (killedByPlayer) {
+            builder.withParameter(LootContextParams.LAST_DAMAGE_PLAYER, helper.makeMockServerPlayerInLevel());
+        }
+        return builder.create(LootContextParamSets.ENTITY);
     }
 
-    private static double heartShardRate(LootTable table, LootParams params, int draws) {
+    private static double sigilRate(LootTable table, LootParams params, int draws) {
         int hits = 0;
         for (int i = 0; i < draws; i++) {
-            for (ItemStack stack : table.getRandomItems(params)) {
-                if (stack.is(HsItems.HEART_SHARD)) {
-                    hits++;
-                    break;
-                }
+            if (countSigils(table, params) > 0) {
+                hits++;
             }
         }
         return (double) hits / draws;
+    }
+
+    private static int countSigils(LootTable table, LootParams params) {
+        int count = 0;
+        for (ItemStack stack : table.getRandomItems(params)) {
+            if (stack.is(HsItems.SIGIL)) {
+                count += stack.getCount();
+            }
+        }
+        return count;
     }
 
     private static void assertInRange(String label, double value, double min, double max) {

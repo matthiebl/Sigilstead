@@ -136,6 +136,11 @@ Prefer a **data generator** (Fabric's `DataGeneratorEntrypoint`) over hand-writt
 structurally repetitive — loot tables, recipes, models, tags. The generator is the artifact; the JSON
 is build output. Generated JSON is never hand-edited.
 
+The same rule covers the placeholder item art. `tools/gen_sigil_textures.py` draws all seven §1
+Sigil textures from one stone-disc routine plus a rune grid per item, so they stay a coherent set;
+the committed PNGs are its output. Retune the script and re-run it — hand-editing a PNG loses the
+edit on the next run.
+
 ---
 
 ## 7. Style
