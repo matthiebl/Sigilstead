@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "key": {
+    "G": "minecraft:gold_ingot",
+    "V": "heartstead:vital_heart"
+  },
+  "pattern": [
+    " G ",
+    "GVG",
+    " G "
+  ],
+  "result": {
+    "id": "heartstead:life_heart"
+  }
+}

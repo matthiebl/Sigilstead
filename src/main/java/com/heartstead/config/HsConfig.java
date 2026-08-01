@@ -14,7 +14,10 @@ public record HsConfig(
     int heartShardChestMinCount,
     int heartShardChestMaxCount,
     double heartShardHostileMobChance,
-    double heartShardEliteMobChance) {
+    double heartShardEliteMobChance,
+    int heartCap,
+    int heartFloor,
+    int heartLossOnDeath) {
 
   public static final Codec<HsConfig> CODEC =
       RecordCodecBuilder.create(
@@ -35,11 +38,23 @@ public record HsConfig(
                           .forGetter(HsConfig::heartShardHostileMobChance),
                       Codec.doubleRange(0.0, 1.0)
                           .fieldOf("heart_shard_elite_mob_chance")
-                          .forGetter(HsConfig::heartShardEliteMobChance))
+                          .forGetter(HsConfig::heartShardEliteMobChance),
+                      Codec.intRange(1, 40)
+                          .fieldOf("heart_cap")
+                          .forGetter(HsConfig::heartCap),
+                      Codec.intRange(1, 40)
+                          .fieldOf("heart_floor")
+                          .forGetter(HsConfig::heartFloor),
+                      Codec.intRange(1, 40)
+                          .fieldOf("heart_loss_on_death")
+                          .forGetter(HsConfig::heartLossOnDeath))
                   .apply(instance, HsConfig::new));
 
   /**
    * DESIGN.md §1: 30% for 1-2 in structure chests, 0.5% from hostile mobs, 10% from named elites.
+   *
+   * <p>DESIGN.md §6: 20-heart cap, floor of 5, -1 heart per death. Operators wanting the harder
+   * mode described in §6 lower {@code heart_floor} to 3 or raise {@code heart_loss_on_death} to 2.
    */
-  public static final HsConfig DEFAULT = new HsConfig(0.30, 1, 2, 0.005, 0.10);
+  public static final HsConfig DEFAULT = new HsConfig(0.30, 1, 2, 0.005, 0.10, 20, 5, 1);
 }

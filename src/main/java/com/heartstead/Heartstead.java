@@ -1,6 +1,7 @@
 package com.heartstead;
 
 import com.heartstead.economy.HeartShardLoot;
+import com.heartstead.lives.LivesSystem;
 import com.heartstead.registry.HsAttachments;
 import com.heartstead.registry.HsComponents;
 import com.heartstead.registry.HsCreativeTabs;
@@ -37,6 +38,7 @@ public class Heartstead implements ModInitializer {
         HsCreativeTabs.register();
         HsAttachments.register();
         HeartShardLoot.register();
+        LivesSystem.register();
         // TODO Phase 3: HsBlocks.register();
         // TODO Phase 3: HsBlockEntities.register();
         // TODO Phase 3: HsScreenHandlers.register();

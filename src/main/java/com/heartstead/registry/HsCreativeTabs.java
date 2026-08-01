@@ -29,6 +29,7 @@ public final class HsCreativeTabs {
                 .displayItems((parameters, output) -> {
                     output.accept(HsItems.HEART_SHARD);
                     output.accept(HsItems.VITAL_HEART);
+                    output.accept(HsItems.LIFE_HEART);
                     output.accept(HsItems.VAULT_SIGIL);
                 })
                 .build());

@@ -15,11 +15,28 @@ Ready-to-paste prompts, in build order. Rules that apply to all of them:
 
 Phase numbers match [DESIGN.md](DESIGN.md) §9.
 
+## Status
+
+| Phase | Status |
+|---|---|
+| 0.1 — Registration foundation | ✅ Done |
+| 0.2 — Loot tables | ✅ Done |
+| 0.5a — Villager trade persistence | ✅ Done |
+| 1 — Lives | ✅ Done |
+| 2 — The Vault (storage) | ⬜ Not started |
+| 2 — The Vault (screen) | ⬜ Not started |
+| 3 — Codex | ⬜ Not started |
+| 3 — Artisan's Table | ⬜ Not started |
+| 4 — Cores | ⬜ Not started |
+| 4 — Classic farm replacements | ⬜ Not started |
+
+**Up next: Phase 2 — The Vault (storage).**
+
 ---
 
 ## Phase 0 — Items and the heart economy
 
-### 0.1 — Registration foundation
+### 0.1 — Registration foundation ✅
 
 ```
 Read docs/DESIGN.md §1 and docs/CONVENTIONS.md §2.
@@ -38,7 +55,7 @@ Also add the Vital Heart crafting recipe as JSON in data/heartstead/recipe/.
 Run ./gradlew build when done and report the actual result.
 ```
 
-### 0.2 — Loot tables
+### 0.2 — Loot tables ✅
 
 ```
 Add Heart Shard to loot per docs/DESIGN.md §1: dungeon, mineshaft, temple and shipwreck
@@ -63,7 +80,7 @@ before proposing any. Advancements are deferred until the §1 economy has actual
 
 Still the riskiest mechanic. It ships with a GameTest instead of a manual checklist.
 
-### 0.5a — Villager trade persistence
+### 0.5a — Villager trade persistence ✅
 
 ```
 Build a proof of concept for docs/DESIGN.md §7.2 ONLY.
@@ -78,7 +95,7 @@ say so and give me a manual checklist for that case only.
 
 ---
 
-## Phase 1 — Lives
+## Phase 1 — Lives ✅
 
 ```
 Implement docs/DESIGN.md §6: Life Heart item and recipe, max_health attribute modifier
@@ -96,7 +113,7 @@ recipe without flagging it.
 
 ---
 
-## Phase 2 — The Vault
+## Phase 2 — The Vault ⬜
 
 The biggest lift, and the first real blocks and screen handlers in the project.
 
@@ -136,7 +153,7 @@ patterns carefully — the Codex and the cores will copy them.
 
 ---
 
-## Phase 3 — Codex and Artisan's Table
+## Phase 3 — Codex and Artisan's Table ⬜
 
 ```
 Implement docs/DESIGN.md §3.3 — the Codex block and block entity, Archive / Tome / Teach
@@ -165,7 +182,7 @@ Vault gets a dupe bug, and it would invalidate the §2.5 suite.
 
 ---
 
-## Phase 4 — Cores
+## Phase 4 — Cores ⬜
 
 ```
 Implement docs/DESIGN.md §4: Blank Core, the prime -> imprint attunement in §4.1, the

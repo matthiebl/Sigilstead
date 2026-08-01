@@ -1,9 +1,15 @@
 package com.heartstead.gametest;
 
+import com.heartstead.config.HsConfig;
+import com.heartstead.config.HsConfigManager;
+import com.heartstead.lives.HeartLevel;
+import com.heartstead.registry.HsAttachments;
 import com.heartstead.registry.HsItems;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
@@ -83,6 +89,34 @@ public class HeartsteadGameTests {
     public void heartShardNeverDropsFromPassiveMob(GameTestHelper helper) {
         double rate = heartShardRateInEntityTable(helper.getLevel(), EntityTypes.COW, 1000);
         helper.succeedIf(() -> assertInRange("cow shard rate", rate, 0.0, 0.0));
+    }
+
+    /**
+     * DESIGN.md §6 — die repeatedly and assert hearts never drop below the configured floor, in
+     * either the tracked attachment value or the live {@code max_health}/current health.
+     */
+    @GameTest
+    public void livesFloorNeverBreached(GameTestHelper helper) {
+        HsConfig config = HsConfigManager.get();
+        ServerLevel level = helper.getLevel();
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+
+        for (int i = 0; i < 8; i++) {
+            player = level.getServer().getPlayerList().respawn(player, false, Entity.RemovalReason.KILLED);
+
+            int hearts = player.getAttachedOrCreate(HsAttachments.HEART_LEVEL, HeartLevel::initial).hearts();
+            if (hearts < config.heartFloor()) {
+                throw new AssertionError("hearts dropped below floor after death " + i + ": " + hearts);
+            }
+            if (player.getMaxHealth() < config.heartFloor() * 2.0f) {
+                throw new AssertionError("max_health dropped below floor after death " + i + ": " + player.getMaxHealth());
+            }
+            if (player.getHealth() < config.heartFloor() * 2.0f) {
+                throw new AssertionError("current health dropped below floor after death " + i + ": " + player.getHealth());
+            }
+        }
+
+        helper.succeed();
     }
 
     private static double heartShardRateInChestTable(ServerLevel level, net.minecraft.resources.ResourceKey<LootTable> key, int draws) {
