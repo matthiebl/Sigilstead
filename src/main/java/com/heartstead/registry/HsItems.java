@@ -2,6 +2,8 @@ package com.heartstead.registry;
 
 import com.heartstead.Heartstead;
 import com.heartstead.item.HeartSigilItem;
+import com.heartstead.item.VaultAccessItem;
+import com.heartstead.vault.VaultAccess;
 import java.util.function.Function;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -47,6 +49,22 @@ public final class HsItems {
 
     /** §2.3 — End-wide withdrawal. Dragon's Breath is the proof item (§12.2). */
     public static final Item END_VAULT_SIGIL = register("end_vault_sigil", new Item.Properties());
+
+    /**
+     * §2.2 T1 — deposit from anywhere, any dimension, and no withdrawal. §2.0 calls this "the safe
+     * verb": the worst it can do is spare you a walk home. Stacks to one, because a second Satchel
+     * does nothing a first one doesn't.
+     */
+    public static final Item SATCHEL = register(
+            "satchel",
+            new Item.Properties().stacksTo(1),
+            properties -> new VaultAccessItem(properties, VaultAccess.SATCHEL));
+
+    /** §2.2 T2 — adds the withdrawal verb, still subject to the §2.3 reach tier for where you stand. */
+    public static final Item VAULT_POUCH = register(
+            "vault_pouch",
+            new Item.Properties().stacksTo(1),
+            properties -> new VaultAccessItem(properties, VaultAccess.POUCH));
 
     private static Item register(String path, Item.Properties properties) {
         return register(path, properties, Item::new);

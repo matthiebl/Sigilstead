@@ -36,7 +36,11 @@ public final class HsCreativeTabs {
                     output.accept(HsItems.OVERWORLD_VAULT_SIGIL);
                     output.accept(HsItems.NETHER_VAULT_SIGIL);
                     output.accept(HsItems.END_VAULT_SIGIL);
+                    // §2 — the Vault's blocks and the §2.2 access ladder, in tier order.
                     output.accept(HsBlocks.VAULT_ANCHOR);
+                    output.accept(HsBlocks.LINKED_FUNNEL);
+                    output.accept(HsItems.SATCHEL);
+                    output.accept(HsItems.VAULT_POUCH);
                 })
                 .build());
     }

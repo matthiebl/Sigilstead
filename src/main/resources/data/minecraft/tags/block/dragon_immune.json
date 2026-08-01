@@ -1,0 +1,6 @@
+{
+  "replace": false,
+  "values": [
+    { "id": "heartstead:vault_anchor", "required": false }
+  ]
+}

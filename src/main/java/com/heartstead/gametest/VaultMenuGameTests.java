@@ -26,6 +26,7 @@ public class VaultMenuGameTests {
     @GameTest
     public void shiftClickDepositsIntoVault(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
+        ensureActivatedWithReach(level);
         Item item = Items.LAPIS_LAZULI;
         ensureDistinctTypeHeadroom(level, item);
         int baseline = Vault.get(level).count(item);
@@ -34,7 +35,7 @@ public class VaultMenuGameTests {
         player.getInventory().setItem(0, new ItemStack(item, 20));
 
         VaultMenu menu = new VaultMenu(0, player.getInventory());
-        Slot slot = findPlayerInventorySlot(menu, 0);
+        Slot slot = findPlayerInventorySlot(menu, player, 0);
         ItemStack moved = menu.quickMoveStack(player, slot.index);
 
         int afterDeposit = Vault.get(level).count(item);
@@ -57,6 +58,7 @@ public class VaultMenuGameTests {
     @GameTest
     public void withdrawIntentConservesExactCount(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
+        ensureActivatedWithReach(level);
         Item item = Items.REDSTONE;
         ensureDistinctTypeHeadroom(level, item);
 
@@ -95,6 +97,7 @@ public class VaultMenuGameTests {
     @GameTest
     public void shiftClickAgainstCappedTypeDoesNotHang(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
+        ensureActivatedWithReach(level);
         Item item = Items.GOLDEN_APPLE;
         ensureDistinctTypeHeadroom(level, item);
 
@@ -110,7 +113,7 @@ public class VaultMenuGameTests {
         ServerPlayer player = helper.makeMockServerPlayerInLevel();
         player.getInventory().setItem(0, new ItemStack(item, item.getDefaultMaxStackSize()));
         VaultMenu menu = new VaultMenu(0, player.getInventory());
-        Slot slot = findPlayerInventorySlot(menu, 0);
+        Slot slot = findPlayerInventorySlot(menu, player, 0);
 
         int iterations = 0;
         ItemStack clicked = menu.quickMoveStack(player, slot.index);
@@ -142,7 +145,11 @@ public class VaultMenuGameTests {
     @GameTest
     public void menuSurvivesVaultWithTwentySevenDistinctTypes(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
+        ensureActivatedWithReach(level);
         Item[] fillerTypes = distinctFillerItems(27);
+        // The distinct-type cap is shared world state and other tests fill it; buy room for all 27
+        // up front rather than depending on this test running early in the batch.
+        ensureRoomForDistinctTypes(level, fillerTypes);
         for (Item filler : fillerTypes) {
             Vault.deposit(level, new ItemStack(filler, 3));
         }
@@ -187,9 +194,15 @@ public class VaultMenuGameTests {
         return result;
     }
 
-    private static Slot findPlayerInventorySlot(VaultMenu menu, int containerSlotIndex) {
+    /**
+     * Matches on <b>container identity</b>, not on {@code getContainerSlot()}. The menu gained the
+     * §2.3 upgrade slot, which is index 0 of its own one-slot container — so an index-only match
+     * silently returned the upgrade slot instead of the player's first inventory slot, and the
+     * deposit assertion failed against a slot it was never meant to touch.
+     */
+    private static Slot findPlayerInventorySlot(VaultMenu menu, ServerPlayer player, int containerSlotIndex) {
         for (Slot slot : menu.slots) {
-            if (slot.getContainerSlot() == containerSlotIndex) {
+            if (slot.container == player.getInventory() && slot.getContainerSlot() == containerSlotIndex) {
                 return slot;
             }
         }
@@ -204,6 +217,42 @@ public class VaultMenuGameTests {
             }
         }
         return total;
+    }
+
+    /**
+     * <b>New precondition in v0.4, and the reason this suite briefly went red during the §2 rework.</b>
+     * DESIGN.md §2.1 says "nothing linked works without an activated Anchor", and §2.4 locks the
+     * storage tab until activation — so {@link VaultMenu#quickMoveStack} now refuses a deposit into a
+     * dormant Vault. These tests predate activation entirely and never set it up, so they were
+     * asserting against a Vault that in v0.4 terms does not exist yet.
+     *
+     * <p>The same applies to withdrawal, for the second half of §2.0: it is now ranged, so a test that
+     * withdraws has to establish reach. This grants the Overworld tier rather than parking the Anchor
+     * next to the player, because {@code makeMockServerPlayerInLevel} does not put every mock player
+     * in the same place and a local-reach setup would be quietly testing the mock's spawn position.
+     *
+     * <p>None of the assertions below changed. What changed is the world state a transfer needs, and
+     * {@code VaultActivationGameTests} deliberately toggles both flags on the shared singleton, so
+     * every test here re-establishes them rather than depending on run order.
+     */
+    private static void ensureActivatedWithReach(ServerLevel level) {
+        if (!Vault.get(level).activated()) {
+            Vault.activateForFree(level);
+        }
+        Vault.grantReach(level, net.minecraft.world.level.Level.OVERWORLD);
+    }
+
+    /** Spends Sigils until the shared Vault can hold every one of {@code items} as a new type. */
+    private static void ensureRoomForDistinctTypes(ServerLevel level, Item[] items) {
+        int needed = 0;
+        for (Item item : items) {
+            if (Vault.get(level).count(item) == 0) {
+                needed++;
+            }
+        }
+        while (Vault.get(level).distinctTypeCount() + needed > Vault.capacityTier(level).distinctTypeCap()) {
+            Vault.spendSigil(level);
+        }
     }
 
     private static void ensureDistinctTypeHeadroom(ServerLevel level, Item item) {

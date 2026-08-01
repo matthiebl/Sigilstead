@@ -3,9 +3,12 @@ package com.heartstead.client;
 import com.heartstead.client.screen.VaultScreen;
 import com.heartstead.client.vault.VaultClientCache;
 import com.heartstead.network.VaultAnchorPayload;
+import com.heartstead.network.VaultStatePayload;
 import com.heartstead.network.VaultSyncPayload;
 import com.heartstead.registry.HsMenuTypes;
 import com.heartstead.vault.ClientVaultAnchorCache;
+import com.heartstead.vault.ClientVaultUpgradeView;
+import com.heartstead.vault.VaultUpgradeKind;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.screens.MenuScreens;
@@ -28,7 +31,25 @@ public class HeartsteadClient implements ClientModInitializer {
                 (payload, context) -> context.client().execute(() -> VaultClientCache.update(payload.entries())));
         ClientPlayNetworking.registerGlobalReceiver(VaultAnchorPayload.TYPE,
                 (payload, context) -> context.client().execute(() -> ClientVaultAnchorCache.update(payload.anchorPos())));
+        ClientPlayNetworking.registerGlobalReceiver(VaultStatePayload.TYPE,
+                (payload, context) -> context.client().execute(() -> {
+                    VaultClientCache.update(payload);
+                    // Slot#isActive() runs client-side too, so the already-bought reach tiers have to
+                    // reach the common-side view the upgrade slots consult (CONVENTIONS.md §3).
+                    ClientVaultUpgradeView.update(satisfiedKinds(payload));
+                }));
         // TODO Phase 3: Codex screen (§3.3); Artisan extends the vanilla crafting menu (§7.1)
         // TODO Phase 4: core attunement progress in the item tooltip (§4.1)
+    }
+
+    /** The §2.3 reach tiers the synced state says are already bought. */
+    private static java.util.Set<VaultUpgradeKind> satisfiedKinds(VaultStatePayload payload) {
+        java.util.EnumSet<VaultUpgradeKind> set = java.util.EnumSet.noneOf(VaultUpgradeKind.class);
+        for (VaultUpgradeKind kind : VaultUpgradeKind.values()) {
+            if (kind.dimension() != null && payload.reachTiers().contains(kind.dimension())) {
+                set.add(kind);
+            }
+        }
+        return set;
     }
 }

@@ -17,7 +17,8 @@ public record HsConfig(
     int heartCap,
     int heartFloor,
     int heartLossOnDeath,
-    VaultConfig vault) {
+    VaultConfig vault,
+    boolean depositRequiresReach) {
 
   public static final Codec<HsConfig> CODEC =
       RecordCodecBuilder.create(
@@ -34,14 +35,25 @@ public record HsConfig(
                       Codec.intRange(1, 40)
                           .fieldOf("heart_loss_on_death")
                           .forGetter(HsConfig::heartLossOnDeath),
-                      VaultConfig.CODEC.fieldOf("vault").forGetter(HsConfig::vault))
+                      VaultConfig.CODEC.fieldOf("vault").forGetter(HsConfig::vault),
+                      Codec.BOOL
+                          .fieldOf("deposit_requires_reach")
+                          .forGetter(HsConfig::depositRequiresReach))
                   .apply(instance, HsConfig::new));
 
   /**
    * DESIGN.md §12.1 for the Sigil table; §12.6 for lives — 20-heart cap, floor of 5, -1 heart per
    * death. Operators wanting §12.6's harder mode lower {@code heart_floor} to 3 or raise
    * {@code heart_loss_on_death} to 2.
+   *
+   * <p>{@code deposit_requires_reach} ships {@code false} per §2.0 and the OPEN-QUESTIONS decision
+   * of 2026-08-01: free universal deposit is the pitch, and this is the switch that turns it off
+   * rather than a rewrite.
+   *
+   * <p>§12.7's {@code bundle_slots} is deliberately absent: the §2.2 Bundle override it tunes is not
+   * built, and a config field that visibly does nothing is worse than no field at all. It lands with
+   * the override.
    */
   public static final HsConfig DEFAULT =
-      new HsConfig(SigilConfig.DEFAULT, 20, 5, 1, VaultConfig.DEFAULT);
+      new HsConfig(SigilConfig.DEFAULT, 20, 5, 1, VaultConfig.DEFAULT, false);
 }

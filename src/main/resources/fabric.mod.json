@@ -22,7 +22,9 @@
       "com.heartstead.gametest.HeartsteadGameTests",
       "com.heartstead.gametest.VillagerTradePersistenceGameTests",
       "com.heartstead.gametest.VaultGameTests",
-      "com.heartstead.gametest.VaultMenuGameTests"
+      "com.heartstead.gametest.VaultMenuGameTests",
+      "com.heartstead.gametest.VaultActivationGameTests",
+      "com.heartstead.gametest.VaultUpgradeSlotGameTests"
     ]
   },
   "mixins": [

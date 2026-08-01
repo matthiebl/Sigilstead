@@ -1,12 +1,12 @@
 package com.heartstead.blockentity;
 
 import com.heartstead.registry.HsBlockEntities;
+import com.heartstead.vault.VaultAccess;
 import com.heartstead.vault.VaultMenu;
 import net.fabricmc.fabric.api.menu.v1.ExtendedMenuProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.util.Unit;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -21,10 +21,10 @@ import net.minecraft.world.level.block.state.BlockState;
  * <p>{@link com.heartstead.registry.HsMenuTypes#VAULT} is registered as a Fabric
  * {@link net.fabricmc.fabric.api.menu.v1.ExtendedMenuType}, which refuses to open (throwing at
  * runtime, not compile time — see the crash this class used to cause) unless its
- * {@link net.minecraft.world.MenuProvider} also implements {@link ExtendedMenuProvider}. The Vault
- * needs no real opening data, so this just hands back {@link Unit#INSTANCE}.
+ * {@link net.minecraft.world.MenuProvider} also implements {@link ExtendedMenuProvider}. The opening
+ * data is {@link VaultAccess#ANCHOR} — the Anchor is the only place §2.4's tab 1 exists.
  */
-public class VaultAnchorBlockEntity extends BlockEntity implements ExtendedMenuProvider<Unit> {
+public class VaultAnchorBlockEntity extends BlockEntity implements ExtendedMenuProvider<VaultAccess> {
 
     public VaultAnchorBlockEntity(BlockPos pos, BlockState state) {
         super(HsBlockEntities.VAULT_ANCHOR, pos, state);
@@ -37,11 +37,11 @@ public class VaultAnchorBlockEntity extends BlockEntity implements ExtendedMenuP
 
     @Override
     public AbstractContainerMenu createMenu(int containerId, Inventory playerInventory, Player player) {
-        return new VaultMenu(containerId, playerInventory);
+        return new VaultMenu(containerId, playerInventory, VaultAccess.ANCHOR);
     }
 
     @Override
-    public Unit getScreenOpeningData(ServerPlayer player) {
-        return Unit.INSTANCE;
+    public VaultAccess getScreenOpeningData(ServerPlayer player) {
+        return VaultAccess.ANCHOR;
     }
 }

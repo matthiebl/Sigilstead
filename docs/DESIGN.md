@@ -160,6 +160,11 @@ world's position claim. Deliberately breaking it is the only way to lose an acti
 
 **Nothing linked works without an activated Anchor.** Funnels go inert, Satchels and Pouches refuse.
 
+The Funnel is configured **in the world, not in a screen**: right-clicking it with an empty hand
+cycles input/output (the mode is a block state, so it is visible and needs no sync packet), and
+right-clicking with an item sets the output filter to that item's type. Nothing is consumed. Two
+fields do not earn a screen handler. Throughput is `vault.funnel_items_per_transfer` (§12.7).
+
 ### 2.2 Access side (items)
 
 | Tier | Item | Capability |
@@ -210,11 +215,35 @@ The Anchor's screen has **two tabs**:
 1. **Anchor** — activation, capacity upgrades, reach upgrades, and what each costs. Always available,
    including when the Anchor is dormant; it is how a player learns what activation is. Shows the
    "use a Vault Sigil from the Vault" fallback (§2.1) only when it applies.
-2. **Storage** — the Vault itself, **locked until activated**. A scrollable slot grid showing stored
-   stacks with counts, a live search field, click-to-withdraw, shift-click-to-deposit, and sort.
-   Pinned favourites and a recents page are still worth having.
 
-The Vault Pouch opens tab 2 alone.
+   **Upgrades are bought by putting the Sigil in a slot**, not by clicking a buy button — the same
+   shape as every interactive block in vanilla. There is **one socket per thing you can buy**:
+   capacity, then one per reach tier. An empty socket shows its Sigil ghosted so it says what it
+   wants without a caption, and a reach tier already bought shows that Sigil dimmed and takes no
+   more — §12.3's table drawn rather than described. Capacity never fills in, because §12.3 gives it
+   no ceiling. Activation stays a button, because its two cases — the world's free first activation
+   and the from-Vault fallback — have no item for the player to place.
+
+2. **Storage** — the Vault itself, **locked until activated**.
+   A scrollable slot grid showing stored stacks with counts, a live search field, click-to-withdraw,
+   shift-click-to-deposit, and sort. **This is the tab the screen opens on** — storage is what a
+   player opens the Vault for, and tab 1 is somewhere they go deliberately. Pinned favourites and a
+   recents page are still worth having.
+
+Both tabs are drawn as **bookmark tabs** above a panel painted in vanilla's own greys — not blitted
+from a chest texture, which is 176 wide and leaves no room beside a nine-column grid for the
+scrollbar. Where a verb is unavailable — a Satchel, or a Pouch out of reach — the grid cells are
+drawn as **disabled sockets** rather than captioned with an error, because the shape of a slot you
+may not use is already a thing Minecraft says.
+
+The grid behaves like a container even though it has no real slots behind it: **hovering shows the
+item's tooltip and highlights the cell** (empty cells too — an empty cell is still somewhere you can
+drop something), and **clicking with a stack on the cursor deposits it**, right-click for one. That
+gesture is what makes the Vault feel like a chest rather than a read-only list.
+
+The Vault Pouch opens tab 2 alone. **So does the Satchel**, with withdrawal refused — one screen, and
+what differs between the two rungs is the verb, which is exactly how §2.2 frames the ladder. A
+Satchel showing a greyed-out grid teaches the ladder; a second, deposit-only screen would not.
 
 ### 2.5 What the Vault refuses to store
 
@@ -889,8 +918,9 @@ Codec-backed JSON, loaded on server start (CONVENTIONS.md §5).
 | `vault.reactivation_sigils` | 1 | §2.1 re-anchoring cost |
 | `vault.local_reach_chunks` | 5 | Local reach square, centred on the Anchor |
 | `vault.reach_tier_sigils` | 1 | Dimensional Sigils per reach tier |
+| `vault.funnel_items_per_transfer` | 16 | §2.1 Linked Funnel throughput, per hopper cycle. Never played |
 | `deposit_requires_reach` | `false` | Turns §2.0's free deposit off, making deposit obey reach too |
-| `bundle_slots` | 9 | §2.2 Bundle override |
+| `bundle_slots` | 9 | §2.2 Bundle override. **Not yet implemented** — the field lands with the override |
 | `core_rate_multiplier` | 1.0 | Global multiplier on every §12.4 / §12.5 rate |
 | `core_accrual_cap_hours` | 24 | §4.2 offline backlog ceiling |
 | `attunement_thresholds.*` | §12.4 | Per-family imprint counts |

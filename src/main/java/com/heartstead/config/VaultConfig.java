@@ -4,9 +4,9 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 /**
- * DESIGN.md §2.3 — the Vault's capacity table, expressed as config so it can be tuned without a
- * recompile (CONVENTIONS.md §5). Stack depth is per distinct item type, in stacks; the caller
- * converts to a raw item-count cap using that item's own max stack size.
+ * DESIGN.md §12.3 — the Vault's capacity, reach and activation table, expressed as config so it can
+ * be tuned without a recompile (CONVENTIONS.md §5). Stack depth is per distinct item type, in
+ * stacks; the caller converts to a raw item-count cap using that item's own max stack size.
  */
 public record VaultConfig(
     int tier1DistinctTypes,
@@ -17,7 +17,11 @@ public record VaultConfig(
     int tier3Sigils,
     int tier3DistinctTypes,
     int tier3StackDepth,
-    int postTier3DistinctTypesPerSigil) {
+    int postTier3DistinctTypesPerSigil,
+    int reactivationSigils,
+    int localReachChunks,
+    int reachTierSigils,
+    int funnelItemsPerTransfer) {
 
   public static final Codec<VaultConfig> CODEC =
       RecordCodecBuilder.create(
@@ -50,9 +54,30 @@ public record VaultConfig(
                           .forGetter(VaultConfig::tier3StackDepth),
                       Codec.intRange(0, 10000)
                           .fieldOf("post_tier3_distinct_types_per_sigil")
-                          .forGetter(VaultConfig::postTier3DistinctTypesPerSigil))
+                          .forGetter(VaultConfig::postTier3DistinctTypesPerSigil),
+                      Codec.intRange(0, 100)
+                          .fieldOf("reactivation_sigils")
+                          .forGetter(VaultConfig::reactivationSigils),
+                      Codec.intRange(1, 1024)
+                          .fieldOf("local_reach_chunks")
+                          .forGetter(VaultConfig::localReachChunks),
+                      Codec.intRange(0, 100)
+                          .fieldOf("reach_tier_sigils")
+                          .forGetter(VaultConfig::reachTierSigils),
+                      Codec.intRange(1, 64)
+                          .fieldOf("funnel_items_per_transfer")
+                          .forGetter(VaultConfig::funnelItemsPerTransfer))
                   .apply(instance, VaultConfig::new));
 
-  /** DESIGN.md §2.3's table verbatim: T1 0 Sigils/27 types/10 stacks, T2 3/108/64, T3 8/512/2048, +27 types per Sigil after. */
-  public static final VaultConfig DEFAULT = new VaultConfig(27, 10, 3, 108, 64, 8, 512, 2048, 27);
+  /**
+   * DESIGN.md §12.3's tables verbatim: T1 0 Sigils/27 types/10 stacks, T2 3/108/64, T3 8/512/2048,
+   * +27 types per Sigil after; 1 Vault Sigil to re-anchor, a 5×5-chunk local reach square, and 1
+   * dimensional Sigil per reach tier.
+   *
+   * <p>{@code funnel_items_per_transfer} has no §12 row yet — the Linked Funnel's throughput was
+   * never specced beyond "hopper-speed" (§2.1), and a hopper's one-item-per-cycle would be uselessly
+   * slow against a Vault. 16 per cycle is a starting guess and is flagged for playtesting.
+   */
+  public static final VaultConfig DEFAULT =
+      new VaultConfig(27, 10, 3, 108, 64, 8, 512, 2048, 27, 1, 5, 1, 16);
 }

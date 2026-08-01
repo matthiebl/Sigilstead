@@ -2,7 +2,6 @@ package com.heartstead.item;
 
 import com.heartstead.registry.HsBlocks;
 import com.heartstead.vault.Vault;
-import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -34,7 +33,8 @@ public class VaultAnchorBlockItem extends BlockItem {
 
     @Override
     public InteractionResult useOn(UseOnContext context) {
-        if (context.getLevel() instanceof ServerLevel serverLevel && otherAnchorStands(serverLevel)) {
+        if (context.getLevel() instanceof ServerLevel serverLevel
+                && otherAnchorStands(serverLevel, context.getClickedPos())) {
             if (context.getPlayer() instanceof ServerPlayer serverPlayer) {
                 serverPlayer.sendSystemMessage(Component.translatable("item.heartstead.vault_anchor.already_exists"), true);
             }
@@ -43,8 +43,7 @@ public class VaultAnchorBlockItem extends BlockItem {
         return super.useOn(context);
     }
 
-    private static boolean otherAnchorStands(ServerLevel level) {
-        Optional<BlockPos> anchor = Vault.anchorPos(level);
-        return anchor.isPresent() && level.getBlockState(anchor.get()).is(HsBlocks.VAULT_ANCHOR);
+    private static boolean otherAnchorStands(ServerLevel level, BlockPos placingAt) {
+        return Vault.anchorStandsElsewhere(level, placingAt, HsBlocks.VAULT_ANCHOR);
     }
 }

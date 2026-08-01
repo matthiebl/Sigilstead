@@ -1,6 +1,7 @@
 package com.heartstead.registry;
 
 import com.heartstead.Heartstead;
+import com.heartstead.block.LinkedFunnelBlock;
 import com.heartstead.block.VaultAnchorBlock;
 import com.heartstead.item.VaultAnchorBlockItem;
 import net.minecraft.core.Registry;
@@ -12,6 +13,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.material.PushReaction;
 
 /**
  * Block registration (DESIGN.md §2.1, CONVENTIONS.md §2). The first real registered blocks in the
@@ -22,11 +24,36 @@ public final class HsBlocks {
     private HsBlocks() {
     }
 
+    /**
+     * §2.1 — the Anchor, with the half of its hardening that lives in code.
+     * {@code PushReaction.BLOCK} stops a piston relocating it out from under the world's position
+     * claim, and the 1200 explosion resistance (obsidian's) covers creepers, beds and TNT. The other
+     * half — the {@code dragon_immune} and {@code wither_immune} tags — is JSON in
+     * {@code data/minecraft/tags/block/}, because tags are data-driven content (CONVENTIONS.md §6).
+     */
     public static final Block VAULT_ANCHOR = register(
             "vault_anchor",
             key -> new VaultAnchorBlock(
-                    BlockBehaviour.Properties.of().setId(key).strength(5.0f, 1200.0f).sound(SoundType.AMETHYST).requiresCorrectToolForDrops()),
+                    BlockBehaviour.Properties.of()
+                            .setId(key)
+                            .strength(5.0f, 1200.0f)
+                            .sound(SoundType.AMETHYST)
+                            .pushReaction(PushReaction.BLOCK)
+                            .requiresCorrectToolForDrops()),
             VaultAnchorBlockItem::new);
+
+    /**
+     * §2.1 — the hopper-speed automation link. Deliberately ordinary: it holds nothing and claims
+     * nothing, so losing one costs a hopper and the Vault is unaffected.
+     */
+    public static final Block LINKED_FUNNEL = register(
+            "linked_funnel",
+            key -> new LinkedFunnelBlock(
+                    BlockBehaviour.Properties.of()
+                            .setId(key)
+                            .strength(3.0f, 8.0f)
+                            .sound(SoundType.METAL)
+                            .requiresCorrectToolForDrops()));
 
     private static Block register(String path, java.util.function.Function<ResourceKey<Block>, Block> factory) {
         return register(path, factory, BlockItem::new);

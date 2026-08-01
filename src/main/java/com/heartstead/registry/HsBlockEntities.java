@@ -1,6 +1,7 @@
 package com.heartstead.registry;
 
 import com.heartstead.Heartstead;
+import com.heartstead.blockentity.LinkedFunnelBlockEntity;
 import com.heartstead.blockentity.VaultAnchorBlockEntity;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -16,11 +17,16 @@ public final class HsBlockEntities {
 
     public static final BlockEntityType<VaultAnchorBlockEntity> VAULT_ANCHOR = Registry.register(
             BuiltInRegistries.BLOCK_ENTITY_TYPE,
-            key(),
+            key("vault_anchor"),
             new BlockEntityType<>(VaultAnchorBlockEntity::new, java.util.Set.of(HsBlocks.VAULT_ANCHOR)));
 
-    private static ResourceKey<BlockEntityType<?>> key() {
-        return ResourceKey.create(Registries.BLOCK_ENTITY_TYPE, Heartstead.id("vault_anchor"));
+    public static final BlockEntityType<LinkedFunnelBlockEntity> LINKED_FUNNEL = Registry.register(
+            BuiltInRegistries.BLOCK_ENTITY_TYPE,
+            key("linked_funnel"),
+            new BlockEntityType<>(LinkedFunnelBlockEntity::new, java.util.Set.of(HsBlocks.LINKED_FUNNEL)));
+
+    private static ResourceKey<BlockEntityType<?>> key(String path) {
+        return ResourceKey.create(Registries.BLOCK_ENTITY_TYPE, Heartstead.id(path));
     }
 
     /** Forces class load (and so the static registrations above) at an explicit, ordered point. */

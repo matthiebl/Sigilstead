@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "AEA",
+    "CBC",
+    "AEA"
+  ],
+  "key": {
+    "A": "minecraft:amethyst_shard",
+    "E": "minecraft:ender_pearl",
+    "C": "minecraft:copper_ingot",
+    "B": "minecraft:barrel"
+  },
+  "result": {
+    "id": "heartstead:vault_anchor"
+  }
+}

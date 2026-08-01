@@ -29,6 +29,14 @@ import net.minecraft.world.phys.BlockHitResult;
  * {@code Level#destroyBlock} on itself — mutating the world for the position a block is still in the
  * middle of being placed at is reentrant and, in testing, hung the server on the next save. Vetoing
  * before the placement commits is the standard, safe pattern (the same one torches and saplings use).
+ *
+ * <p><b>Hardening (§2.1).</b> "The Anchor is hard to lose by accident": {@code PushReaction.BLOCK}
+ * (set on the block properties in {@code HsBlocks}) stops a piston relocating it out from under the
+ * world's position claim, a high explosion resistance plus the {@code dragon_immune} and
+ * {@code wither_immune} tags cover the two things that flatten bases uninvited, and
+ * {@link #affectNeighborsAfterRemoval} makes deliberately breaking it the only way to lose an
+ * activation. The Anchor <em>item</em> still drops normally — the punishment is the lost activation,
+ * not a lost block.
  */
 public class VaultAnchorBlock extends BaseEntityBlock {
 
@@ -50,7 +58,7 @@ public class VaultAnchorBlock extends BaseEntityBlock {
 
     @Override
     protected boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
-        if (level instanceof ServerLevel serverLevel && otherAnchorStands(serverLevel, pos)) {
+        if (level instanceof ServerLevel serverLevel && Vault.anchorStandsElsewhere(serverLevel, pos, this)) {
             return false;
         }
         // The client has no view of the server-only SavedData claim, so without this it always
@@ -72,15 +80,29 @@ public class VaultAnchorBlock extends BaseEntityBlock {
         if (oldState.is(state.getBlock()) || !(level instanceof ServerLevel serverLevel)) {
             return;
         }
-        if (!otherAnchorStands(serverLevel, pos)) {
+        if (!Vault.anchorStandsElsewhere(serverLevel, pos, this)) {
             Vault.claimAnchor(serverLevel, pos);
         }
     }
 
-    /** True if a Vault Anchor other than the one at {@code pos} is currently standing in the world. */
-    private boolean otherAnchorStands(ServerLevel level, BlockPos pos) {
-        Optional<BlockPos> anchor = Vault.anchorPos(level);
-        return anchor.isPresent() && !anchor.get().equals(pos) && level.getBlockState(anchor.get()).is(this);
+    /**
+     * §2.1 — breaking the standing Anchor loses the activation. Capacity and reach are untouched:
+     * {@link Vault#deactivate} deliberately does not roll either back, so one player breaking a
+     * block on a server cannot delete everyone else's progress. Putting it back costs one Vault
+     * Sigil, and nothing more.
+     *
+     * <p>Guarded on the removed block actually being <em>the</em> claimed Anchor. Without that, a
+     * second Anchor being vetoed by {@link #canSurvive} — which removes a block through this same
+     * path — would deactivate the Vault the player already had.
+     */
+    @Override
+    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
+        super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
+        boolean wasTheClaimedAnchor = Vault.get(level).anchorPos().map(pos::equals).orElse(false)
+                && Vault.get(level).anchorDimension().map(level.dimension()::equals).orElse(false);
+        if (wasTheClaimedAnchor) {
+            Vault.deactivate(level);
+        }
     }
 
     @Override

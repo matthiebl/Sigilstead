@@ -1,14 +1,19 @@
 package com.heartstead.vault;
 
+import com.heartstead.config.HsConfigManager;
+import com.heartstead.network.VaultStatePayload;
 import com.heartstead.network.VaultSyncPayload;
 import com.heartstead.registry.HsMenuTypes;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.Container;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
@@ -16,30 +21,76 @@ import net.minecraft.world.item.ItemStack;
  * DESIGN.md §2.4 — the Vault screen handler. Establishes the block + block entity + screen handler
  * pattern the Codex and core screens (a later phase) copy.
  *
- * <p>Only holds real {@link net.minecraft.world.inventory.Slot}s for the player's own inventory —
- * the Vault side is not slot-backed. §2.3 allows hundreds of distinct types shown through a live
- * search filter, which doesn't map onto vanilla's fixed slot-click protocol, so the Vault grid is
- * client-drawn from a synced snapshot ({@link VaultSyncPayload}) and driven by intents
- * ({@link com.heartstead.network.VaultWithdrawPayload}) instead — "the screen sends intents, never
- * results" (docs/PROMPTS.md). All mutation happens here or in {@link Vault}, never on the client.
+ * <p>The Vault grid is not slot-backed: §2.3 allows hundreds of distinct types shown through a live
+ * search filter, which doesn't map onto vanilla's fixed slot-click protocol, so it is client-drawn
+ * from a synced snapshot ({@link VaultSyncPayload}) and driven by intents. The player's own
+ * inventory and the four §2.3 upgrade slots <em>are</em> real slots, at {@link VaultLayout}'s
+ * coordinates.
+ *
+ * <p><b>Two tabs (§2.4), tracked server-side.</b> The client asks to switch and the server records
+ * it, because the upgrade slots' {@link Slot#isActive()} depends on it — slots left active under the
+ * storage grid would swallow clicks meant for a stored stack. Tab 2 is the default: storage is what
+ * a player opens the Vault for, and tab 1 is where they go deliberately.
+ *
+ * <p><b>Upgrades are slots, not buttons</b> — one per {@link VaultUpgradeKind}, the same shape as
+ * every interactive block in vanilla.
  */
 public final class VaultMenu extends AbstractContainerMenu {
 
-    /** Top-left of the player-inventory slot grid, shared with the client screen's layout. */
-    public static final int PLAYER_INV_X = 8;
-    public static final int PLAYER_INV_Y = 140;
-
     private final Inventory playerInventory;
+    private final VaultAccess access;
+
+    /** §2.3's upgrade slots, one per {@link VaultUpgradeKind}, in declaration order. */
+    private final SimpleContainer upgradeContainer = new NotifyingContainer(VaultUpgradeKind.values().length);
+
+    /** Guards {@link #slotsChanged} against the re-entry its own {@code setItem} calls would cause. */
+    private boolean applyingUpgrades;
+
+    private boolean anchorTabOpen;
     private int lastSyncedRevision = -1;
+    private boolean lastSyncedReach;
 
     public VaultMenu(int containerId, Inventory playerInventory) {
+        this(containerId, playerInventory, VaultAccess.ANCHOR);
+    }
+
+    public VaultMenu(int containerId, Inventory playerInventory, VaultAccess access) {
         super(HsMenuTypes.VAULT, containerId);
         this.playerInventory = playerInventory;
-        addStandardInventorySlots(playerInventory, PLAYER_INV_X, PLAYER_INV_Y);
+        this.access = access;
+
+        VaultUpgradeKind[] kinds = VaultUpgradeKind.values();
+        for (int i = 0; i < kinds.length; i++) {
+            addSlot(new UpgradeSlot(upgradeContainer, i, kinds[i]));
+        }
+        addStandardInventorySlots(playerInventory, VaultLayout.PLAYER_INV_X, VaultLayout.PLAYER_INV_Y);
 
         if (playerInventory.player instanceof ServerPlayer serverPlayer) {
             syncTo(serverPlayer, true);
         }
+    }
+
+    public VaultAccess access() {
+        return access;
+    }
+
+    public boolean anchorTabOpen() {
+        return anchorTabOpen;
+    }
+
+    /**
+     * Client intent — see the class javadoc for why the server needs to know which tab is showing.
+     * Also called directly on the client so its own copy of the menu agrees; {@code isActive()} is
+     * evaluated on both sides, and a client that only told the server would draw upgrade slots it
+     * refused to let the player click.
+     */
+    public void handleSetTab(boolean anchorTab) {
+        this.anchorTabOpen = anchorTab && access.hasAnchorTab();
+    }
+
+    /** The index of the first player-inventory slot, i.e. one past the upgrade slots. */
+    private int firstPlayerSlot() {
+        return VaultUpgradeKind.values().length;
     }
 
     @Override
@@ -47,24 +98,171 @@ public final class VaultMenu extends AbstractContainerMenu {
         return true;
     }
 
+    /** Anything left in an upgrade slot goes back to the player rather than evaporating on close. */
+    @Override
+    public void removed(Player player) {
+        super.removed(player);
+        clearContainer(player, upgradeContainer);
+    }
+
+    /**
+     * §2.3 — the upgrade slots' whole behaviour. Fires whenever their contents change, so dropping a
+     * Sigil in is what buys the upgrade; there is no confirm step.
+     *
+     * <p>Plain Vault Sigils are spent greedily because every one buys something (activation first if
+     * the Vault is dormant, then capacity, which §12.3 gives no ceiling). A dimensional Sigil spends
+     * exactly one, because a second buys nothing — the rest stay in the slot rather than being
+     * silently eaten.
+     */
+    @Override
+    public void slotsChanged(Container container) {
+        super.slotsChanged(container);
+        if (container != upgradeContainer || !(playerInventory.player instanceof ServerPlayer player)) {
+            return;
+        }
+        if (!access.hasAnchorTab() || applyingUpgrades) {
+            return;
+        }
+
+        applyingUpgrades = true;
+        try {
+            applyUpgrades(player.level());
+        } finally {
+            applyingUpgrades = false;
+        }
+    }
+
+    private void applyUpgrades(ServerLevel level) {
+        VaultUpgradeKind[] kinds = VaultUpgradeKind.values();
+        for (int i = 0; i < kinds.length; i++) {
+            ItemStack stack = upgradeContainer.getItem(i);
+            if (stack.isEmpty() || !stack.is(kinds[i].sigil())) {
+                continue;
+            }
+            if (kinds[i] == VaultUpgradeKind.CAPACITY) {
+                spendPlainSigils(level, stack);
+            } else if (!kinds[i].isSatisfied(Vault.get(level)) && Vault.get(level).activated()) {
+                Vault.grantReach(level, kinds[i].dimension());
+                stack.shrink(1);
+            }
+            upgradeContainer.setItem(i, stack.isEmpty() ? ItemStack.EMPTY : stack);
+        }
+    }
+
+    private void spendPlainSigils(ServerLevel level, ItemStack stack) {
+        VaultData vault = Vault.get(level);
+
+        if (!vault.activated()) {
+            int cost = vault.everActivated() ? HsConfigManager.get().vault().reactivationSigils() : 0;
+            if (stack.getCount() < cost) {
+                return;
+            }
+            stack.shrink(cost);
+            Vault.activateForFree(level);
+        }
+
+        // Capacity has no ceiling (§12.3), so every remaining Sigil in the slot buys a step.
+        int remaining = stack.getCount();
+        for (int i = 0; i < remaining; i++) {
+            vault.spendSigil();
+        }
+        stack.shrink(remaining);
+    }
+
+    /**
+     * §2.1 — the one tab-1 verb that is still a button, because the two cases it covers have no item
+     * to put in a slot: the world's free first activation, and the anti-softlock fallback that
+     * spends a Sigil already inside the Vault. Refused unless this menu was opened at the Anchor.
+     */
+    public void handleActivate(ServerPlayer player) {
+        if (!access.hasAnchorTab()) {
+            return;
+        }
+        if (!Vault.tryActivate(player.level(), player)) {
+            player.sendSystemMessage(Component.translatable("gui.heartstead.vault.need_vault_sigil"), true);
+        }
+    }
+
+    /**
+     * §2.4 — deposit the stack the player is holding on the cursor by clicking anywhere in the Vault
+     * grid, the way you would drop it into a chest slot. The grid has no real slots to click, so this
+     * is the intent that stands in for that gesture; right-click deposits one, matching vanilla.
+     *
+     * <p>Goes through {@link Vault#deposit} like every other transfer, and only shrinks the carried
+     * stack by what the Vault actually took.
+     */
+    public void handleDepositCarried(ServerPlayer player, boolean single) {
+        ItemStack carried = getCarried();
+        if (carried.isEmpty()) {
+            return;
+        }
+        ServerLevel level = player.level();
+        if (!VaultReach.canDepositAt(level, player.blockPosition()) || !Vault.isStorable(carried)) {
+            return;
+        }
+
+        int offered = single ? 1 : carried.getCount();
+        ItemStack leftover = Vault.deposit(level, carried.copyWithCount(offered));
+        int moved = offered - leftover.getCount();
+        if (moved <= 0) {
+            return;
+        }
+        carried.shrink(moved);
+        setCarried(carried.isEmpty() ? ItemStack.EMPTY : carried);
+    }
+
     /**
      * Shift-click deposit (DESIGN.md §2.4): a click that would normally move a stack between the
-     * container and the player's own inventory instead deposits it into the Vault, since this menu
-     * has no container side to move it to. Routes through {@link Vault#deposit}, the same
-     * §2.5-tested transfer code the withdraw path uses — a second item-moving path is how the Vault
-     * gets a dupe bug.
+     * container and the player's own inventory instead deposits it into the Vault. Routes through
+     * {@link Vault#deposit}, the same §2.6-tested transfer code the withdraw path uses — a second
+     * item-moving path is how the Vault gets a dupe bug.
+     *
+     * <p>Refuses while dormant and refuses anything §2.5 won't store, and in both cases returns
+     * {@link ItemStack#EMPTY} so vanilla's retry loop terminates — see
+     * {@code VaultMenuGameTests#shiftClickAgainstCappedTypeDoesNotHang}.
      */
     @Override
     public ItemStack quickMoveStack(Player player, int index) {
         if (!(player.level() instanceof ServerLevel serverLevel)) {
             return ItemStack.EMPTY;
         }
-        var slot = slots.get(index);
+        Slot slot = slots.get(index);
         if (!slot.hasItem()) {
             return ItemStack.EMPTY;
         }
 
+        // Shift-clicking an upgrade slot returns its contents to the player, as any input slot does.
+        if (slot.container == upgradeContainer) {
+            ItemStack contents = slot.getItem();
+            ItemStack copy = contents.copy();
+            if (!moveItemStackTo(contents, firstPlayerSlot(), slots.size(), true)) {
+                return ItemStack.EMPTY;
+            }
+            slot.setChanged();
+            return copy;
+        }
+
         ItemStack original = slot.getItem();
+
+        // On tab 1, a Sigil one of the upgrade slots would accept goes there rather than into
+        // storage — the same courtesy a furnace does with fuel. Depositing it instead would be
+        // technically correct and quietly infuriating, since those slots are why that tab is open.
+        if (anchorTabOpen && access.hasAnchorTab()) {
+            int target = upgradeSlotFor(serverLevel, original.getItem());
+            if (target >= 0) {
+                ItemStack copy = original.copy();
+                if (!moveItemStackTo(original, target, target + 1, false)) {
+                    return ItemStack.EMPTY;
+                }
+                slot.setChanged();
+                return copy;
+            }
+        }
+
+        if (!VaultReach.canDepositAt(serverLevel, player.blockPosition()) || !Vault.isStorable(original)) {
+            return ItemStack.EMPTY;
+        }
+
         ItemStack copy = original.copy();
         ItemStack leftover = Vault.deposit(serverLevel, original);
         slot.set(leftover);
@@ -78,19 +276,39 @@ public final class VaultMenu extends AbstractContainerMenu {
         return depositedNothing ? ItemStack.EMPTY : copy;
     }
 
+    /** The empty upgrade slot that would take {@code item}, or -1 if none would. */
+    private int upgradeSlotFor(ServerLevel level, Item item) {
+        VaultUpgradeKind[] kinds = VaultUpgradeKind.values();
+        for (int i = 0; i < kinds.length; i++) {
+            if (kinds[i].sigil() == item && !kinds[i].isSatisfied(Vault.get(level))
+                    && upgradeContainer.getItem(i).isEmpty()) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     /**
      * Server-side handling of a {@link com.heartstead.network.VaultWithdrawPayload} intent. Never
      * trusts the client's count: it's clamped to both live Vault stock and the player's free
      * inventory space by {@link Vault#withdrawInto}, so a full inventory or a stale client snapshot
      * can't lose or duplicate anything.
+     *
+     * <p>Two gates ahead of that, in the order §2 defines them: does this access item grant the
+     * withdrawal verb at all (§2.2), and does the Vault's reach cover where the player is standing
+     * (§2.0, §2.3). The first is silent — the screen already draws a Satchel's grid as disabled
+     * sockets, so a message would be telling the player something they can see.
      */
     public void handleWithdraw(ServerPlayer player, Item item, int count) {
-        if (count <= 0) {
+        if (count <= 0 || !access.canWithdraw()) {
             return;
         }
         ServerLevel level = player.level();
-        int available = Vault.get(level).count(item);
-        if (available <= 0) {
+        if (!VaultReach.canWithdrawAt(level, player.blockPosition())) {
+            player.sendSystemMessage(Component.translatable("gui.heartstead.vault.out_of_reach"), true);
+            return;
+        }
+        if (Vault.get(level).count(item) <= 0) {
             return;
         }
         int withdrawn = Vault.withdrawInto(level, item, count, player.getInventory());
@@ -107,13 +325,93 @@ public final class VaultMenu extends AbstractContainerMenu {
         }
     }
 
+    /**
+     * Pushes both the contents snapshot and the §2.4 tab-1 state whenever the Vault's revision
+     * counter has moved. One revision counter drives both so the two can never disagree — the tab-1
+     * numbers and the grid are always from the same instant.
+     */
     private void syncTo(ServerPlayer serverPlayer, boolean force) {
-        VaultData vault = Vault.get(serverPlayer.level());
+        ServerLevel level = serverPlayer.level();
+        VaultData vault = Vault.get(level);
         int revision = vault.revision();
-        if (!force && revision == lastSyncedRevision) {
+
+        // Reach depends on where the player is standing, not on the Vault's contents — so walking out
+        // of range changes nothing the revision counter would notice. Without this second trigger the
+        // client keeps drawing a usable grid until something unrelated happens to dirty the Vault.
+        boolean reach = VaultReach.canWithdrawAt(level, serverPlayer.blockPosition());
+        if (!force && revision == lastSyncedRevision && reach == lastSyncedReach) {
             return;
         }
         lastSyncedRevision = revision;
+        lastSyncedReach = reach;
         ServerPlayNetworking.send(serverPlayer, VaultSyncPayload.of(vault.contents()));
+        ServerPlayNetworking.send(serverPlayer, stateFor(level, serverPlayer, vault));
+    }
+
+    private static VaultStatePayload stateFor(ServerLevel level, ServerPlayer player, VaultData vault) {
+        VaultCapacityTier tier = VaultCapacityTier.forSigilsSpent(vault.sigilsSpent(), HsConfigManager.get().vault());
+        return new VaultStatePayload(
+                vault.activated(),
+                vault.everActivated(),
+                vault.sigilsSpent(),
+                tier.distinctTypeCap(),
+                tier.stackDepthCap(),
+                vault.distinctTypeCount(),
+                java.util.List.copyOf(vault.reachTiers()),
+                Vault.canActivateFromVaultStock(level),
+                VaultReach.canWithdrawAt(level, player.blockPosition()),
+                HsConfigManager.get().vault().reactivationSigils());
+    }
+
+    /**
+     * {@link SimpleContainer#setChanged()} is a no-op and the class has no listener hook, so a plain
+     * one never tells the menu that a player put something in it — which is why the upgrade slots
+     * accepted Sigils and then did nothing at all with them. Vanilla solves this the same way, by
+     * having crafting containers hold their menu and call {@code slotsChanged} themselves.
+     */
+    private final class NotifyingContainer extends SimpleContainer {
+
+        NotifyingContainer(int size) {
+            super(size);
+        }
+
+        @Override
+        public void setChanged() {
+            super.setChanged();
+            slotsChanged(this);
+        }
+    }
+
+    /**
+     * One §2.3 upgrade. Accepts only its own Sigil (§12.2), so a misdrop bounces instead of sitting
+     * in a slot that will never spend it, and goes inactive once its tier is bought — which is what
+     * draws it as filled-and-disabled rather than as an empty socket.
+     */
+    private final class UpgradeSlot extends Slot {
+
+        private final VaultUpgradeKind kind;
+
+        UpgradeSlot(Container container, int index, VaultUpgradeKind kind) {
+            super(container, index, VaultLayout.upgradeSlotX(index), VaultLayout.UPGRADE_SLOT_Y);
+            this.kind = kind;
+        }
+
+        @Override
+        public boolean mayPlace(ItemStack stack) {
+            return stack.is(kind.sigil());
+        }
+
+        @Override
+        public boolean isActive() {
+            if (!anchorTabOpen || !access.hasAnchorTab()) {
+                return false;
+            }
+            Player player = playerInventory.player;
+            if (player.level() instanceof ServerLevel serverLevel) {
+                return !kind.isSatisfied(Vault.get(serverLevel));
+            }
+            // Client side: the synced state is the only view of what's been bought.
+            return !ClientVaultUpgradeView.isSatisfied(kind);
+        }
     }
 }

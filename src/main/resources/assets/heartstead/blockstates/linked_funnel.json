@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "mode=input": { "model": "heartstead:block/linked_funnel_input" },
+    "mode=output": { "model": "heartstead:block/linked_funnel_output" }
+  }
+}
