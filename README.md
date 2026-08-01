@@ -9,15 +9,16 @@
 
 | System | Replaces |
 |---|---|
-| **The Vault** — player-bound virtual storage, deposit into linked blocks, withdraw from anywhere | Chest sorting halls |
+| **The Vault** — shared world storage; deposit into it from anywhere, withdraw as far as you've explored | Chest sorting halls |
 | **Cores** — attune a core by *playing*, socket it into housing, get passive yield | Mob farms, iron farms, raid farms, quarries |
 | **The Codex** — archive an enchanted book, teach a librarian to sell that enchantment forever | Trade-hall reroll grinding |
 | **Lives** — keep inventory, lose a heart instead; earn hearts back by exploring | Losing your stuff to a creeper at y=-58 |
 | **Abundance / Kiln Touch** — bulk-drop multiplication, autosmelt that keeps Fortune | Manual bulk gathering |
 | **Artisan's Table** — craft from inventory *and* Vault, vanilla recipe book included | Walking to a bench, hunting for materials |
 
-Everything hangs off one found item — the **Heart Shard** — so exploring is never wasted, and extra
-lives compete with farm cores for the same currency.
+Everything hangs off one found item — the **Sigil** — which crafts into exactly one of three things:
+a farm core, an extra heart, or storage. Exploring is never wasted, no drop is ever dead in your
+hands, and every Sigil you pick up is a choice between the three.
 
 ## Read this first
 
@@ -92,5 +93,5 @@ multiplayer, and releases trail new Minecraft versions.
 ## Adding it to an existing world
 
 It works, but there is **no catch-up path**. A world with chests full of diamonds still has zero
-Heart Shards, and the only way to get them is to go exploring — same as a fresh world. That's
+Sigils, and the only way to get them is to go exploring — same as a fresh world. That's
 deliberate: the economy is the point of the mod.

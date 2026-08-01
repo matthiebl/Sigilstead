@@ -29,7 +29,7 @@ project is a mod.
 
 Consequences:
 
-- **Recipes gate correctly.** An ingredient of `heartstead:heart_shard` matches *only* a Heart Shard.
+- **Recipes gate correctly.** An ingredient of `heartstead:sigil` matches *only* a Sigil.
   There is no base-item table; do not reintroduce one.
 - **Blocks are blocks.** Vault Anchor, Soul Cage, Quarry Node and the rest are real blocks with their
   own block states, textures, and block entities. No marker entities shadowing a vanilla barrel, and
@@ -40,10 +40,10 @@ Consequences:
 
 | Kind | Convention | Example |
 |---|---|---|
-| Registry id | snake_case | `heartstead:vital_heart` |
-| Registry holder field | SCREAMING_SNAKE | `HsItems.VITAL_HEART` |
+| Registry id | snake_case | `heartstead:vault_sigil` |
+| Registry holder field | SCREAMING_SNAKE | `HsItems.VAULT_SIGIL` |
 | Registry class | `Hs` + plural | `HsItems`, `HsBlocks`, `HsBlockEntities` |
-| Lang key | vanilla scheme | `item.heartstead.vital_heart` |
+| Lang key | vanilla scheme | `item.heartstead.vault_sigil` |
 
 One registry class per registry, all under `com.heartstead.registry`. Registration is called
 explicitly and in order from `Heartstead.onInitialize()` — never rely on static class-load timing.

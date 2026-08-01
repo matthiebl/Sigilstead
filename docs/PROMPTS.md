@@ -19,18 +19,24 @@ Phase numbers match [DESIGN.md](DESIGN.md) §9.
 
 | Phase | Status |
 |---|---|
-| 0.1 — Registration foundation | ✅ Done |
-| 0.2 — Loot tables | ✅ Done |
+| 0.1 — Registration foundation | ✅ Done — **against spec v0.3, superseded** |
+| 0.2 — Loot tables | ✅ Done — **against spec v0.3, superseded** |
 | 0.5a — Villager trade persistence | ✅ Done |
-| 1 — Lives | ✅ Done |
-| 2 — The Vault (storage) | ✅ Done |
-| 2 — The Vault (screen) | ✅ Done |
+| 1 — Lives | ✅ Done — **item renamed in v0.4** |
+| 2 — The Vault (storage) | ✅ Done — **reworked in v0.4** |
+| 2 — The Vault (screen) | ✅ Done — **reworked in v0.4** |
+| 2.5 — Economy retrofit | ⬜ Not started |
 | 3 — Codex | ⬜ Not started |
 | 3 — Artisan's Table | ⬜ Not started |
 | 4 — Cores | ⬜ Not started |
 | 4 — Classic farm replacements | ⬜ Not started |
 
-**Up next: Phase 3 — Codex and Artisan's Table.**
+**Up next: Phase 2.5 — the economy retrofit.**
+
+DESIGN.md moved to v0.4 after Phases 0–2 shipped. The spine went from two items (Heart Shard →
+Vital Heart) to one found Sigil with three children, and the Vault gained activation, reach tiers and
+container rules. **Phase 2.5 reconciles the code with the spec before Phase 3 builds on top of it** —
+doing Codex work first would mean writing it twice.
 
 ---
 
@@ -55,6 +61,10 @@ Also add the Vital Heart crafting recipe as JSON in data/heartstead/recipe/.
 Run ./gradlew build when done and report the actual result.
 ```
 
+> **Superseded by v0.4.** The spine is no longer heart_shard → vital_heart. It is one found `sigil`
+> plus `core_sigil`, `heart_sigil`, `vault_sigil` and the three dimensional variants (§1, §12.2).
+> Phase 2.5 does the rename; this prompt is kept only so the git history reads.
+
 ### 0.2 — Loot tables ✅
 
 ```
@@ -70,6 +80,10 @@ Consider whether a Fabric loot-table-modification callback is a better fit than
 overriding vanilla loot table JSON outright — overriding conflicts with every other mod
 that touches the same table. Recommend one and say why.
 ```
+
+> **Superseded by v0.4.** The whole drop table changed and moved to §12.1 — different item, roughly
+> quarter rates on chests and mobs, new boss and mini-boss entries north of 50%, and two hard
+> exclusions (nothing killed by a core, and never the Wither). Phase 2.5 redoes it.
 
 Phase 0 ends there. **There is no advancement or bounty work in this phase** — read DESIGN.md §7.3
 before proposing any. Advancements are deferred until the §1 economy has actually been played.
@@ -110,6 +124,10 @@ GameTest the floor: die repeatedly, assert health never goes below it.
 Note DESIGN.md §1.1 — Blank Core must stay cheaper than Life Heart. Don't change either
 recipe without flagging it.
 ```
+
+> **Partly superseded by v0.4.** The mechanic is unchanged and still shipped; the item is now the
+> **Heart Sigil** and its numbers moved to §12.6. Phase 2.5a does the rename. The §1.1 guardrail
+> survives verbatim, with Core Sigil in Blank Core's place.
 
 ---
 
@@ -153,6 +171,89 @@ patterns carefully — the Codex and the cores will copy them.
 
 ---
 
+## Phase 2.5 — Economy retrofit ⬜
+
+Phases 0–2 shipped against spec v0.3. DESIGN.md v0.4 unified the currency and reworked the Vault.
+This phase closes the gap. **Do it before Phase 3** — the Codex and the Artisan both build on the
+Vault's transfer path and on §1's item ids, and doing them first means doing them twice.
+
+Three tasks, in order. Don't merge them; the first is a rename and the second changes behaviour, and
+mixing those makes the diff unreviewable.
+
+### 2.5a — Rename the spine
+
+```
+Read docs/DESIGN.md §1 and §12.2, then retire the v0.3 spine.
+
+heart_shard and vital_heart are GONE, replaced by one found item `sigil`. life_heart
+becomes `heart_sigil`; the not-yet-built Blank Core is now `core_sigil`. Add `vault_sigil`
+plus `overworld_vault_sigil`, `nether_vault_sigil` and `end_vault_sigil`.
+
+Rename the Java too — HsItems fields, LifeHeartItem, HeartShardLoot, and the lives
+package's references. Registry ids, lang keys, models and textures all move with them.
+This is a pre-release mod with no players, so there is NO migration path and no legacy id
+aliasing: delete the old ids outright.
+
+Then write the §12.2 recipes as JSON. The §1.1 guardrail is a hard constraint — Core Sigil
+must stay the cheapest of the three surcharges. Say so if any recipe you write breaks it.
+
+./gradlew build and report the real result.
+```
+
+### 2.5b — Redo the drop tables
+
+```
+Replace the v0.3 Heart Shard loot with the §12.1 Sigil table. Every chest, mob and boss
+entry, including the new ones (Ravager, Warden, Ender Dragon first-kill vs respawn).
+
+TWO EXCLUSIONS, and they are the reason the economy doesn't bootstrap — read §4.2 and
+§12.1 before writing either:
+
+1. No mob killed by a core ever drops a Sigil. Cores don't exist until Phase 4, so build
+   the hook now and leave it obviously named, or Phase 4 will not remember to add it.
+2. The Wither never drops a Sigil, even on a player kill. The §5 Wither Skull Core makes
+   skulls passively, so skulls -> Wither -> Sigils is the loop in disguise.
+
+Keep the Fabric loot-table-modification callback approach from 0.2 rather than overriding
+vanilla JSON.
+
+GameTest exclusion 2 at minimum: kill a Wither, assert zero Sigils.
+```
+
+### 2.5c — Rework the Vault
+
+```
+Read docs/DESIGN.md §2 in full, then bring the Phase 2 Vault up to v0.4.
+
+Behaviour changes, all specced:
+
+- §2.1 activation. First Anchor a world ever has activates free; every activation after
+  costs a Vault Sigil; breaking an activated Anchor loses the activation but NEVER the
+  capacity or reach already bought. The anti-softlock fallback (a Vault Sigil sitting in
+  the Vault can pay) is part of this, and a held Sigil is always preferred.
+- §2.1 block hardening: PushReaction.BLOCK, explosion resistance, and the dragon_immune
+  and wither_immune tags.
+- §2.0 the deposit/withdraw split. Deposit is unrestricted from anywhere. Withdrawal needs
+  the §12.3 reach tier covering where the player is standing. This is ONE rule and it
+  applies to the Satchel, the Pouch and the Linked Funnel's output mode alike.
+- §2.3 reach tiers as world state alongside capacity, bought with the dimensional Sigils.
+- §2.5 the container rules, both directions: the Vault rejects any item with a non-empty
+  container or bundle_contents component, and the Bundle override refuses to nest.
+- §2.4 the two-tab Anchor screen. Tab 1 (activation and upgrades) is always available
+  including when dormant; tab 2 (storage) is locked until activated.
+
+Every number comes from §12.3 and §12.7 as config, not literals.
+
+The §2.6 conservation suite still has to pass unchanged — if a test needs editing to go
+green, that is a finding to report, not a test to edit. Add cases for: activation across a
+world reload, a withdrawal attempted from a dimension the world hasn't bought, and deposit
+while the Anchor's chunk is unloaded.
+
+./gradlew build && ./gradlew runGametest, and report real output.
+```
+
+---
+
 ## Phase 3 — Codex and Artisan's Table ⬜
 
 ```
@@ -185,8 +286,13 @@ Vault gets a dupe bug, and it would invalidate the §2.5 suite.
 ## Phase 4 — Cores ⬜
 
 ```
-Implement docs/DESIGN.md §4: Blank Core, the prime -> imprint attunement in §4.1, the
-four housing blocks in §4.2, and rate tiering in §4.3.
+Implement docs/DESIGN.md §4: the prime -> imprint attunement in §4.1, the four housing
+blocks in §4.2, and rate tiering in §4.3. The Core Sigil itself already exists from
+Phase 2.5a — don't re-add it. Every recipe, threshold and rate comes from §12.4.
+
+§4.2's no-Sigils-from-cores rule is absolute and is the reason the economy doesn't
+bootstrap. Phase 2.5b left a hook for it; wire every core loot table through that hook and
+GameTest it — socket a core, run it, assert zero Sigils ever appear in its output.
 
 Attunement state is a data component on the stack per §4.1. Get the hand rules exactly
 right: an un-attuned core only takes a target from the main hand or offhand, but once it
@@ -209,7 +315,8 @@ core_rate_multiplier ships at 1.0 but is a config field; I expect to lower it.
 Then, separately:
 
 ```
-Implement the eleven classic farm replacements in docs/DESIGN.md §5.
+Implement the eleven classic farm replacements in docs/DESIGN.md §5, with every recipe,
+imprint and rate taken from §12.5.
 
 These need NO new blocks — every one sockets into a §4.2 housing. The housing supplies
 the family, the core supplies the rate and the loot table. It should come out as eleven
@@ -218,7 +325,7 @@ recipes and eleven loot tables plus the imprint conditions, and almost no new Ja
 Note the two imprint shapes in §5 (milestone vs counted) and which cores use which.
 
 Before implementing, check my tier-I and tier-III numbers against the comparison table at
-the end of §5 and tell me if any of them are wrong — those rates have never been played.
+the end of §12.5 and tell me if any are wrong — those rates have never been played.
 ```
 
 ---
