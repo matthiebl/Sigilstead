@@ -66,7 +66,8 @@ public final class HsBlocks {
         ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, Heartstead.id(path));
         Block block = Registry.register(BuiltInRegistries.BLOCK, blockKey, blockFactory.apply(blockKey));
         ResourceKey<Item> itemKey = ResourceKey.create(Registries.ITEM, Heartstead.id(path));
-        Registry.register(BuiltInRegistries.ITEM, itemKey, itemFactory.apply(block, new Item.Properties().setId(itemKey)));
+        Registry.register(BuiltInRegistries.ITEM, itemKey,
+                itemFactory.apply(block, new Item.Properties().setId(itemKey).useBlockDescriptionPrefix()));
         return block;
     }
 

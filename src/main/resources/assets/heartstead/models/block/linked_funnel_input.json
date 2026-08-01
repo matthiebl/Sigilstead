@@ -1,8 +1,8 @@
 {
   "parent": "minecraft:block/cube_bottom_top",
   "textures": {
-    "top": "minecraft:block/hopper_top",
-    "bottom": "minecraft:block/copper_block",
-    "side": "minecraft:block/hopper_outside"
+    "top": "heartstead:block/linked_funnel_mouth",
+    "bottom": "heartstead:block/linked_funnel_plate",
+    "side": "heartstead:block/linked_funnel_side"
   }
 }

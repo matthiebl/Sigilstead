@@ -1,6 +1,7 @@
 {
-  "parent": "minecraft:block/cube_all",
+  "parent": "minecraft:block/cube_column",
   "textures": {
-    "all": "minecraft:block/amethyst_block"
+    "end": "heartstead:block/vault_anchor_top",
+    "side": "heartstead:block/vault_anchor_side"
   }
 }

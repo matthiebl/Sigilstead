@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "minecraft:item/bundle_open_front"
+    "layer0": "heartstead:item/vault_pouch"
   }
 }
