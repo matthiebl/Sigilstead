@@ -3,9 +3,13 @@ package com.heartstead;
 import com.heartstead.economy.HeartShardLoot;
 import com.heartstead.lives.LivesSystem;
 import com.heartstead.registry.HsAttachments;
+import com.heartstead.registry.HsBlockEntities;
+import com.heartstead.registry.HsBlocks;
 import com.heartstead.registry.HsComponents;
 import com.heartstead.registry.HsCreativeTabs;
 import com.heartstead.registry.HsItems;
+import com.heartstead.registry.HsMenuTypes;
+import com.heartstead.registry.HsPayloads;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
@@ -35,13 +39,14 @@ public class Heartstead implements ModInitializer {
     public void onInitialize() {
         HsComponents.register();
         HsItems.register();
+        HsBlocks.register();
+        HsBlockEntities.register();
+        HsMenuTypes.register();
+        HsPayloads.register();
         HsCreativeTabs.register();
         HsAttachments.register();
         HeartShardLoot.register();
         LivesSystem.register();
-        // TODO Phase 3: HsBlocks.register();
-        // TODO Phase 3: HsBlockEntities.register();
-        // TODO Phase 3: HsScreenHandlers.register();
         // TODO Phase 4: HsCoreTypes.register();
 
         LOG.info("Heartstead loaded.");

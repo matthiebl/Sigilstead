@@ -31,6 +31,7 @@ public final class HsCreativeTabs {
                     output.accept(HsItems.VITAL_HEART);
                     output.accept(HsItems.LIFE_HEART);
                     output.accept(HsItems.VAULT_SIGIL);
+                    output.accept(HsBlocks.VAULT_ANCHOR);
                 })
                 .build());
     }

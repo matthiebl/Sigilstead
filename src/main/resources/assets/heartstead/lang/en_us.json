@@ -3,5 +3,11 @@
   "item.heartstead.heart_shard": "Heart Shard",
   "item.heartstead.vital_heart": "Vital Heart",
   "item.heartstead.life_heart": "Life Heart",
-  "item.heartstead.vault_sigil": "Vault Sigil"
+  "item.heartstead.vault_sigil": "Vault Sigil",
+  "block.heartstead.vault_anchor": "Vault Anchor",
+  "gui.heartstead.vault.search": "Search...",
+  "gui.heartstead.vault.sort.count": "Count",
+  "gui.heartstead.vault.sort.name": "Name",
+  "gui.heartstead.vault.inventory_full": "Your inventory is full",
+  "item.heartstead.vault_anchor.already_exists": "A Vault Anchor already exists in this world"
 }

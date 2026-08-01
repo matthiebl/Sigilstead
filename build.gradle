@@ -35,6 +35,17 @@ loom {
     }
 }
 
+// The gametest run directory's world save persists between invocations. Most GameTests are
+// stateless (fresh mock players each run), but §2.5's Vault suite exercises real world-level
+// SavedData (DESIGN.md §2), which is *meant* to survive a restart — so without this, repeated
+// local runGametest invocations would accumulate Vault Sigils and contents indefinitely and the
+// distinct-type-capacity boundary test would eventually outgrow its fixture item pool.
+tasks.named("runGametest") {
+    doFirst {
+        project.delete(project.layout.buildDirectory.dir("gametest/world"))
+    }
+}
+
 repositories {
     // Loom adds the Minecraft and Fabric repositories automatically.
     // Only add entries here for third-party mod dependencies.

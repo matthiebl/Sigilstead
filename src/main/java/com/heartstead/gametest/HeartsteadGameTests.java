@@ -61,8 +61,6 @@ import net.minecraft.world.phys.Vec3;
  */
 public class HeartsteadGameTests {
 
-    // TODO Phase 3: vault conservation suite — write these BEFORE the Vault itself.
-
     /** DESIGN.md §1 — dungeon chests roll Heart Shard at 30% for 1-2. Statistical, not exact. */
     @GameTest
     public void heartShardDungeonChestRate(GameTestHelper helper) {

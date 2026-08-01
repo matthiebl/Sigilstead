@@ -8,6 +8,9 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
  * from a JSON file in the Fabric config directory by {@link HsConfigManager}.
  *
  * <p>Server-authoritative: clients never decide balance, only render what the server tells them.
+ *
+ * <p>{@link VaultConfig} nests as its own record rather than nine flat fields here — a Mojang
+ * {@code RecordCodecBuilder} group tops out at 16 entries, and this one was already at 8.
  */
 public record HsConfig(
     double heartShardChestChance,
@@ -17,7 +20,8 @@ public record HsConfig(
     double heartShardEliteMobChance,
     int heartCap,
     int heartFloor,
-    int heartLossOnDeath) {
+    int heartLossOnDeath,
+    VaultConfig vault) {
 
   public static final Codec<HsConfig> CODEC =
       RecordCodecBuilder.create(
@@ -47,7 +51,8 @@ public record HsConfig(
                           .forGetter(HsConfig::heartFloor),
                       Codec.intRange(1, 40)
                           .fieldOf("heart_loss_on_death")
-                          .forGetter(HsConfig::heartLossOnDeath))
+                          .forGetter(HsConfig::heartLossOnDeath),
+                      VaultConfig.CODEC.fieldOf("vault").forGetter(HsConfig::vault))
                   .apply(instance, HsConfig::new));
 
   /**
@@ -56,5 +61,5 @@ public record HsConfig(
    * <p>DESIGN.md §6: 20-heart cap, floor of 5, -1 heart per death. Operators wanting the harder
    * mode described in §6 lower {@code heart_floor} to 3 or raise {@code heart_loss_on_death} to 2.
    */
-  public static final HsConfig DEFAULT = new HsConfig(0.30, 1, 2, 0.005, 0.10, 20, 5, 1);
+  public static final HsConfig DEFAULT = new HsConfig(0.30, 1, 2, 0.005, 0.10, 20, 5, 1, VaultConfig.DEFAULT);
 }

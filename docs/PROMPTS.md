@@ -23,14 +23,14 @@ Phase numbers match [DESIGN.md](DESIGN.md) §9.
 | 0.2 — Loot tables | ✅ Done |
 | 0.5a — Villager trade persistence | ✅ Done |
 | 1 — Lives | ✅ Done |
-| 2 — The Vault (storage) | ⬜ Not started |
-| 2 — The Vault (screen) | ⬜ Not started |
+| 2 — The Vault (storage) | ✅ Done |
+| 2 — The Vault (screen) | ✅ Done |
 | 3 — Codex | ⬜ Not started |
 | 3 — Artisan's Table | ⬜ Not started |
 | 4 — Cores | ⬜ Not started |
 | 4 — Classic farm replacements | ⬜ Not started |
 
-**Up next: Phase 2 — The Vault (storage).**
+**Up next: Phase 3 — Codex and Artisan's Table.**
 
 ---
 
@@ -113,7 +113,7 @@ recipe without flagging it.
 
 ---
 
-## Phase 2 — The Vault ⬜
+## Phase 2 — The Vault ✅
 
 The biggest lift, and the first real blocks and screen handlers in the project.
 
