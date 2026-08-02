@@ -1,6 +1,7 @@
 package com.heartstead.registry;
 
 import com.heartstead.Heartstead;
+import com.heartstead.codex.CodexMenu;
 import com.heartstead.vault.VaultAccess;
 import com.heartstead.vault.VaultMenu;
 import net.fabricmc.fabric.api.menu.v1.ExtendedMenuType;
@@ -31,6 +32,14 @@ public final class HsMenuTypes {
             BuiltInRegistries.MENU,
             ResourceKey.create(Registries.MENU, Heartstead.id("vault")),
             new ExtendedMenuType<>(VaultMenu::new, VaultAccess.STREAM_CODEC));
+
+    /** DESIGN.md §3.3 — the Codex. No opening data: every Codex shows the opening player's own archive. */
+    public static final MenuType<CodexMenu> CODEX = Registry.register(
+            BuiltInRegistries.MENU,
+            ResourceKey.create(Registries.MENU, Heartstead.id("codex")),
+            new ExtendedMenuType<>(
+                    (containerId, inventory, unit) -> new CodexMenu(containerId, inventory),
+                    net.minecraft.network.codec.StreamCodec.unit(net.minecraft.util.Unit.INSTANCE)));
 
     /** Forces class load (and so the static registrations above) at an explicit, ordered point. */
     public static void register() {

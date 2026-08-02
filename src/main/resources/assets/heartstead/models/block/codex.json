@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "heartstead:block/codex_top",
+    "side": "heartstead:block/codex_side"
+  }
+}

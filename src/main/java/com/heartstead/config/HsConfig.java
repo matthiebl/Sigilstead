@@ -19,7 +19,8 @@ public record HsConfig(
     int heartLossOnDeath,
     VaultConfig vault,
     boolean depositRequiresReach,
-    EnchantmentConfig enchantment) {
+    EnchantmentConfig enchantment,
+    CodexConfig codex) {
 
   public static final Codec<HsConfig> CODEC =
       RecordCodecBuilder.create(
@@ -38,7 +39,8 @@ public record HsConfig(
                           .forGetter(HsConfig::depositRequiresReach),
                       EnchantmentConfig.CODEC
                           .fieldOf("enchantment")
-                          .forGetter(HsConfig::enchantment))
+                          .forGetter(HsConfig::enchantment),
+                      CodexConfig.CODEC.fieldOf("codex").forGetter(HsConfig::codex))
                   .apply(instance, HsConfig::new));
 
   /**
@@ -56,5 +58,6 @@ public record HsConfig(
    */
   public static final HsConfig DEFAULT =
       new HsConfig(
-          SigilConfig.DEFAULT, 20, 5, 1, VaultConfig.DEFAULT, false, EnchantmentConfig.DEFAULT);
+          SigilConfig.DEFAULT, 20, 5, 1, VaultConfig.DEFAULT, false, EnchantmentConfig.DEFAULT,
+          CodexConfig.DEFAULT);
 }

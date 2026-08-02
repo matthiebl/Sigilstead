@@ -1,5 +1,10 @@
 package com.heartstead.registry;
 
+import com.heartstead.codex.CodexMenu;
+import com.heartstead.network.CodexArchivePayload;
+import com.heartstead.network.CodexBuyCapacityPayload;
+import com.heartstead.network.CodexSealPayload;
+import com.heartstead.network.CodexSyncPayload;
 import com.heartstead.network.VaultActivatePayload;
 import com.heartstead.network.VaultAnchorPayload;
 import com.heartstead.network.VaultConfirmUpgradePayload;
@@ -42,6 +47,32 @@ public final class HsPayloads {
                 .register(VaultDepositCarriedPayload.TYPE, VaultDepositCarriedPayload.STREAM_CODEC);
         PayloadTypeRegistry.serverboundPlay()
                 .register(VaultConfirmUpgradePayload.TYPE, VaultConfirmUpgradePayload.STREAM_CODEC);
+
+        PayloadTypeRegistry.clientboundPlay().register(CodexSyncPayload.TYPE, CodexSyncPayload.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(CodexArchivePayload.TYPE, CodexArchivePayload.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(CodexBuyCapacityPayload.TYPE, CodexBuyCapacityPayload.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(CodexSealPayload.TYPE, CodexSealPayload.STREAM_CODEC);
+
+        ServerPlayNetworking.registerGlobalReceiver(CodexArchivePayload.TYPE, (payload, context) -> context.server().execute(() -> {
+            ServerPlayer player = context.player();
+            if (player.containerMenu instanceof CodexMenu codexMenu) {
+                codexMenu.handleArchive(player);
+            }
+        }));
+
+        ServerPlayNetworking.registerGlobalReceiver(CodexBuyCapacityPayload.TYPE, (payload, context) -> context.server().execute(() -> {
+            ServerPlayer player = context.player();
+            if (player.containerMenu instanceof CodexMenu codexMenu) {
+                codexMenu.handleBuyCapacity(player);
+            }
+        }));
+
+        ServerPlayNetworking.registerGlobalReceiver(CodexSealPayload.TYPE, (payload, context) -> context.server().execute(() -> {
+            ServerPlayer player = context.player();
+            if (player.containerMenu instanceof CodexMenu codexMenu) {
+                codexMenu.handleSeal(player, payload.enchantment());
+            }
+        }));
 
         ServerPlayNetworking.registerGlobalReceiver(VaultWithdrawPayload.TYPE, (payload, context) -> context.server().execute(() -> {
             ServerPlayer player = context.player();

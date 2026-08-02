@@ -1,6 +1,7 @@
 package com.heartstead.registry;
 
 import com.heartstead.Heartstead;
+import com.heartstead.block.CodexBlock;
 import com.heartstead.block.LinkedFunnelBlock;
 import com.heartstead.block.VaultAnchorBlock;
 import com.heartstead.item.VaultAnchorBlockItem;
@@ -54,6 +55,18 @@ public final class HsBlocks {
                             .strength(3.0f, 8.0f)
                             .sound(SoundType.METAL)
                             .requiresCorrectToolForDrops()));
+
+    /**
+     * §3.3 — the Codex. Ordinary block hardness; unlike the Anchor there is nothing standing behind
+     * it to protect, so it gets none of {@code VAULT_ANCHOR}'s hardening.
+     */
+    public static final Block CODEX = register(
+            "codex",
+            key -> new CodexBlock(
+                    BlockBehaviour.Properties.of()
+                            .setId(key)
+                            .strength(2.5f)
+                            .sound(SoundType.WOOD)));
 
     private static Block register(String path, java.util.function.Function<ResourceKey<Block>, Block> factory) {
         return register(path, factory, BlockItem::new);

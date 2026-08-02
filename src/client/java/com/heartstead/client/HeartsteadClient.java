@@ -1,7 +1,10 @@
 package com.heartstead.client;
 
+import com.heartstead.client.codex.CodexClientCache;
+import com.heartstead.client.screen.CodexScreen;
 import com.heartstead.client.screen.VaultScreen;
 import com.heartstead.client.vault.VaultClientCache;
+import com.heartstead.network.CodexSyncPayload;
 import com.heartstead.network.VaultAnchorPayload;
 import com.heartstead.network.VaultStatePayload;
 import com.heartstead.network.VaultSyncPayload;
@@ -27,6 +30,9 @@ public class HeartsteadClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         MenuScreens.register(HsMenuTypes.VAULT, VaultScreen::new);
+        MenuScreens.register(HsMenuTypes.CODEX, CodexScreen::new);
+        ClientPlayNetworking.registerGlobalReceiver(CodexSyncPayload.TYPE,
+                (payload, context) -> context.client().execute(() -> CodexClientCache.update(payload)));
         ClientPlayNetworking.registerGlobalReceiver(VaultSyncPayload.TYPE,
                 (payload, context) -> context.client().execute(() -> VaultClientCache.update(payload.entries())));
         ClientPlayNetworking.registerGlobalReceiver(VaultAnchorPayload.TYPE,
@@ -38,7 +44,7 @@ public class HeartsteadClient implements ClientModInitializer {
                     // reach the common-side view the upgrade slots consult (CONVENTIONS.md §3).
                     ClientVaultUpgradeView.update(satisfiedKinds(payload));
                 }));
-        // TODO Phase 3: Codex screen (§3.3); Artisan extends the vanilla crafting menu (§7.1)
+        // TODO Phase 3: Artisan extends the vanilla crafting menu (§7.1)
         // TODO Phase 4: core attunement progress in the item tooltip (§4.1)
     }
 

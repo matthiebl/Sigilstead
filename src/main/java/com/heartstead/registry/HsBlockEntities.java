@@ -1,6 +1,7 @@
 package com.heartstead.registry;
 
 import com.heartstead.Heartstead;
+import com.heartstead.blockentity.CodexBlockEntity;
 import com.heartstead.blockentity.LinkedFunnelBlockEntity;
 import com.heartstead.blockentity.VaultAnchorBlockEntity;
 import net.minecraft.core.Registry;
@@ -24,6 +25,11 @@ public final class HsBlockEntities {
             BuiltInRegistries.BLOCK_ENTITY_TYPE,
             key("linked_funnel"),
             new BlockEntityType<>(LinkedFunnelBlockEntity::new, java.util.Set.of(HsBlocks.LINKED_FUNNEL)));
+
+    public static final BlockEntityType<CodexBlockEntity> CODEX = Registry.register(
+            BuiltInRegistries.BLOCK_ENTITY_TYPE,
+            key("codex"),
+            new BlockEntityType<>(CodexBlockEntity::new, java.util.Set.of(HsBlocks.CODEX)));
 
     private static ResourceKey<BlockEntityType<?>> key(String path) {
         return ResourceKey.create(Registries.BLOCK_ENTITY_TYPE, Heartstead.id(path));

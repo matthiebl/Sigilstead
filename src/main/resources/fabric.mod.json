@@ -24,7 +24,9 @@
       "com.heartstead.gametest.VaultGameTests",
       "com.heartstead.gametest.VaultMenuGameTests",
       "com.heartstead.gametest.VaultActivationGameTests",
-      "com.heartstead.gametest.VaultUpgradeSlotGameTests"
+      "com.heartstead.gametest.VaultUpgradeSlotGameTests",
+      "com.heartstead.gametest.CodexGameTests",
+      "com.heartstead.gametest.CodexTeachGameTests"
     ]
   },
   "mixins": [

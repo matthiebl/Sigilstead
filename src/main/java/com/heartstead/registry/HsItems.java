@@ -2,6 +2,7 @@ package com.heartstead.registry;
 
 import com.heartstead.Heartstead;
 import com.heartstead.item.HeartSigilItem;
+import com.heartstead.item.SealedTomeItem;
 import com.heartstead.item.VaultAccessItem;
 import com.heartstead.vault.VaultAccess;
 import java.util.function.Function;
@@ -65,6 +66,13 @@ public final class HsItems {
             "vault_pouch",
             new Item.Properties().stacksTo(1),
             properties -> new VaultAccessItem(properties, VaultAccess.POUCH));
+
+    /** §3.3 Tome — placed empty into the Codex's empower slot to become a Sealed Tome. */
+    public static final Item TOME = register("tome", new Item.Properties());
+
+    /** §3.3 Sealed Tome — carries {@link com.heartstead.codex.SealedTomeData}; taught to a librarian, then consumed. */
+    public static final Item SEALED_TOME =
+            register("sealed_tome", new Item.Properties().stacksTo(1), SealedTomeItem::new);
 
     private static Item register(String path, Item.Properties properties) {
         return register(path, properties, Item::new);

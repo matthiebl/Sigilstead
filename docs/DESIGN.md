@@ -322,6 +322,10 @@ Recipes in §12.2, capacities and prices in §12.6.
 Two costs, don't confuse them: **teaching** costs a Sealed Tome plus one emerald, once per librarian.
 **Buying** the taught book afterwards costs the fixed price, every time.
 
+**Any archived enchantment can be sealed and taught, not just the four named in §12.6.** Those four
+have hand-picked prices; everything else — any other vanilla enchantment, or a mod's — prices off a
+rarity formula (§12.6) so Teach never dead-ends on an enchantment nobody thought to price by hand.
+
 **The archive belongs to the player, not to the block** — a codec-backed player attachment
 (CONVENTIONS.md §4). Any Codex you walk up to shows *your* archive and *your* capacity, so the block
 is a workbench rather than a container, and there is nothing to lose if someone breaks it. This is
@@ -904,6 +908,12 @@ are cheap to build — lower those two first if tier III proves too strong.
 | Efficiency V | 28 |
 | Silk Touch | 24 |
 | Feather Falling IV | 10 |
+
+**Everything else teachable (§3.3)** prices at `3 emeralds × level × rarity multiplier`, clamped to
+4–64. Rarity multiplier is vanilla's own anvil-cost rarity (1 common, 2 uncommon, 4 rare, 8 very
+rare) — the same number vanilla already assigns every enchantment, so nothing new needs defining
+per enchantment. A common level-1 enchantment floors at 4 emeralds; a very-rare one at max level
+usually ceilings at 64.
 
 **Lives (§6)**
 

@@ -44,5 +44,15 @@
   "gui.heartstead.vault.activate_cost.tip": "Costs %s Vault Sigil, taken from your inventory.",
   "gui.heartstead.vault.activate_from_vault.tip": "Costs %s Vault Sigil. You have none on you, so this will spend one from inside the Vault.",
   "enchantment.heartstead.abundance": "Abundance",
-  "enchantment.heartstead.kiln_touch": "Kiln Touch"
+  "enchantment.heartstead.kiln_touch": "Kiln Touch",
+  "item.heartstead.tome": "Tome",
+  "item.heartstead.sealed_tome": "Sealed Tome",
+  "block.heartstead.codex": "Codex",
+  "gui.heartstead.codex.title": "Codex",
+  "gui.heartstead.codex.archive": "Archive",
+  "gui.heartstead.codex.buy_capacity": "Confirm",
+  "gui.heartstead.codex.capacity_summary": "Archived: %s/%s",
+  "gui.heartstead.codex.taught": "Taught!",
+  "gui.heartstead.codex.teach_need_emerald": "You need %s Emerald",
+  "gui.heartstead.codex.teach_not_librarian": "Only a librarian can be taught"
 }

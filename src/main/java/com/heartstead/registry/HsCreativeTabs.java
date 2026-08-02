@@ -41,6 +41,10 @@ public final class HsCreativeTabs {
                     output.accept(HsBlocks.LINKED_FUNNEL);
                     output.accept(HsItems.SATCHEL);
                     output.accept(HsItems.VAULT_POUCH);
+                    // §3.3 — the Codex and its Tome. The Sealed Tome is deliberately absent: it only
+                    // ever exists pre-filled by the Empower step, so a blank creative one means nothing.
+                    output.accept(HsBlocks.CODEX);
+                    output.accept(HsItems.TOME);
                 })
                 .build());
     }
