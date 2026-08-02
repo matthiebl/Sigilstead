@@ -2,6 +2,8 @@ package com.heartstead;
 
 import com.heartstead.economy.SigilBossDrops;
 import com.heartstead.economy.SigilLoot;
+import com.heartstead.enchantment.EnchantmentBlockLoot;
+import com.heartstead.enchantment.EnchantmentBookLoot;
 import com.heartstead.lives.LivesSystem;
 import com.heartstead.registry.HsAttachments;
 import com.heartstead.registry.HsBlockEntities;
@@ -48,6 +50,8 @@ public class Heartstead implements ModInitializer {
         HsAttachments.register();
         SigilLoot.register();
         SigilBossDrops.register();
+        EnchantmentBlockLoot.register();
+        EnchantmentBookLoot.register();
         LivesSystem.register();
         // TODO Phase 4: HsCoreTypes.register();
 

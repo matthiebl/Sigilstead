@@ -42,5 +42,7 @@
   "gui.heartstead.vault.activated.tip": "This world's Vault is live. Breaking the Anchor ends that, but never costs you capacity or reach.",
   "gui.heartstead.vault.activate_free.tip": "The first Anchor a world ever has activates for free.",
   "gui.heartstead.vault.activate_cost.tip": "Costs %s Vault Sigil, taken from your inventory.",
-  "gui.heartstead.vault.activate_from_vault.tip": "Costs %s Vault Sigil. You have none on you, so this will spend one from inside the Vault."
+  "gui.heartstead.vault.activate_from_vault.tip": "Costs %s Vault Sigil. You have none on you, so this will spend one from inside the Vault.",
+  "enchantment.heartstead.abundance": "Abundance",
+  "enchantment.heartstead.kiln_touch": "Kiln Touch"
 }

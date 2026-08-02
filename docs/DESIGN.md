@@ -928,6 +928,9 @@ Codec-backed JSON, loaded on server start (CONVENTIONS.md §5).
 | `vault.funnel_items_per_transfer` | 16 | §2.1 Linked Funnel throughput, per hopper cycle. Never played |
 | `deposit_requires_reach` | `false` | Turns §2.0's free deposit off, making deposit obey reach too |
 | `bundle_slots` | 9 | §2.2 Bundle override. **Not yet implemented** — the field lands with the override |
+| `enchantment.abundance_chance_per_level` | 0.6 | §3.1/§12.6 — the per-level Abundance bonus roll |
+| `enchantment.abundance_book_chance` | 0.06 | §3.1 mineshaft/trial chamber Abundance book rate |
+| `enchantment.kiln_touch_book_chance` | 0.06 | §3.2 nether fortress/bastion Kiln Touch book rate |
 | `core_rate_multiplier` | 1.0 | Global multiplier on every §12.4 / §12.5 rate |
 | `core_accrual_cap_hours` | 24 | §4.2 offline backlog ceiling |
 | `attunement_thresholds.*` | §12.4 | Per-family imprint counts |
