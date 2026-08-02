@@ -2,6 +2,7 @@ package com.heartstead.registry;
 
 import com.heartstead.network.VaultActivatePayload;
 import com.heartstead.network.VaultAnchorPayload;
+import com.heartstead.network.VaultConfirmUpgradePayload;
 import com.heartstead.network.VaultDepositCarriedPayload;
 import com.heartstead.network.VaultStatePayload;
 import com.heartstead.network.VaultSyncPayload;
@@ -9,6 +10,7 @@ import com.heartstead.network.VaultTabPayload;
 import com.heartstead.network.VaultWithdrawPayload;
 import com.heartstead.vault.Vault;
 import com.heartstead.vault.VaultMenu;
+import com.heartstead.vault.VaultUpgradeKind;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -38,6 +40,8 @@ public final class HsPayloads {
         PayloadTypeRegistry.serverboundPlay().register(VaultTabPayload.TYPE, VaultTabPayload.STREAM_CODEC);
         PayloadTypeRegistry.serverboundPlay()
                 .register(VaultDepositCarriedPayload.TYPE, VaultDepositCarriedPayload.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay()
+                .register(VaultConfirmUpgradePayload.TYPE, VaultConfirmUpgradePayload.STREAM_CODEC);
 
         ServerPlayNetworking.registerGlobalReceiver(VaultWithdrawPayload.TYPE, (payload, context) -> context.server().execute(() -> {
             ServerPlayer player = context.player();
@@ -64,6 +68,14 @@ public final class HsPayloads {
             ServerPlayer player = context.player();
             if (player.containerMenu instanceof VaultMenu vaultMenu) {
                 vaultMenu.handleSetTab(payload.anchorTab());
+            }
+        }));
+
+        ServerPlayNetworking.registerGlobalReceiver(VaultConfirmUpgradePayload.TYPE, (payload, context) -> context.server().execute(() -> {
+            ServerPlayer player = context.player();
+            VaultUpgradeKind[] kinds = VaultUpgradeKind.values();
+            if (player.containerMenu instanceof VaultMenu vaultMenu && payload.kind() >= 0 && payload.kind() < kinds.length) {
+                vaultMenu.handleConfirmUpgrade(player, kinds[payload.kind()]);
             }
         }));
 

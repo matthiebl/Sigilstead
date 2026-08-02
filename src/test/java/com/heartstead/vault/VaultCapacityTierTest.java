@@ -23,10 +23,17 @@ class VaultCapacityTierTest {
     }
 
     @Test
-    void oneSigilBelowTier2ThresholdStaysAtTier1() {
+    void eachSigilBelowTier2ThresholdStillGrowsDistinctTypes() {
         VaultCapacityTier tier = VaultCapacityTier.forSigilsSpent(2, VaultConfig.DEFAULT);
-        assertEquals(27, tier.distinctTypeCap());
+        assertEquals(27 + 2 * 27, tier.distinctTypeCap());
         assertEquals(10, tier.stackDepthCap());
+    }
+
+    @Test
+    void eachSigilBetweenTier2AndTier3StillGrowsDistinctTypes() {
+        VaultCapacityTier tier = VaultCapacityTier.forSigilsSpent(5, VaultConfig.DEFAULT);
+        assertEquals(27 + 5 * 27, tier.distinctTypeCap());
+        assertEquals(64, tier.stackDepthCap());
     }
 
     @Test

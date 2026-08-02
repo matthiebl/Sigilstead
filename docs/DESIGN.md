@@ -216,13 +216,17 @@ The Anchor's screen has **two tabs**:
    including when the Anchor is dormant; it is how a player learns what activation is. Shows the
    "use a Vault Sigil from the Vault" fallback (§2.1) only when it applies.
 
-   **Upgrades are bought by putting the Sigil in a slot**, not by clicking a buy button — the same
-   shape as every interactive block in vanilla. There is **one socket per thing you can buy**:
-   capacity, then one per reach tier. An empty socket shows its Sigil ghosted so it says what it
-   wants without a caption, and a reach tier already bought shows that Sigil dimmed and takes no
-   more — §12.3's table drawn rather than described. Capacity never fills in, because §12.3 gives it
-   no ceiling. Activation stays a button, because its two cases — the world's free first activation
-   and the from-Vault fallback — have no item for the player to place.
+   **Upgrades are bought by putting the Sigil in a slot and confirming**, not by clicking a bare buy
+   button — the same two-step shape as an enchanting table. There is **one socket per thing you can
+   buy**: capacity, then one per reach tier, each with its own confirm button beneath it. Dropping a
+   Sigil in only *arms* that socket; nothing is spent and nothing is bought until the confirm click,
+   so a misdrop or a change of mind costs nothing — closing the screen or pulling the Sigil back out
+   returns it untouched. The confirm button is disabled while its socket is empty, holds the wrong
+   Sigil, or (for a reach tier) is already satisfied. An empty socket shows its Sigil ghosted so it
+   says what it wants without a caption, and a reach tier already bought shows that Sigil dimmed and
+   takes no more — §12.3's table drawn rather than described. Capacity never fills in, because §12.3
+   gives it no ceiling. Activation stays a button, because its two cases — the world's free first
+   activation and the from-Vault fallback — have no item for the player to place.
 
 2. **Storage** — the Vault itself, **locked until activated**.
    A scrollable slot grid showing stored stacks with counts, a live search field, click-to-withdraw,
@@ -790,9 +794,12 @@ recipes are in §12.4.
 | **T2** | 3 | 108 | 64 stacks |
 | **T3** | 8 | 512 | 2048 stacks (effectively unbounded) |
 
-Each new Vault Sigil gives **+27 distinct types** and once tier thresholds are reached the
-distinct types and depth jumps to meet the description in the table above.
-Past T3, each further Vault Sigil buys **+27 distinct types** and nothing else.
+Every Vault Sigil spent on capacity gives **+27 distinct types immediately**, whether or not it
+crosses a tier threshold — the table above is the floor each tier guarantees, not a gate that holds
+distinct types flat until the next milestone. Depth per type is different: it only moves at a tier
+threshold, jumping straight to the table's value (10 → 64 → 2048) rather than climbing gradually.
+Past T3, each further Vault Sigil buys **+27 distinct types** and nothing else, continuing the same
+per-Sigil rate.
 
 **Reach — where withdrawal works (§2.0, §2.3).** Deposit ignores this table entirely.
 
@@ -914,7 +921,7 @@ Codec-backed JSON, loaded on server start (CONVENTIONS.md §5).
 |---|---|---|
 | `sigil_drop_rates.*` | §12.1 | Every entry in the Sigil drop table |
 | `vault.tier*_distinct_types`, `vault.tier*_stack_depth`, `vault.tier*_sigils` | §12.3 | Capacity ladder |
-| `vault.post_tier3_distinct_types_per_sigil` | 27 | Capacity past T3 |
+| `vault.distinct_types_per_sigil` | 27 | Capacity — every Sigil's immediate distinct-type gain |
 | `vault.reactivation_sigils` | 1 | §2.1 re-anchoring cost |
 | `vault.local_reach_chunks` | 5 | Local reach square, centred on the Anchor |
 | `vault.reach_tier_sigils` | 1 | Dimensional Sigils per reach tier |

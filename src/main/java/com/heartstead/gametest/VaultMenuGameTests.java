@@ -176,21 +176,33 @@ public class VaultMenuGameTests {
         });
     }
 
-    /** A pool of distinct, mutually-unused vanilla item types, separate from VaultGameTests' pool to avoid cross-test interference. */
+    /**
+     * A pool of distinct, mutually-unused vanilla item types, disjoint from {@code VaultGameTests}'
+     * pool — the two used to share nineteen items (logs, stone variants, sand), which was invisible
+     * while capacity only ever jumped in three big steps but started colliding once a fix made every
+     * Sigil grow capacity by exactly +27, landing test runs on a much wider range of "room" sizes:
+     * whichever of these two suites' tests happened to run first silently pre-filled the other's
+     * "fresh" filler types, so the second test's deposit loop added fewer distinct types than it
+     * asked for. Wool and concrete colours are used nowhere else in either pool.
+     */
     private static Item[] distinctFillerItems(int count) {
-        Item[] pool = {
+        // 26.2 folds the sixteen dye-colour variants of wool and concrete into one ColorCollection
+        // each rather than sixteen separate Items fields (REFERENCES.md) — asList() is the sixteen.
+        java.util.List<Item> pool = new java.util.ArrayList<>(java.util.List.of(
                 Items.OAK_PLANKS, Items.SPRUCE_PLANKS, Items.BIRCH_PLANKS, Items.JUNGLE_PLANKS, Items.ACACIA_PLANKS,
                 Items.DARK_OAK_PLANKS, Items.MANGROVE_PLANKS, Items.CHERRY_PLANKS, Items.BAMBOO_PLANKS, Items.CRIMSON_PLANKS,
-                Items.WARPED_PLANKS, Items.OAK_LOG, Items.SPRUCE_LOG, Items.BIRCH_LOG, Items.JUNGLE_LOG,
-                Items.ACACIA_LOG, Items.DARK_OAK_LOG, Items.MANGROVE_LOG, Items.CHERRY_LOG, Items.CRIMSON_STEM,
-                Items.WARPED_STEM, Items.STONE, Items.GRANITE, Items.DIORITE, Items.ANDESITE,
-                Items.DEEPSLATE, Items.SAND, Items.RED_SAND, Items.GRAVEL, Items.CLAY,
-        };
-        if (count > pool.length) {
-            throw new AssertionError("distinctFillerItems pool too small: needed " + count + ", have " + pool.length);
+                Items.WARPED_PLANKS));
+        pool.addAll(Items.WOOL.asList());
+        pool.add(Items.CONCRETE.white());
+        pool.add(Items.CONCRETE.orange());
+        pool.add(Items.CONCRETE.magenta());
+        if (count > pool.size()) {
+            throw new AssertionError("distinctFillerItems pool too small: needed " + count + ", have " + pool.size());
         }
         Item[] result = new Item[count];
-        System.arraycopy(pool, 0, result, 0, count);
+        for (int i = 0; i < count; i++) {
+            result[i] = pool.get(i);
+        }
         return result;
     }
 

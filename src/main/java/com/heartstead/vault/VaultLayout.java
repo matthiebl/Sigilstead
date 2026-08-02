@@ -57,12 +57,24 @@ public final class VaultLayout {
     public static final int UPGRADE_SLOT_X =
             (PANEL_WIDTH - ((UPGRADE_SLOT_COUNT - 1) * UPGRADE_SLOT_SPACING + CELL)) / 2;
 
+    /**
+     * §2.4 — each upgrade slot arms on drop and buys nothing until this fires, the same two-step
+     * shape as an enchanting table's confirm click. One button per slot, centred under its socket.
+     */
+    public static final int CONFIRM_BUTTON_WIDTH = 32;
+    public static final int CONFIRM_BUTTON_HEIGHT = 16;
+    public static final int CONFIRM_BUTTON_Y = UPGRADE_SLOT_Y + CELL + 4;
+
+    public static int confirmButtonX(int index) {
+        return upgradeSlotX(index) + (CELL - CONFIRM_BUTTON_WIDTH) / 2;
+    }
+
     public static final int ACTIVATE_WIDTH = 104;
     public static final int ACTIVATE_HEIGHT = 16;
     public static final int ACTIVATE_X = (PANEL_WIDTH - ACTIVATE_WIDTH) / 2;
 
-    /** Below the upgrade sockets, and clear of the inventory label — which it used to sit on top of. */
-    public static final int ACTIVATE_Y = UPGRADE_SLOT_Y + CELL + 8;
+    /** Below the confirm-button row, and clear of the inventory label — which it used to sit on top of. */
+    public static final int ACTIVATE_Y = CONFIRM_BUTTON_Y + CONFIRM_BUTTON_HEIGHT + 4;
 
     public static final int TAB_WIDTH = 28;
     public static final int TAB_HEIGHT = 20;

@@ -17,7 +17,7 @@ public record VaultConfig(
     int tier3Sigils,
     int tier3DistinctTypes,
     int tier3StackDepth,
-    int postTier3DistinctTypesPerSigil,
+    int distinctTypesPerSigil,
     int reactivationSigils,
     int localReachChunks,
     int reachTierSigils,
@@ -53,8 +53,8 @@ public record VaultConfig(
                           .fieldOf("tier3_stack_depth")
                           .forGetter(VaultConfig::tier3StackDepth),
                       Codec.intRange(0, 10000)
-                          .fieldOf("post_tier3_distinct_types_per_sigil")
-                          .forGetter(VaultConfig::postTier3DistinctTypesPerSigil),
+                          .fieldOf("distinct_types_per_sigil")
+                          .forGetter(VaultConfig::distinctTypesPerSigil),
                       Codec.intRange(0, 100)
                           .fieldOf("reactivation_sigils")
                           .forGetter(VaultConfig::reactivationSigils),
@@ -71,8 +71,8 @@ public record VaultConfig(
 
   /**
    * DESIGN.md §12.3's tables verbatim: T1 0 Sigils/27 types/10 stacks, T2 3/108/64, T3 8/512/2048,
-   * +27 types per Sigil after; 1 Vault Sigil to re-anchor, a 5×5-chunk local reach square, and 1
-   * dimensional Sigil per reach tier.
+   * +27 types per Sigil throughout (stack depth only moves at a tier boundary); 1 Vault Sigil to
+   * re-anchor, a 5×5-chunk local reach square, and 1 dimensional Sigil per reach tier.
    *
    * <p>{@code funnel_items_per_transfer} has no §12 row yet — the Linked Funnel's throughput was
    * never specced beyond "hopper-speed" (§2.1), and a hopper's one-item-per-cycle would be uselessly

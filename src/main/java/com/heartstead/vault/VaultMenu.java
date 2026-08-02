@@ -41,10 +41,7 @@ public final class VaultMenu extends AbstractContainerMenu {
     private final VaultAccess access;
 
     /** §2.3's upgrade slots, one per {@link VaultUpgradeKind}, in declaration order. */
-    private final SimpleContainer upgradeContainer = new NotifyingContainer(VaultUpgradeKind.values().length);
-
-    /** Guards {@link #slotsChanged} against the re-entry its own {@code setItem} calls would cause. */
-    private boolean applyingUpgrades;
+    private final SimpleContainer upgradeContainer = new SimpleContainer(VaultUpgradeKind.values().length);
 
     private boolean anchorTabOpen;
     private int lastSyncedRevision = -1;
@@ -106,47 +103,35 @@ public final class VaultMenu extends AbstractContainerMenu {
     }
 
     /**
-     * §2.3 — the upgrade slots' whole behaviour. Fires whenever their contents change, so dropping a
-     * Sigil in is what buys the upgrade; there is no confirm step.
+     * §2.3 / §2.4 — the upgrade slots' whole behaviour. Dropping a Sigil into a slot only <em>arms</em>
+     * it; nothing is spent and nothing is bought until {@link #handleConfirmUpgrade} fires, the same
+     * two-step shape as an enchanting table's confirm click. Nothing needs to happen here on its own —
+     * placement is just a real slot filling in, which vanilla's own slot sync already broadcasts to
+     * the client.
      *
-     * <p>Plain Vault Sigils are spent greedily because every one buys something (activation first if
-     * the Vault is dormant, then capacity, which §12.3 gives no ceiling). A dimensional Sigil spends
-     * exactly one, because a second buys nothing — the rest stay in the slot rather than being
+     * <p>Plain Vault Sigils are spent greedily on confirm because every one buys something (activation
+     * first if the Vault is dormant, then capacity, which §12.3 gives no ceiling). A dimensional Sigil
+     * spends exactly one, because a second buys nothing — the rest stay in the slot rather than being
      * silently eaten.
      */
-    @Override
-    public void slotsChanged(Container container) {
-        super.slotsChanged(container);
-        if (container != upgradeContainer || !(playerInventory.player instanceof ServerPlayer player)) {
+    public void handleConfirmUpgrade(ServerPlayer player, VaultUpgradeKind kind) {
+        if (!access.hasAnchorTab() || !anchorTabOpen) {
             return;
         }
-        if (!access.hasAnchorTab() || applyingUpgrades) {
+        int index = kind.ordinal();
+        ItemStack stack = upgradeContainer.getItem(index);
+        if (stack.isEmpty() || !stack.is(kind.sigil())) {
             return;
         }
 
-        applyingUpgrades = true;
-        try {
-            applyUpgrades(player.level());
-        } finally {
-            applyingUpgrades = false;
+        ServerLevel level = player.level();
+        if (kind == VaultUpgradeKind.CAPACITY) {
+            spendPlainSigils(level, stack);
+        } else if (!kind.isSatisfied(Vault.get(level)) && Vault.get(level).activated()) {
+            Vault.grantReach(level, kind.dimension());
+            stack.shrink(1);
         }
-    }
-
-    private void applyUpgrades(ServerLevel level) {
-        VaultUpgradeKind[] kinds = VaultUpgradeKind.values();
-        for (int i = 0; i < kinds.length; i++) {
-            ItemStack stack = upgradeContainer.getItem(i);
-            if (stack.isEmpty() || !stack.is(kinds[i].sigil())) {
-                continue;
-            }
-            if (kinds[i] == VaultUpgradeKind.CAPACITY) {
-                spendPlainSigils(level, stack);
-            } else if (!kinds[i].isSatisfied(Vault.get(level)) && Vault.get(level).activated()) {
-                Vault.grantReach(level, kinds[i].dimension());
-                stack.shrink(1);
-            }
-            upgradeContainer.setItem(i, stack.isEmpty() ? ItemStack.EMPTY : stack);
-        }
+        upgradeContainer.setItem(index, stack.isEmpty() ? ItemStack.EMPTY : stack);
     }
 
     private void spendPlainSigils(ServerLevel level, ItemStack stack) {
@@ -361,25 +346,6 @@ public final class VaultMenu extends AbstractContainerMenu {
                 Vault.canActivateFromVaultStock(level),
                 VaultReach.canWithdrawAt(level, player.blockPosition()),
                 HsConfigManager.get().vault().reactivationSigils());
-    }
-
-    /**
-     * {@link SimpleContainer#setChanged()} is a no-op and the class has no listener hook, so a plain
-     * one never tells the menu that a player put something in it — which is why the upgrade slots
-     * accepted Sigils and then did nothing at all with them. Vanilla solves this the same way, by
-     * having crafting containers hold their menu and call {@code slotsChanged} themselves.
-     */
-    private final class NotifyingContainer extends SimpleContainer {
-
-        NotifyingContainer(int size) {
-            super(size);
-        }
-
-        @Override
-        public void setChanged() {
-            super.setChanged();
-            slotsChanged(this);
-        }
     }
 
     /**

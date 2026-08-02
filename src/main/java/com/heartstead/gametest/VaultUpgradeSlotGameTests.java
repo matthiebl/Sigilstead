@@ -16,9 +16,9 @@ import net.minecraft.world.level.Level;
 
 /**
  * DESIGN.md §2.3's upgrade slot — the tab-1 rework that replaced the buy buttons with a real slot
- * you place a Sigil into. It moves items, so it gets its own tests (CONVENTIONS.md §8): a Sigil that
- * vanishes without buying anything, or an upgrade granted without consuming one, are both exactly
- * the class of bug §2.6 exists to catch.
+ * you place a Sigil into, armed but not spent until a confirm click (§2.4). It moves items, so it
+ * gets its own tests (CONVENTIONS.md §8): a Sigil that vanishes without buying anything, or an
+ * upgrade granted without consuming one, are both exactly the class of bug §2.6 exists to catch.
  *
  * <p>Runs against the shared singleton {@link VaultData} like the rest of the Vault suite, so each
  * test re-establishes the activation state it needs rather than depending on run order.
@@ -38,7 +38,7 @@ public class VaultUpgradeSlotGameTests {
         menu.handleSetTab(true);
 
         menu.slots.getFirst().set(new ItemStack(HsItems.VAULT_SIGIL, 3));
-        menu.slotsChanged(menu.slots.getFirst().container);
+        menu.handleConfirmUpgrade(player, VaultUpgradeKind.CAPACITY);
 
         int sigilsAfter = Vault.get(level).sigilsSpent();
         ItemStack leftInSlot = menu.slots.getFirst().getItem();
@@ -49,6 +49,37 @@ public class VaultUpgradeSlotGameTests {
             }
             if (!leftInSlot.isEmpty()) {
                 throw new AssertionError("the upgrade slot still holds " + leftInSlot + " after spending every Sigil in it");
+            }
+        });
+    }
+
+    /**
+     * §2.4 — placing a Sigil only arms the slot. Nothing is spent and nothing is bought until the
+     * confirm click, the same two-step shape as an enchanting table.
+     */
+    @GameTest
+    public void placingASigilAloneBuysNothing(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        Vault.claimAnchor(level, helper.absolutePos(BlockPos.ZERO));
+        Vault.activateForFree(level);
+
+        int sigilsBefore = Vault.get(level).sigilsSpent();
+        ServerPlayer player = helper.makeMockServerPlayerInLevel();
+        VaultMenu menu = new VaultMenu(0, player.getInventory(), VaultAccess.ANCHOR);
+        menu.handleSetTab(true);
+
+        menu.slots.getFirst().set(new ItemStack(HsItems.VAULT_SIGIL, 3));
+
+        int sigilsAfter = Vault.get(level).sigilsSpent();
+        ItemStack stillInSlot = menu.slots.getFirst().getItem();
+
+        helper.succeedIf(() -> {
+            if (sigilsAfter != sigilsBefore) {
+                throw new AssertionError("dropping a Sigil in the slot bought " + (sigilsAfter - sigilsBefore)
+                        + " capacity steps before any confirm click");
+            }
+            if (stillInSlot.getCount() != 3) {
+                throw new AssertionError("the armed slot holds " + stillInSlot.getCount() + " of 3 Sigils, expected all 3 untouched");
             }
         });
     }
@@ -70,7 +101,7 @@ public class VaultUpgradeSlotGameTests {
 
         int slot = VaultUpgradeKind.NETHER_REACH.ordinal();
         menu.slots.get(slot).set(new ItemStack(HsItems.NETHER_VAULT_SIGIL, 4));
-        menu.slotsChanged(menu.slots.get(slot).container);
+        menu.handleConfirmUpgrade(player, VaultUpgradeKind.NETHER_REACH);
 
         boolean gotReach = Vault.get(level).reachTiers().contains(Level.NETHER);
         ItemStack leftInSlot = menu.slots.get(slot).getItem();
@@ -102,7 +133,7 @@ public class VaultUpgradeSlotGameTests {
         // End reach is already owned, so nothing is spent and all four stay put.
         int slot = VaultUpgradeKind.END_REACH.ordinal();
         menu.slots.get(slot).set(new ItemStack(HsItems.END_VAULT_SIGIL, 4));
-        menu.slotsChanged(menu.slots.get(slot).container);
+        menu.handleConfirmUpgrade(player, VaultUpgradeKind.END_REACH);
         menu.removed(player);
 
         int returned = countInInventory(player, HsItems.END_VAULT_SIGIL);
@@ -134,7 +165,7 @@ public class VaultUpgradeSlotGameTests {
         menu.handleSetTab(true);
 
         menu.slots.getFirst().set(new ItemStack(HsItems.VAULT_SIGIL, 2));
-        menu.slotsChanged(menu.slots.getFirst().container);
+        menu.handleConfirmUpgrade(player, VaultUpgradeKind.CAPACITY);
 
         int sigilsAfter = Vault.get(level).sigilsSpent();
         ItemStack leftInSlot = menu.slots.getFirst().getItem();

@@ -2,6 +2,7 @@ package com.heartstead.client.screen;
 
 import com.heartstead.client.vault.VaultClientCache;
 import com.heartstead.network.VaultActivatePayload;
+import com.heartstead.network.VaultConfirmUpgradePayload;
 import com.heartstead.network.VaultDepositCarriedPayload;
 import com.heartstead.network.VaultStatePayload;
 import com.heartstead.network.VaultSyncPayload;
@@ -78,6 +79,7 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
     private EditBox searchBox;
     private Button sortButton;
     private Button activateButton;
+    private final Button[] confirmButtons = new Button[VaultUpgradeKind.values().length];
 
     private SortMode sortMode = SortMode.COUNT_DESC;
     private Tab tab = Tab.STORAGE;
@@ -119,6 +121,17 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
                         VaultLayout.ACTIVATE_WIDTH, VaultLayout.ACTIVATE_HEIGHT)
                 .build());
 
+        VaultUpgradeKind[] kinds = VaultUpgradeKind.values();
+        for (int i = 0; i < kinds.length; i++) {
+            int kind = i;
+            confirmButtons[i] = addRenderableWidget(Button.builder(
+                            Component.translatable("gui.heartstead.vault.upgrade.confirm"),
+                            b -> ClientPlayNetworking.send(new VaultConfirmUpgradePayload(kind)))
+                    .bounds(leftPos + VaultLayout.confirmButtonX(i), topPos + VaultLayout.CONFIRM_BUTTON_Y,
+                            VaultLayout.CONFIRM_BUTTON_WIDTH, VaultLayout.CONFIRM_BUTTON_HEIGHT)
+                    .build());
+        }
+
         selectTab(tab);
         refresh();
     }
@@ -130,6 +143,9 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         searchBox.visible = storage;
         sortButton.visible = storage;
         activateButton.visible = !storage;
+        for (Button confirmButton : confirmButtons) {
+            confirmButton.visible = !storage;
+        }
 
         // Both sides must agree: Slot#isActive() is evaluated on the client too, so telling only the
         // server would leave the upgrade slots drawn but unclickable.
@@ -151,6 +167,13 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         activateButton.active = !state.activated();
         activateButton.setMessage(activationLabel(state));
         activateButton.setTooltip(Tooltip.create(activationTooltip(state)));
+
+        VaultUpgradeKind[] kinds = VaultUpgradeKind.values();
+        for (int i = 0; i < kinds.length; i++) {
+            ItemStack armed = menu.slots.get(i).getItem();
+            boolean satisfied = isSatisfied(kinds[i], state);
+            confirmButtons[i].active = !armed.isEmpty() && armed.is(kinds[i].sigil()) && !satisfied;
+        }
     }
 
     /**
@@ -542,7 +565,8 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
 
     private enum SortMode {
         COUNT_DESC(Component.translatable("gui.heartstead.vault.sort.count"),
-                Comparator.<VaultSyncPayload.Entry>comparingInt(VaultSyncPayload.Entry::count).reversed()),
+                Comparator.<VaultSyncPayload.Entry>comparingInt(VaultSyncPayload.Entry::count).reversed()
+                        .thenComparing(e -> displayName(e.item()))),
         NAME_ASC(Component.translatable("gui.heartstead.vault.sort.name"),
                 Comparator.comparing(e -> displayName(e.item())));
 

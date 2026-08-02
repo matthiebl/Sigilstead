@@ -38,6 +38,7 @@
   "gui.heartstead.vault.upgrade.nether_reach.owned": "Nether reach — unlocked",
   "gui.heartstead.vault.upgrade.end_reach": "End reach — insert an End Vault Sigil",
   "gui.heartstead.vault.upgrade.end_reach.owned": "End reach — unlocked",
+  "gui.heartstead.vault.upgrade.confirm": "Confirm",
   "gui.heartstead.vault.activated.tip": "This world's Vault is live. Breaking the Anchor ends that, but never costs you capacity or reach.",
   "gui.heartstead.vault.activate_free.tip": "The first Anchor a world ever has activates for free.",
   "gui.heartstead.vault.activate_cost.tip": "Costs %s Vault Sigil, taken from your inventory.",
