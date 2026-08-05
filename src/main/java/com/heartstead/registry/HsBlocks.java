@@ -2,8 +2,10 @@ package com.heartstead.registry;
 
 import com.heartstead.Heartstead;
 import com.heartstead.block.CodexBlock;
+import com.heartstead.block.CoreHousingBlock;
 import com.heartstead.block.LinkedFunnelBlock;
 import com.heartstead.block.VaultAnchorBlock;
+import com.heartstead.core.CoreFamily;
 import com.heartstead.item.VaultAnchorBlockItem;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -67,6 +69,39 @@ public final class HsBlocks {
                             .setId(key)
                             .strength(2.5f)
                             .sound(SoundType.WOOD)));
+
+    // ---------------------------------------------------------------- §4.2 housings
+    //
+    // Four registrations of one block class. §12.4 prices them all at "deliberately cheap" — the
+    // Core already ate a Sigil — so none of them gets the Anchor's hardening.
+
+    /** §4.2 — hosts a Soul Core. §12.4: 9 Iron Bars, 1 loot roll / 20s at tier I. */
+    public static final Block SOUL_CAGE = registerHousing("soul_cage", CoreFamily.SOUL, SoundType.CHAIN, 3.0f);
+
+    /** §4.2 — hosts a Verdant Core. §12.4: Composter + 4 Dirt, 1 harvest / 30s at tier I. */
+    public static final Block VERDANT_PLANTER =
+            registerHousing("verdant_planter", CoreFamily.VERDANT, SoundType.WOOD, 2.0f);
+
+    /** §4.2 — hosts a Pastoral Core. §12.4: 4 Oak Fence + 4 Hay, 1 yield / 45s at tier I. */
+    public static final Block PADDOCK = registerHousing("paddock", CoreFamily.PASTORAL, SoundType.WOOD, 2.0f);
+
+    /** §4.2 — hosts a Lithic Core. §12.4: 8 Deepslate Bricks + Amethyst Shard, 8 blocks / 20s at tier I. */
+    public static final Block QUARRY_NODE =
+            registerHousing("quarry_node", CoreFamily.LITHIC, SoundType.DEEPSLATE_BRICKS, 3.5f);
+
+    /** Every §4.2 housing, in §12.4's table order — for the creative tab and the GameTests. */
+    public static final java.util.List<Block> HOUSINGS =
+            java.util.List.of(SOUL_CAGE, VERDANT_PLANTER, PADDOCK, QUARRY_NODE);
+
+    private static Block registerHousing(String path, CoreFamily family, SoundType sound, float strength) {
+        return register(path, key -> new CoreHousingBlock(
+                BlockBehaviour.Properties.of()
+                        .setId(key)
+                        .strength(strength)
+                        .sound(sound)
+                        .requiresCorrectToolForDrops(),
+                family));
+    }
 
     private static Block register(String path, java.util.function.Function<ResourceKey<Block>, Block> factory) {
         return register(path, factory, BlockItem::new);

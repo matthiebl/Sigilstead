@@ -70,6 +70,13 @@ End reach. Deliberately not specced: it is scope, it interacts with the withdraw
 ways that need thought (does it fire while you're out of reach?), and the pack does not need it to
 be good.
 
+### [OPEN] How big is a housing's "small internal storage"?
+[DESIGN.md](DESIGN.md) §4.2 never sizes it, and the number decides how long a housing with no Linked
+Funnel keeps producing before it stalls. **Shipped as `core.housing_slots`, default 9** (one chest
+row) — chosen so a housing left overnight fills and stops rather than banking forever, which is the
+behaviour §4.2 asks for when it says internal storage limits should be meaningful. Unvalidated: nine
+slots of a Quarry Node's 8-blocks-per-cycle output is roughly ten minutes, which may well feel short.
+
 ### [OPEN] Config surface
 [CONVENTIONS.md](CONVENTIONS.md) §5 puts config in a codec-backed JSON file loaded on server start.
 Undecided: whether operators get an in-game config screen, a command, or just the file. **The file

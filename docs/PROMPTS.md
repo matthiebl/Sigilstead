@@ -295,7 +295,7 @@ Vault gets a dupe bug, and it would invalidate the §2.5 suite.
 
 ---
 
-## Phase 4 — Cores ⬜
+## Phase 4 — Cores ✅ (§4.1–4.3; the §5 eleven are still open)
 
 ```
 Implement docs/DESIGN.md §4: the prime -> imprint attunement in §4.1, the four housing

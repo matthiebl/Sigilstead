@@ -2,6 +2,8 @@ package com.heartstead.registry;
 
 import com.heartstead.Heartstead;
 import com.heartstead.codex.CodexMenu;
+import com.heartstead.core.CoreHousingMenu;
+import com.heartstead.core.CoreHousingOpenData;
 import com.heartstead.vault.VaultAccess;
 import com.heartstead.vault.VaultMenu;
 import net.fabricmc.fabric.api.menu.v1.ExtendedMenuType;
@@ -40,6 +42,17 @@ public final class HsMenuTypes {
             new ExtendedMenuType<>(
                     (containerId, inventory, unit) -> new CodexMenu(containerId, inventory),
                     net.minecraft.network.codec.StreamCodec.unit(net.minecraft.util.Unit.INSTANCE)));
+
+    /**
+     * DESIGN.md §4.2 — the housing socket screen. The opening data is the family and the buffer size:
+     * the family lets the client's core slot reject a wrong-family core without a round trip, and the
+     * size has to be sent because {@code housing_slots} is server config (CONVENTIONS.md §5) and a
+     * client guessing it would desync every slot index after the core.
+     */
+    public static final MenuType<CoreHousingMenu> CORE_HOUSING = Registry.register(
+            BuiltInRegistries.MENU,
+            ResourceKey.create(Registries.MENU, Heartstead.id("core_housing")),
+            new ExtendedMenuType<>(CoreHousingMenu::new, CoreHousingOpenData.STREAM_CODEC));
 
     /** Forces class load (and so the static registrations above) at an explicit, ordered point. */
     public static void register() {

@@ -1,5 +1,6 @@
 package com.heartstead;
 
+import com.heartstead.core.CoreImprint;
 import com.heartstead.economy.SigilBossDrops;
 import com.heartstead.economy.SigilLoot;
 import com.heartstead.enchantment.EnchantmentBlockLoot;
@@ -13,6 +14,7 @@ import com.heartstead.registry.HsCreativeTabs;
 import com.heartstead.registry.HsItems;
 import com.heartstead.registry.HsMenuTypes;
 import com.heartstead.registry.HsPayloads;
+import com.heartstead.registry.HsRecipes;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
@@ -45,6 +47,7 @@ public class Heartstead implements ModInitializer {
         HsBlocks.register();
         HsBlockEntities.register();
         HsMenuTypes.register();
+        HsRecipes.register();
         HsPayloads.register();
         HsCreativeTabs.register();
         HsAttachments.register();
@@ -53,7 +56,7 @@ public class Heartstead implements ModInitializer {
         EnchantmentBlockLoot.register();
         EnchantmentBookLoot.register();
         LivesSystem.register();
-        // TODO Phase 4: HsCoreTypes.register();
+        CoreImprint.register();
 
         LOG.info("Heartstead loaded.");
     }

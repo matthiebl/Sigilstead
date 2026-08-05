@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "heartstead:block/paddock_top",
+    "side": "heartstead:block/paddock_side"
+  }
+}

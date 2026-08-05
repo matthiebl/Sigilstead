@@ -20,7 +20,11 @@ public record HsConfig(
     VaultConfig vault,
     boolean depositRequiresReach,
     EnchantmentConfig enchantment,
-    CodexConfig codex) {
+    CodexConfig codex,
+    double coreRateMultiplier,
+    int coreAccrualCapHours,
+    AttunementConfig attunementThresholds,
+    CoreConfig core) {
 
   public static final Codec<HsConfig> CODEC =
       RecordCodecBuilder.create(
@@ -40,7 +44,17 @@ public record HsConfig(
                       EnchantmentConfig.CODEC
                           .fieldOf("enchantment")
                           .forGetter(HsConfig::enchantment),
-                      CodexConfig.CODEC.fieldOf("codex").forGetter(HsConfig::codex))
+                      CodexConfig.CODEC.fieldOf("codex").forGetter(HsConfig::codex),
+                      Codec.doubleRange(0.0, 1000.0)
+                          .fieldOf("core_rate_multiplier")
+                          .forGetter(HsConfig::coreRateMultiplier),
+                      Codec.intRange(0, 8760)
+                          .fieldOf("core_accrual_cap_hours")
+                          .forGetter(HsConfig::coreAccrualCapHours),
+                      AttunementConfig.CODEC
+                          .fieldOf("attunement_thresholds")
+                          .forGetter(HsConfig::attunementThresholds),
+                      CoreConfig.CODEC.fieldOf("core").forGetter(HsConfig::core))
                   .apply(instance, HsConfig::new));
 
   /**
@@ -55,9 +69,12 @@ public record HsConfig(
    * <p>§12.7's {@code bundle_slots} is deliberately absent: the §2.2 Bundle override it tunes is
    * not built, and a config field that visibly does nothing is worse than no field at all. It lands
    * with the override.
+   *
+   * <p>{@code core_rate_multiplier} ships at 1.0 per §12.7 and is expected to come down — it is the
+   * one dial that moves every §4 and §5 rate at once, which is exactly why §10 ranks it first.
    */
   public static final HsConfig DEFAULT =
       new HsConfig(
           SigilConfig.DEFAULT, 20, 5, 1, VaultConfig.DEFAULT, false, EnchantmentConfig.DEFAULT,
-          CodexConfig.DEFAULT);
+          CodexConfig.DEFAULT, 1.0, 24, AttunementConfig.DEFAULT, CoreConfig.DEFAULT);
 }

@@ -2,6 +2,7 @@ package com.heartstead.registry;
 
 import com.heartstead.Heartstead;
 import com.heartstead.blockentity.CodexBlockEntity;
+import com.heartstead.blockentity.CoreHousingBlockEntity;
 import com.heartstead.blockentity.LinkedFunnelBlockEntity;
 import com.heartstead.blockentity.VaultAnchorBlockEntity;
 import net.minecraft.core.Registry;
@@ -25,6 +26,15 @@ public final class HsBlockEntities {
             BuiltInRegistries.BLOCK_ENTITY_TYPE,
             key("linked_funnel"),
             new BlockEntityType<>(LinkedFunnelBlockEntity::new, java.util.Set.of(HsBlocks.LINKED_FUNNEL)));
+
+    /**
+     * DESIGN.md §4.2 — one block entity type for all four housings. They differ only in the family
+     * their block declares, so a type per housing would be four registrations of identical behaviour.
+     */
+    public static final BlockEntityType<CoreHousingBlockEntity> CORE_HOUSING = Registry.register(
+            BuiltInRegistries.BLOCK_ENTITY_TYPE,
+            key("core_housing"),
+            new BlockEntityType<>(CoreHousingBlockEntity::new, java.util.Set.copyOf(HsBlocks.HOUSINGS)));
 
     public static final BlockEntityType<CodexBlockEntity> CODEX = Registry.register(
             BuiltInRegistries.BLOCK_ENTITY_TYPE,

@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "heartstead:block/quarry_node_top",
+    "side": "heartstead:block/quarry_node_side"
+  }
+}

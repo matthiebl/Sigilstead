@@ -2,6 +2,7 @@ package com.heartstead.client;
 
 import com.heartstead.client.codex.CodexClientCache;
 import com.heartstead.client.screen.CodexScreen;
+import com.heartstead.client.screen.CoreHousingScreen;
 import com.heartstead.client.screen.VaultScreen;
 import com.heartstead.client.vault.VaultClientCache;
 import com.heartstead.network.CodexSyncPayload;
@@ -31,6 +32,7 @@ public class HeartsteadClient implements ClientModInitializer {
     public void onInitializeClient() {
         MenuScreens.register(HsMenuTypes.VAULT, VaultScreen::new);
         MenuScreens.register(HsMenuTypes.CODEX, CodexScreen::new);
+        MenuScreens.register(HsMenuTypes.CORE_HOUSING, CoreHousingScreen::new);
         ClientPlayNetworking.registerGlobalReceiver(CodexSyncPayload.TYPE,
                 (payload, context) -> context.client().execute(() -> CodexClientCache.update(payload)));
         ClientPlayNetworking.registerGlobalReceiver(VaultSyncPayload.TYPE,
@@ -45,7 +47,10 @@ public class HeartsteadClient implements ClientModInitializer {
                     ClientVaultUpgradeView.update(satisfiedKinds(payload));
                 }));
         // TODO Phase 3: Artisan extends the vanilla crafting menu (§7.1)
-        // TODO Phase 4: core attunement progress in the item tooltip (§4.1)
+        //
+        // §4.1's attunement tooltip needs nothing here: the attunement component is
+        // networkSynchronized, so the stack the client already holds carries family, target and
+        // progress, and PrimedCoreItem#appendHoverText reads them off it.
     }
 
     /** The §2.3 reach tiers the synced state says are already bought. */

@@ -2,6 +2,7 @@ package com.heartstead.registry;
 
 import com.heartstead.Heartstead;
 import com.heartstead.codex.SealedTomeData;
+import com.heartstead.core.CoreAttunement;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponentType;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -12,13 +13,18 @@ import net.minecraft.resources.ResourceKey;
  * Data component registration (DESIGN.md §3.3, CONVENTIONS.md §2.2).
  *
  * <p>{@link #SEALED_TOME_DATA} is the Sealed Tome's per-stack payload — which enchantment (and at
- * what level) the Empower step chose. Registered before {@link HsItems}, so later systems (the
- * §4.1 attunement component a Core Sigil grows when primed) have somewhere to go without reshuffling
- * registration order.
+ * what level) the Empower step chose. {@link #CORE_ATTUNEMENT} is DESIGN.md §4.1's family / target /
+ * progress triple, the reason §4 needs no player-side counter at all.
+ *
+ * <p>Both are {@code networkSynchronized}: the client draws the §4.1 attunement tooltip and the §4.3
+ * tier line from the stack it already has, so neither needs a payload of its own.
  */
 public final class HsComponents {
 
     public static DataComponentType<SealedTomeData> SEALED_TOME_DATA;
+
+    /** DESIGN.md §4.1 — {@code heartstead:attunement}, carried by every Primed Core and Core. */
+    public static DataComponentType<CoreAttunement> CORE_ATTUNEMENT;
 
     private HsComponents() {
     }
@@ -30,6 +36,14 @@ public final class HsComponents {
                 DataComponentType.<SealedTomeData>builder()
                         .persistent(SealedTomeData.CODEC)
                         .networkSynchronized(SealedTomeData.STREAM_CODEC)
+                        .build());
+
+        CORE_ATTUNEMENT = Registry.register(
+                BuiltInRegistries.DATA_COMPONENT_TYPE,
+                key("attunement"),
+                DataComponentType.<CoreAttunement>builder()
+                        .persistent(CoreAttunement.CODEC)
+                        .networkSynchronized(CoreAttunement.STREAM_CODEC)
                         .build());
     }
 

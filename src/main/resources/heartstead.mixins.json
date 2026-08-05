@@ -4,6 +4,7 @@
   "package": "com.heartstead.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "AnimalBreedMixin",
     "SealedTomeTeachMixin",
     "VillagerTradePersistenceMixin"
   ],

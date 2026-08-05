@@ -372,6 +372,17 @@ Prime recipes and imprint thresholds are in §12.4. The thresholds are one sessi
 not a grind — a few minutes in a dark room, one small field, the pen you were going to build anyway,
 a stack of mining.
 
+**What each family may lock onto is an explicit allow-list, and it is data.** Four tags under
+`data/heartstead/tags/`, one per family — `soul_imprintable` and `pastoral_imprintable` under
+`entity_type/`, `verdant_imprintable` and `lithic_imprintable` under `block/`. Editing a target list
+is a JSON edit, not a recompile, and the defaults are in §12.4.
+
+They are allow-lists rather than "any hostile mob" because the category rule is wrong at the edges in
+ways that break the economy: it includes the Ender Dragon, the Wither and every §12.1 mini-boss. An
+Evoker Soul Core would produce a Totem of Undying every 20 seconds against §12.5's 1.6 totems/hour
+for the core actually designed to make them. **The exclusions are the point of the list**, so they
+are written down in §12.4 rather than inferred from a mob's category.
+
 **How it behaves in the hand:**
 
 - **A target only locks from the hand.** An un-attuned Primed Core has to be in your **main hand or
@@ -381,19 +392,28 @@ a stack of mining.
 - **The lock happens on the first qualifying event, not at craft time.** Kill a zombie holding a
   Primed Soul Core and it is a zombie core from that moment. The tooltip updates on that first
   event — `Attuning: Zombie 1/16` — so the lock is never a surprise you discover at 16/16.
-- **Once a core has a target, everything you carry progresses at once.** Attuned Primed Cores count
-  from anywhere in the inventory, and any number of them advance in parallel — carry a zombie Soul
-  Core, a wheat Verdant Core and a deepslate Lithic Core and one afternoon of ordinary play feeds all
-  three. Nothing is queued and nothing waits its turn.
+- **Once a core has a target, it counts from anywhere in the inventory.** Attuned Primed Cores on
+  *different* targets advance in parallel — carry a zombie Soul Core, a wheat Verdant Core and a
+  deepslate Lithic Core and one afternoon of ordinary play feeds all three. Nothing is queued and
+  nothing waits its turn.
+- **One qualifying event advances exactly one core.** Two zombie Soul Cores in the same inventory do
+  *not* both tick off one kill; the first matching core takes the credit and that is the end of the
+  event. Otherwise a second copy of a core would cost half as much attunement as the first, for a
+  target §4.3 will only ever let you run one of. Search order is main hand, then offhand, then the
+  rest of the inventory — the core you are holding wins, because that is the only order a player can
+  predict without opening their inventory. An event that advances a core does not also lock an
+  un-attuned one.
 - **Progress lives on the stack.** Drop it, chest it, die with it — the counter is a data component,
   so it survives everything a stack survives. There is no player-side counter to desync.
 - **Wrong-target events are inert.** Mining dirt with a stone-locked Lithic Core does nothing at all.
   No penalty, no reset — pillar 4.
 - **The tooltip is the entire UI.** No screen, no block, no ritual. That is the point: attunement is
   something you finish without noticing you were doing it.
-- **Priming is reversible until the target locks.** A Primed Core at any progress reverts to a Core
-  Sigil in the crafting grid; the reagents are not refunded. Once a target is locked it is locked,
-  and that irreversibility is what gives the choice weight.
+- **Priming is reversible; the target is not.** A Primed Core at any progress reverts to a Core Sigil
+  in the crafting grid — the reagents are not refunded, and neither is the progress. What is
+  irreversible is the *aim*: a core cannot be re-targeted, so changing your mind about a zombie core
+  means scrapping it and starting the imprint again. That is what gives the choice weight. Once the
+  core has finished it is no longer a Primed Core and no longer reverts.
 
 ### 4.2 Housing
 
@@ -425,6 +445,14 @@ exponential. It needs a GameTest, because it is exactly the sort of invariant a 
 reintroduces silently. §12.1 carries the matching exclusion on the Wither, whose summoning item *is*
 core-producible.
 
+**A consequence of how that rule is enforced.** A core rolls its inherited loot table with no killing
+player in the context — that is *why* no Sigil pool can pass. It follows that any vanilla drop gated
+on `killed_by_player` yields nothing to a core at all: an Enderman Soul Core produces no pearls and a
+Blaze one no rods. That is correct behaviour for a farm that runs while you are asleep, and it is not
+a bug to work around. It does mean the §5 cores whose whole point is such a drop (Ender, Wither Skull,
+Shulker, Tidal) **must ship their own loot table** rather than inherit the mob's — which §4.2 already
+allows for: "the core supplies the rate and the loot table."
+
 **Cores accrue while unloaded, and must never require a chunkloader.** A housing block stores the
 world-time stamp of its last settled yield. On chunk load — and on any interaction — it settles the
 whole elapsed delta in one calculation rather than ticking. Nothing about a core rewards keeping a
@@ -448,6 +476,11 @@ Upgrade a locked core. Costs and multipliers in §12.4.
 Soul Core is active anywhere in the world — the socket is **refused at the point of insertion**, with
 the reason shown to the player. Nothing is ever placed and then silently switched off, so there is no
 dormancy, no wake-up ordering, and no "which of my four does the game pick" question to answer.
+
+"At the point of insertion" is literal and load-bearing: the housing's core slot **will not accept**
+the duplicate, and the message explains why. It is not accepted and then handed back. A refusal that
+moves the item runs inside vanilla's click handling, where shift-click retries as long as it is
+making progress — and handing the core back counts as progress.
 
 Breadth is free and encouraged: zombie *and* skeleton, wheat *and* carrot, cobble *and* deepslate are
 all fine. It is only the duplicate that is refused. Depth costs the tier resources.
@@ -828,6 +861,29 @@ applies, wherever the Anchor stands.
 | **Pastoral Core** | 4 Hay Bale + 4 Leather | Breed two animals | 8 breeds of the first species |
 | **Lithic Core** | 4 Stone + 4 Flint | Mine a stone or earth block | 64 of the first block type |
 
+**Imprint allow-lists (§4.1)** — four tags under `data/heartstead/tags/`, editable as JSON.
+
+| Family | Tag | Default contents |
+|---|---|---|
+| **Soul** | `entity_type/soul_imprintable` | Every hostile mob **except** the exclusions below |
+| **Pastoral** | `entity_type/pastoral_imprintable` | Every breedable vanilla animal. Not villagers (an unspecced emerald farm), not the undead mounts |
+| **Verdant** | `block/verdant_imprintable` | Wheat, carrots, potatoes, beetroots, nether wart, torchflower, pitcher crop. Maturity is checked in code — the tag says *which* crop, the block's `age` says *when* |
+| **Lithic** | `block/lithic_imprintable` | Overworld and Nether base stone, dirt, sand, terracotta, gravel, clay, calcite, tuff, end stone |
+
+**Excluded from `soul_imprintable`, and why.** Each drops something unconditionally — no
+`killed_by_player` gate — so a core targeting it farms that drop at the housing's full rate:
+
+| Excluded | Drops | Against |
+|---|---|---|
+| Ender Dragon, Wither | — | The two boss fights; §12.1 already keeps both out of the Sigil table |
+| **Evoker** | Totem of Undying | §12.5's Ominous core: 1.6 totems/hr. An Evoker Soul Cage is ~180/hr |
+| **Elder Guardian** | Wet sponge, armour trim template | §12.5's Guardian core, which pays neither |
+| **Warden** | Sculk catalyst | Nothing else in the pack produces one |
+| **Ravager** | Saddle | Nothing else in the pack produces one |
+
+Illusioner and Giant are also absent: neither spawns naturally, so neither is a thing a player could
+attune to by playing. Adding any of these back is one line of JSON if playtesting disagrees.
+
 **Housings (§4.2)**
 
 | Block | Recipe | Base rate, tier I |
@@ -842,8 +898,8 @@ applies, wherever the Anchor stands.
 | Tier | Cost | Effect |
 |---|---|---|
 | I | base | Roughly a small hand-built farm |
-| II | 4 Blaze Powder | 2.5× rate |
-| III | 2 Netherite Scrap | 6× rate |
+| II | 4 Blaze Powder + 4 Diamonds | 2.5× rate |
+| III | 4 Netherite Scrap | 6× rate |
 
 Offline accrual cap: `core_accrual_cap_hours`, default 24 in-game hours of yield (§12.7).
 
@@ -944,4 +1000,9 @@ Codec-backed JSON, loaded on server start (CONVENTIONS.md §5).
 | `core_rate_multiplier` | 1.0 | Global multiplier on every §12.4 / §12.5 rate |
 | `core_accrual_cap_hours` | 24 | §4.2 offline backlog ceiling |
 | `attunement_thresholds.*` | §12.4 | Per-family imprint counts |
+| `core.*_period_ticks` | §12.4 | Tier-I period per housing, in ticks (20s = 400) |
+| `core.quarry_blocks_per_cycle` | 8 | §12.4 — the Quarry Node is the only housing producing in bulk |
+| `core.tier2_multiplier`, `core.tier3_multiplier` | 2.5, 6.0 | §12.4 rate tiers |
+| `core.housing_slots` | 9 | §4.2 internal storage. **Never played** — §4.2 says only "small" |
+| `core.settle_interval_ticks` | 20 | How often a *loaded* housing re-runs the same settle-from-timestamp calculation. Not a rate: changing it cannot change total yield |
 | `lives.*` | §12.6 | Cap, loss per death, floor |

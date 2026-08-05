@@ -26,7 +26,15 @@
       "com.heartstead.gametest.VaultActivationGameTests",
       "com.heartstead.gametest.VaultUpgradeSlotGameTests",
       "com.heartstead.gametest.CodexGameTests",
-      "com.heartstead.gametest.CodexTeachGameTests"
+      "com.heartstead.gametest.CodexTeachGameTests",
+      "com.heartstead.gametest.CoreImprintGameTests",
+      "com.heartstead.gametest.CoreYieldGameTests",
+      "com.heartstead.gametest.CoreAccrualGameTests",
+      "com.heartstead.gametest.CoreSocketGameTests",
+      "com.heartstead.gametest.CoreVaultGameTests",
+      "com.heartstead.gametest.CoreHousingMenuGameTests",
+      "com.heartstead.gametest.CoreUpgradeGameTests",
+      "com.heartstead.gametest.CoreImprintTagGameTests"
     ]
   },
   "mixins": [

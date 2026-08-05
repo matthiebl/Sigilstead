@@ -1,6 +1,7 @@
 package com.heartstead.registry;
 
 import com.heartstead.Heartstead;
+import com.heartstead.core.CoreFamily;
 import net.fabricmc.fabric.api.creativetab.v1.FabricCreativeModeTab;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -45,6 +46,16 @@ public final class HsCreativeTabs {
                     // ever exists pre-filled by the Empower step, so a blank creative one means nothing.
                     output.accept(HsBlocks.CODEX);
                     output.accept(HsItems.TOME);
+                    // §4 — the four housings, then the Primed Cores in §12.4's table order. Finished
+                    // Cores are deliberately absent: a Core's whole identity is the target it learned
+                    // by playing (§4.1), so a creative one with no target would be a nameless item
+                    // that no housing accepts. Prime one and imprint it, exactly like everyone else.
+                    for (var housing : HsBlocks.HOUSINGS) {
+                        output.accept(housing);
+                    }
+                    for (CoreFamily family : CoreFamily.values()) {
+                        output.accept(HsItems.primedCore(family));
+                    }
                 })
                 .build());
     }

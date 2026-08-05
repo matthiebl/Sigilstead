@@ -1,0 +1,19 @@
+{
+  "replace": false,
+  "values": [
+    "#minecraft:base_stone_overworld",
+    "#minecraft:base_stone_nether",
+    "#minecraft:stone_ore_replaceables",
+    "#minecraft:deepslate_ore_replaceables",
+    "#minecraft:dirt",
+    "#minecraft:sand",
+    "#minecraft:terracotta",
+    "minecraft:gravel",
+    "minecraft:clay",
+    "minecraft:calcite",
+    "minecraft:tuff",
+    "minecraft:end_stone",
+    "minecraft:cobblestone",
+    "minecraft:cobbled_deepslate"
+  ]
+}

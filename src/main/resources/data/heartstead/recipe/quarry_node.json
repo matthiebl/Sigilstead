@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "BBB",
+    "BAB",
+    "BBB"
+  ],
+  "key": {
+    "B": "minecraft:deepslate_bricks",
+    "A": "minecraft:amethyst_shard"
+  },
+  "result": {
+    "id": "heartstead:quarry_node"
+  }
+}

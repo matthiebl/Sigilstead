@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "FHF",
+    "H H",
+    "FHF"
+  ],
+  "key": {
+    "F": "minecraft:oak_fence",
+    "H": "minecraft:hay_block"
+  },
+  "result": {
+    "id": "heartstead:paddock"
+  }
+}

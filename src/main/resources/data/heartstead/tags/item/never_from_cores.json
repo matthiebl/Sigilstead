@@ -1,0 +1,12 @@
+{
+  "replace": false,
+  "values": [
+    "heartstead:sigil",
+    "heartstead:core_sigil",
+    "heartstead:heart_sigil",
+    "heartstead:vault_sigil",
+    "heartstead:overworld_vault_sigil",
+    "heartstead:nether_vault_sigil",
+    "heartstead:end_vault_sigil"
+  ]
+}
