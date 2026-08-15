@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:empty",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "minecraft:coal" }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "minecraft:wither_skeleton_skull" }
+      ],
+      "conditions": [
+        { "condition": "minecraft:random_chance", "chance": 0.02 }
+      ]
+    }
+  ]
+}

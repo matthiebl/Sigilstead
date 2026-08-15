@@ -29,7 +29,11 @@ public record CoreConfig(
     double tier2Multiplier,
     double tier3Multiplier,
     int housingSlots,
-    int settleIntervalTicks) {
+    int settleIntervalTicks,
+    double soulCageXpPerCycle,
+    double verdantPlanterXpPerCycle,
+    double paddockXpPerCycle,
+    double quarryNodeXpPerCycle) {
 
     public static final Codec<CoreConfig> CODEC = RecordCodecBuilder.create(instance -> instance
             .group(
@@ -50,11 +54,27 @@ public record CoreConfig(
                     Codec.intRange(1, 54).fieldOf("housing_slots")
                             .forGetter(CoreConfig::housingSlots),
                     Codec.intRange(1, 12000).fieldOf("settle_interval_ticks")
-                            .forGetter(CoreConfig::settleIntervalTicks))
+                            .forGetter(CoreConfig::settleIntervalTicks),
+                    Codec.doubleRange(0.0, 1000.0).fieldOf("soul_cage_xp_per_cycle")
+                            .forGetter(CoreConfig::soulCageXpPerCycle),
+                    Codec.doubleRange(0.0, 1000.0).fieldOf("verdant_planter_xp_per_cycle")
+                            .forGetter(CoreConfig::verdantPlanterXpPerCycle),
+                    Codec.doubleRange(0.0, 1000.0).fieldOf("paddock_xp_per_cycle")
+                            .forGetter(CoreConfig::paddockXpPerCycle),
+                    Codec.doubleRange(0.0, 1000.0).fieldOf("quarry_node_xp_per_cycle")
+                            .forGetter(CoreConfig::quarryNodeXpPerCycle))
             .apply(instance, CoreConfig::new));
 
-    /** DESIGN.md §12.4 verbatim, plus the two structural numbers §12 does not specify. */
-    public static final CoreConfig DEFAULT = new CoreConfig(400, 600, 900, 400, 8, 2.5, 6.0, 9, 20);
+    /**
+     * DESIGN.md §12.4 verbatim, plus the two structural numbers §12 does not specify.
+     *
+     * <p>The four XP baselines follow {@link ClassicCoreRate}'s "same as the vanilla action" rule,
+     * flagged for playtesting the same way {@code housingSlots} is: Soul Cage 4 (an average hostile
+     * mob's kill XP), Paddock 3 (a breed's XP), Verdant Planter and Quarry Node 0 — harvesting a crop
+     * and mining plain stone, dirt or sand grant no XP in vanilla either.
+     */
+    public static final CoreConfig DEFAULT = new CoreConfig(400, 600, 900, 400, 8, 2.5, 6.0, 9, 20,
+            4.0, 0.0, 3.0, 0.0);
 
     /** The tier-I period, in ticks, of the housing that hosts {@code family} (§12.4). */
     public int basePeriodTicks(CoreFamily family) {
@@ -72,5 +92,15 @@ public record CoreConfig(
      */
     public int rollsPerCycle(CoreFamily family) {
         return family == CoreFamily.LITHIC ? quarryBlocksPerCycle : 1;
+    }
+
+    /** The generic (non-classic-core) XP one production cycle grants, for the housing family. */
+    public double xpPerCycle(CoreFamily family) {
+        return switch (family) {
+            case SOUL -> soulCageXpPerCycle;
+            case VERDANT -> verdantPlanterXpPerCycle;
+            case PASTORAL -> paddockXpPerCycle;
+            case LITHIC -> quarryNodeXpPerCycle;
+        };
     }
 }

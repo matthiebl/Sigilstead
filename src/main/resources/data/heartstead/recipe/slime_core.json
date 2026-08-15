@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "MOM",
+    " C ",
+    "M M"
+  ],
+  "key": {
+    "M": "minecraft:slime_block",
+    "O": "minecraft:moss_block",
+    "C": "heartstead:core_sigil"
+  },
+  "result": {
+    "id": "heartstead:primed_soul_core",
+    "components": {
+      "heartstead:attunement": { "family": "soul", "target": "minecraft:slime" }
+    }
+  }
+}

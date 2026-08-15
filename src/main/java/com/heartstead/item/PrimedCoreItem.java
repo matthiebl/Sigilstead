@@ -8,6 +8,7 @@ import com.heartstead.registry.HsComponents;
 import java.util.function.Consumer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -50,7 +51,6 @@ public class PrimedCoreItem extends Item {
         if (attunement == null) {
             return;
         }
-        int threshold = HsConfigManager.get().attunementThresholds().forFamily(family);
 
         if (attunement.unattuned()) {
             lines.accept(Component.translatable("item.heartstead.core.unattuned." + family.id())
@@ -60,8 +60,15 @@ public class PrimedCoreItem extends Item {
             return;
         }
 
-        Component target = CoreTargets.displayName(family, attunement.target().orElseThrow());
+        Identifier lockedTarget = attunement.target().orElseThrow();
+        int threshold = com.heartstead.core.ClassicCore.forTarget(lockedTarget)
+                .map(classic -> HsConfigManager.get().classicCores().forCore(classic).threshold())
+                .orElseGet(() -> HsConfigManager.get().attunementThresholds().forFamily(family));
+
+        Component target = CoreTargets.displayName(family, lockedTarget);
         lines.accept(Component.translatable("item.heartstead.core.attuning", target,
                 attunement.progress(), threshold).withStyle(ChatFormatting.AQUA));
+        lines.accept(Component.translatable("item.heartstead.core.yield",
+                CoreTargets.yieldDescription(family, lockedTarget)).withStyle(ChatFormatting.GRAY));
     }
 }

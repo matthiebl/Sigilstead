@@ -30,8 +30,8 @@ Phase numbers match [DESIGN.md](DESIGN.md) §9.
 | 2.5c — Rework the Vault | ✅ Done |
 | 3 — Codex | ⬜ Not started |
 | 3 — Artisan's Table | ⬜ Not started |
-| 4 — Cores | ⬜ Not started |
-| 4 — Classic farm replacements | ⬜ Not started |
+| 4 — Cores | ✅ Done |
+| 4 — Classic farm replacements | ✅ Done |
 
 **Up next: Phase 3 — Codex and Artisan's Table.**
 

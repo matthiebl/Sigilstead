@@ -21,7 +21,12 @@ import net.minecraft.world.level.dimension.end.EnderDragonFight;
  * first kill still reads {@code false} here.
  *
  * <p>§4.2's no-Sigils-from-cores rule holds trivially: this pays on a real dragon entity dying, and
- * no core spawns one. The §5 Ender Core inherits an enderman's loot table, not this hook.
+ * no core spawns one. The §5 Ender Core does not touch this hook either way — per §4.2, "the §5
+ * cores whose whole point is such a drop … must ship their own loot table rather than inherit the
+ * mob's", so the Ender Core rolls its own bespoke {@code heartstead:classic_cores/ender} table
+ * ({@link com.heartstead.core.ClassicCore}) rather than a real enderman's. This dragon death only
+ * decides whether the Ender Core's target is allowed to lock at all — see
+ * {@code CoreImprint#registerClassicMilestones}.
  */
 public final class SigilBossDrops {
 

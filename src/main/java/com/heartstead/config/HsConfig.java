@@ -24,7 +24,8 @@ public record HsConfig(
     double coreRateMultiplier,
     int coreAccrualCapHours,
     AttunementConfig attunementThresholds,
-    CoreConfig core) {
+    CoreConfig core,
+    ClassicCoreConfig classicCores) {
 
   public static final Codec<HsConfig> CODEC =
       RecordCodecBuilder.create(
@@ -54,7 +55,8 @@ public record HsConfig(
                       AttunementConfig.CODEC
                           .fieldOf("attunement_thresholds")
                           .forGetter(HsConfig::attunementThresholds),
-                      CoreConfig.CODEC.fieldOf("core").forGetter(HsConfig::core))
+                      CoreConfig.CODEC.fieldOf("core").forGetter(HsConfig::core),
+                      ClassicCoreConfig.CODEC.fieldOf("classic_cores").forGetter(HsConfig::classicCores))
                   .apply(instance, HsConfig::new));
 
   /**
@@ -76,5 +78,6 @@ public record HsConfig(
   public static final HsConfig DEFAULT =
       new HsConfig(
           SigilConfig.DEFAULT, 20, 5, 1, VaultConfig.DEFAULT, false, EnchantmentConfig.DEFAULT,
-          CodexConfig.DEFAULT, 1.0, 24, AttunementConfig.DEFAULT, CoreConfig.DEFAULT);
+          CodexConfig.DEFAULT, 1.0, 24, AttunementConfig.DEFAULT, CoreConfig.DEFAULT,
+          ClassicCoreConfig.DEFAULT);
 }

@@ -52,7 +52,6 @@ import net.minecraft.world.item.ItemStack;
  */
 public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
 
-    private static final Identifier SLOT_SPRITE = Identifier.withDefaultNamespace("container/slot");
     private static final Identifier DISABLED_SLOT_SPRITE =
             Identifier.withDefaultNamespace("container/crafter/disabled_slot");
     private static final Identifier SCROLLER_SPRITE =
@@ -61,10 +60,10 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
             Identifier.withDefaultNamespace("container/creative_inventory/scroller_disabled");
 
     /** Vanilla's GUI palette, so a painted panel is indistinguishable from a blitted one. */
-    private static final int PANEL_BODY = 0xFFC6C6C6;
-    private static final int PANEL_LIGHT = 0xFFFFFFFF;
-    private static final int PANEL_DARK = 0xFF555555;
-    private static final int PANEL_EDGE = 0xFF000000;
+    private static final int PANEL_BODY = HsGuiPainting.PANEL_BODY;
+    private static final int PANEL_LIGHT = HsGuiPainting.PANEL_LIGHT;
+    private static final int PANEL_DARK = HsGuiPainting.PANEL_DARK;
+    private static final int PANEL_EDGE = HsGuiPainting.PANEL_EDGE;
     private static final int TAB_UNSELECTED_BODY = 0xFF8B8B8B;
 
     /** Vanilla's slot hover tint, straight out of {@code AbstractContainerScreen}. */
@@ -74,7 +73,7 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
     private static final int GHOST_FADE = 0xB0C6C6C6;
     private static final int SATISFIED_FADE = 0x60C6C6C6;
 
-    private static final int TEXT_COLOR = 0xFF404040;
+    private static final int TEXT_COLOR = HsGuiPainting.TEXT_COLOR;
 
     private EditBox searchBox;
     private Button sortButton;
@@ -276,19 +275,14 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         }
     }
 
-    /** A vanilla-style raised panel: black outline, body fill, light top-left, dark bottom-right. */
+    /** See {@link HsGuiPainting#panel} — kept as a same-named private delegate so every call site below reads unchanged. */
     private static void panel(GuiGraphicsExtractor graphics, int x, int y, int width, int height) {
-        graphics.fill(x, y, x + width, y + height, PANEL_EDGE);
-        graphics.fill(x + 1, y + 1, x + width - 1, y + height - 1, PANEL_BODY);
-        graphics.fill(x + 1, y + 1, x + width - 1, y + 2, PANEL_LIGHT);
-        graphics.fill(x + 1, y + 1, x + 2, y + height - 1, PANEL_LIGHT);
-        graphics.fill(x + width - 2, y + 1, x + width - 1, y + height - 1, PANEL_DARK);
-        graphics.fill(x + 1, y + height - 2, x + width - 1, y + height - 1, PANEL_DARK);
+        HsGuiPainting.panel(graphics, x, y, width, height);
     }
 
-    /** One 18×18 slot depression, drawn at the socket's top-left (one pixel out from the item). */
+    /** See {@link HsGuiPainting#socket}. */
     private static void socket(GuiGraphicsExtractor graphics, int itemX, int itemY) {
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SLOT_SPRITE, itemX - 1, itemY - 1, 18, 18);
+        HsGuiPainting.socket(graphics, itemX, itemY);
     }
 
     /**
@@ -307,7 +301,12 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
             int w = VaultLayout.TAB_WIDTH;
             int h = VaultLayout.TAB_HEIGHT;
 
-            graphics.fill(x, y, x + w, y + h + 2, PANEL_EDGE);
+            // Border as three strips rather than one rectangle, the corners left untouched — the
+            // bottom is already borderless (it tucks under the panel below), so only the top-left
+            // and top-right corners need the chamfer HsGuiPainting#panel gives every other edge.
+            graphics.fill(x + 1, y, x + w - 1, y + 1, PANEL_EDGE);
+            graphics.fill(x, y + 1, x + 1, y + h + 2, PANEL_EDGE);
+            graphics.fill(x + w - 1, y + 1, x + w, y + h + 2, PANEL_EDGE);
             graphics.fill(x + 1, y + 1, x + w - 1, y + h + 2, selected ? PANEL_BODY : TAB_UNSELECTED_BODY);
             graphics.fill(x + 1, y + 1, x + w - 1, y + 2, PANEL_LIGHT);
             graphics.fill(x + 1, y + 1, x + 2, y + h + 1, PANEL_LIGHT);

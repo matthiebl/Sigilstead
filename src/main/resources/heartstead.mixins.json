@@ -5,6 +5,8 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "AnimalBreedMixin",
+    "PiglinBarterMixin",
+    "RaidVictoryMixin",
     "SealedTomeTeachMixin",
     "VillagerTradePersistenceMixin"
   ],

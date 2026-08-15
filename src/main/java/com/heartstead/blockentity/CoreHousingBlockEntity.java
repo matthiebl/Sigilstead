@@ -93,6 +93,14 @@ public class CoreHousingBlockEntity extends BlockEntity implements WorldlyContai
     /** §4.2 — the one stored clock. Everything owed is the span between this and the current game time. */
     private long lastSettled;
 
+    /**
+     * Accrued experience, waiting to be collected from the screen. Kept as a {@code double} so a
+     * fractional remainder from a low-XP core (or a partial tier multiplier) is never silently
+     * dropped between settles — only {@link #collectExperience} rounds down, and only what it hands
+     * the player is subtracted.
+     */
+    private double storedExperience;
+
     /** The §4.3 claim this housing currently holds, so it can be released precisely when it changes. */
     private CoreKey claimedKey;
 
@@ -139,6 +147,26 @@ public class CoreHousingBlockEntity extends BlockEntity implements WorldlyContai
      */
     public void setLastSettledForTest(long gameTime) {
         this.lastSettled = gameTime;
+    }
+
+    /** The XP accrued and waiting to be collected — what the screen's counter and button read. */
+    public double storedExperience() {
+        return storedExperience;
+    }
+
+    /**
+     * Hands the player whatever whole XP points have accrued, keeping any fractional remainder for
+     * next time — the same "nothing owed is ever silently dropped" rule {@link #settle} follows for
+     * items. A no-op below one point, so the button has nothing to send for.
+     */
+    public void collectExperience(ServerPlayer player) {
+        int whole = (int) Math.floor(storedExperience);
+        if (whole <= 0) {
+            return;
+        }
+        player.giveExperiencePoints(whole);
+        storedExperience -= whole;
+        setChanged();
     }
 
     private Optional<CoreAttunement> attunement() {
@@ -222,8 +250,12 @@ public class CoreHousingBlockEntity extends BlockEntity implements WorldlyContai
 
         CoreConfig config = HsConfigManager.get().core();
         CoreAttunement core = attunement.get();
+        int basePeriodTicks = core.target()
+                .flatMap(com.heartstead.core.ClassicCore::forTarget)
+                .map(classic -> HsConfigManager.get().classicCores().forCore(classic).periodTicks())
+                .orElseGet(() -> config.basePeriodTicks(family));
         double period = CoreAccrual.effectivePeriodTicks(
-                config.basePeriodTicks(family),
+                basePeriodTicks,
                 core.tier().rateMultiplier(config),
                 HsConfigManager.get().coreRateMultiplier());
         long cap = CoreAccrual.capTicks(HsConfigManager.get().coreAccrualCapHours());
@@ -235,7 +267,20 @@ public class CoreHousingBlockEntity extends BlockEntity implements WorldlyContai
             return 0;
         }
 
-        int rolls = config.rollsPerCycle(family);
+        // XP scales with tier exactly the way item yield does — tier only changes cycles/hour, not
+        // what one cycle is worth — so no separate tier multiplier is needed here.
+        double xpPerCycle = core.target()
+                .flatMap(com.heartstead.core.ClassicCore::forTarget)
+                .map(classic -> HsConfigManager.get().classicCores().forCore(classic).xpPerCycle())
+                .orElseGet(() -> config.xpPerCycle(family));
+        storedExperience += settlement.cycles() * xpPerCycle;
+
+        // §5's classic cores price their whole cycle's yield into the loot table itself (Geode's "4
+        // shards" is one roll with a set_count function, not four rolls) — the Quarry Node's 8-blocks-
+        // per-cycle bulk rate is a §4.2 base-rate detail Geode's own §12.5 rate replaces outright.
+        int rolls = core.target().flatMap(com.heartstead.core.ClassicCore::forTarget).isPresent()
+                ? 1
+                : config.rollsPerCycle(family);
         for (int cycle = 0; cycle < settlement.cycles(); cycle++) {
             if (!hasAnywhereToPut(level)) {
                 break;
@@ -501,6 +546,7 @@ public class CoreHousingBlockEntity extends BlockEntity implements WorldlyContai
         super.saveAdditional(output);
         output.putInt("version", CURRENT_VERSION);
         output.putLong("last_settled", lastSettled);
+        output.putDouble("stored_experience", storedExperience);
         output.putInt("buffer_size", buffer.size());
         if (!core.isEmpty()) {
             output.store("core", ItemStack.CODEC, core);
@@ -512,6 +558,7 @@ public class CoreHousingBlockEntity extends BlockEntity implements WorldlyContai
     protected void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
         lastSettled = input.getLongOr("last_settled", 0L);
+        storedExperience = input.getDoubleOr("stored_experience", 0.0);
         core = input.read("core", ItemStack.CODEC).orElse(ItemStack.EMPTY);
 
         // Sized to whichever is larger, the config or what this housing was saved with. Lowering

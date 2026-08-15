@@ -7,12 +7,20 @@ import com.heartstead.registry.HsItems;
 import java.util.ArrayList;
 import java.util.List;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityCombatEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.TagKey;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.Animal;
@@ -22,6 +30,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.level.levelgen.structure.BuiltinStructures;
+import net.minecraft.world.level.levelgen.structure.Structure;
 
 /**
  * DESIGN.md §4.1 step 2 — imprinting. The whole of §4's "rewards the activity it replaces" lives
@@ -83,6 +93,9 @@ public final class CoreImprint {
     public static final TagKey<Block> LITHIC_IMPRINTABLE =
             TagKey.create(Registries.BLOCK, Heartstead.id("lithic_imprintable"));
 
+    /** §5 Golem — how far from a just-built Iron Golem to look for the player who built it. */
+    private static final double GOLEM_BUILD_CREDIT_BLOCKS = 16.0;
+
     private CoreImprint() {
     }
 
@@ -108,6 +121,65 @@ public final class CoreImprint {
                 offer(serverPlayer, CoreFamily.LITHIC, BuiltInRegistries.BLOCK.getKey(state.getBlock()));
             }
         });
+
+        registerClassicMilestones();
+    }
+
+    /**
+     * DESIGN.md §5's four milestone cores that lock on a mob kill rather than a structure/dimension
+     * gate with no matching mob: Guardian, Wither Skull, Ender and Shulker. Ominous (raid victory) and
+     * Barter (piglin bartering) have no kill to hook and live in their own mixins instead.
+     *
+     * <p>Each targets a {@link ClassicCore#isSynthetic() synthetic} id rather than the real mob, so
+     * this deliberately does <b>not</b> go through the {@link #SOUL_IMPRINTABLE} tag check the generic
+     * path uses — three of these four mobs are excluded from that tag precisely so a generic Soul Core
+     * can never farm them at the tag-gated rate (§4.1's exclusion table). Bypassing the tag here is
+     * safe only because the target these four lock is one the generic path can never reach anyway.
+     *
+     * <p>Uses {@link ServerLivingEntityEvents#AFTER_DEATH} rather than the combat "killed other
+     * entity" event, matching {@link com.heartstead.economy.SigilBossDrops}'s proven pattern for the
+     * Ender Dragon rather than assuming the combat event covers boss deaths the same way it covers an
+     * ordinary mob.
+     */
+    private static void registerClassicMilestones() {
+        // Golem (§5, Counted) — "build 4 iron golems while carrying it". IronGolem#isPlayerCreated is
+        // vanilla's own marker for exactly this (CarvedPumpkinBlock sets it the moment the golem-
+        // building pattern completes, and vanilla uses the same flag to gate the golem attacking its
+        // builder), so no mixin is needed here at all — unlike a natural village spawn, a player-built
+        // golem is unambiguous.
+        ServerEntityEvents.ENTITY_LOAD.register((entity, level) -> {
+            if (entity instanceof net.minecraft.world.entity.animal.golem.IronGolem golem && golem.isPlayerCreated()) {
+                if (level.getNearestPlayer(golem, GOLEM_BUILD_CREDIT_BLOCKS) instanceof ServerPlayer builder) {
+                    offer(builder, CoreFamily.SOUL, ClassicCore.GOLEM.target());
+                }
+            }
+        });
+
+        ServerLivingEntityEvents.AFTER_DEATH.register((entity, damageSource) -> {
+            if (!(entity.level() instanceof ServerLevel level) || !(killingPlayer(damageSource) instanceof ServerPlayer player)) {
+                return;
+            }
+
+            if (entity.getType() == EntityTypes.ELDER_GUARDIAN) {
+                offer(player, CoreFamily.SOUL, ClassicCore.GUARDIAN.target());
+            } else if (entity.getType() == EntityTypes.WITHER_SKELETON && inStructure(level, entity.blockPosition(), BuiltinStructures.FORTRESS)) {
+                offer(player, CoreFamily.SOUL, ClassicCore.WITHER_SKULL.target());
+            } else if (entity.getType() == EntityTypes.SHULKER && inStructure(level, entity.blockPosition(), BuiltinStructures.END_CITY)) {
+                offer(player, CoreFamily.SOUL, ClassicCore.SHULKER.target());
+            } else if (entity.getType() == EntityTypes.ENDER_DRAGON) {
+                offer(player, CoreFamily.SOUL, ClassicCore.ENDER.target());
+            }
+        });
+    }
+
+    private static Entity killingPlayer(DamageSource damageSource) {
+        return damageSource.getEntity();
+    }
+
+    /** Whether {@code pos} falls inside a generated instance of {@code structure} — §5's location gates. */
+    private static boolean inStructure(ServerLevel level, BlockPos pos, ResourceKey<Structure> structure) {
+        Structure resolved = level.registryAccess().lookupOrThrow(Registries.STRUCTURE).getValue(structure);
+        return resolved != null && level.structureManager().getStructureWithPieceAt(pos, resolved).isValid();
     }
 
     /** Whether {@code type} is on {@code tag} — {@link EntityType} has no {@code is(TagKey)} of its own. */
@@ -161,7 +233,9 @@ public final class CoreImprint {
         if (target == null) {
             return;
         }
-        int threshold = HsConfigManager.get().attunementThresholds().forFamily(family);
+        int threshold = ClassicCore.forTarget(target)
+                .map(classic -> HsConfigManager.get().classicCores().forCore(classic).threshold())
+                .orElseGet(() -> HsConfigManager.get().attunementThresholds().forFamily(family));
 
         for (CoreSlot slot : carriedSlots(player)) {
             CoreAttunement attunement = primedAttunement(slot.get(), family);

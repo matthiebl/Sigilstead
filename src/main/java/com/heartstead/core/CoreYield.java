@@ -95,6 +95,13 @@ public final class CoreYield {
 
     private static Optional<LootParams> params(ServerLevel level, CoreFamily family,
                                                net.minecraft.resources.Identifier target, BlockPos pos) {
+        // §5's classic cores roll a bespoke heartstead loot table that needs no context at all — six
+        // of them do not even name a real entity or block (ClassicCore's javadoc explains why), so
+        // building an ENTITY or BLOCK LootParams for them is both unnecessary and, for those six,
+        // impossible.
+        if (ClassicCore.forTarget(target).isPresent()) {
+            return Optional.of(new LootParams.Builder(level).create(LootContextParamSets.EMPTY));
+        }
         return switch (family.imprint()) {
             case ENTITY -> entityParams(level, target, pos);
             case BLOCK -> blockParams(level, target, pos);

@@ -63,9 +63,12 @@ public class CoreItem extends Item {
         if (next == null) {
             lines.accept(Component.translatable("item.heartstead.core.tier_max")
                     .withStyle(ChatFormatting.DARK_GRAY));
-            return;
+        } else {
+            lines.accept(Component.translatable("item.heartstead.core.tier_next", next.costDescription())
+                    .withStyle(ChatFormatting.DARK_GRAY));
         }
-        lines.accept(Component.translatable("item.heartstead.core.tier_next", next.costDescription())
-                .withStyle(ChatFormatting.DARK_GRAY));
+
+        attunement.target().ifPresent(target -> lines.accept(Component.translatable("item.heartstead.core.yield",
+                CoreTargets.yieldDescription(family, target)).withStyle(ChatFormatting.GRAY)));
     }
 }

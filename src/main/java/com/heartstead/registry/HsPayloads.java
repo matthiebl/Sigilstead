@@ -1,10 +1,12 @@
 package com.heartstead.registry;
 
 import com.heartstead.codex.CodexMenu;
+import com.heartstead.core.CoreHousingMenu;
 import com.heartstead.network.CodexArchivePayload;
 import com.heartstead.network.CodexBuyCapacityPayload;
 import com.heartstead.network.CodexSealPayload;
 import com.heartstead.network.CodexSyncPayload;
+import com.heartstead.network.CoreHousingCollectXpPayload;
 import com.heartstead.network.VaultActivatePayload;
 import com.heartstead.network.VaultAnchorPayload;
 import com.heartstead.network.VaultConfirmUpgradePayload;
@@ -47,6 +49,8 @@ public final class HsPayloads {
                 .register(VaultDepositCarriedPayload.TYPE, VaultDepositCarriedPayload.STREAM_CODEC);
         PayloadTypeRegistry.serverboundPlay()
                 .register(VaultConfirmUpgradePayload.TYPE, VaultConfirmUpgradePayload.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay()
+                .register(CoreHousingCollectXpPayload.TYPE, CoreHousingCollectXpPayload.STREAM_CODEC);
 
         PayloadTypeRegistry.clientboundPlay().register(CodexSyncPayload.TYPE, CodexSyncPayload.STREAM_CODEC);
         PayloadTypeRegistry.serverboundPlay().register(CodexArchivePayload.TYPE, CodexArchivePayload.STREAM_CODEC);
@@ -107,6 +111,13 @@ public final class HsPayloads {
             VaultUpgradeKind[] kinds = VaultUpgradeKind.values();
             if (player.containerMenu instanceof VaultMenu vaultMenu && payload.kind() >= 0 && payload.kind() < kinds.length) {
                 vaultMenu.handleConfirmUpgrade(player, kinds[payload.kind()]);
+            }
+        }));
+
+        ServerPlayNetworking.registerGlobalReceiver(CoreHousingCollectXpPayload.TYPE, (payload, context) -> context.server().execute(() -> {
+            ServerPlayer player = context.player();
+            if (player.containerMenu instanceof CoreHousingMenu coreHousingMenu) {
+                coreHousingMenu.handleCollectXp(player);
             }
         }));
 

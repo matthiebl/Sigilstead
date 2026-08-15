@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "NKN",
+    " C ",
+    "N N"
+  ],
+  "key": {
+    "N": "minecraft:nether_brick",
+    "K": "minecraft:wither_skeleton_skull",
+    "C": "heartstead:core_sigil"
+  },
+  "result": {
+    "id": "heartstead:primed_soul_core",
+    "components": {
+      "heartstead:attunement": { "family": "soul", "target": "heartstead:wither_skull" }
+    }
+  }
+}

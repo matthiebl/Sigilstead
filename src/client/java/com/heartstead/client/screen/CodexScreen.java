@@ -13,10 +13,8 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.input.MouseButtonEvent;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.enchantment.Enchantment;
 
@@ -31,12 +29,7 @@ import net.minecraft.world.item.enchantment.Enchantment;
  */
 public class CodexScreen extends AbstractContainerScreen<CodexMenu> {
 
-    private static final Identifier SLOT_SPRITE = Identifier.withDefaultNamespace("container/slot");
-    private static final int PANEL_BODY = 0xFFC6C6C6;
-    private static final int PANEL_LIGHT = 0xFFFFFFFF;
-    private static final int PANEL_DARK = 0xFF555555;
-    private static final int PANEL_EDGE = 0xFF000000;
-    private static final int TEXT_COLOR = 0xFF404040;
+    private static final int TEXT_COLOR = HsGuiPainting.TEXT_COLOR;
     private static final int ROW_HOVER = 0x40FFFFFF;
 
     private Button archiveButton;
@@ -76,23 +69,23 @@ public class CodexScreen extends AbstractContainerScreen<CodexMenu> {
     @Override
     public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         super.extractBackground(graphics, mouseX, mouseY, partialTick);
-        panel(graphics, leftPos, topPos, CodexLayout.PANEL_WIDTH, CodexLayout.PANEL_HEIGHT);
+        HsGuiPainting.panel(graphics, leftPos, topPos, CodexLayout.PANEL_WIDTH, CodexLayout.PANEL_HEIGHT);
 
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 9; col++) {
-                socket(graphics, leftPos + CodexLayout.PLAYER_INV_X + col * CodexLayout.CELL,
+                HsGuiPainting.socket(graphics, leftPos + CodexLayout.PLAYER_INV_X + col * CodexLayout.CELL,
                         topPos + CodexLayout.PLAYER_INV_Y + row * CodexLayout.CELL);
             }
         }
         for (int col = 0; col < 9; col++) {
-            socket(graphics, leftPos + CodexLayout.PLAYER_INV_X + col * CodexLayout.CELL,
+            HsGuiPainting.socket(graphics, leftPos + CodexLayout.PLAYER_INV_X + col * CodexLayout.CELL,
                     topPos + CodexLayout.HOTBAR_Y);
         }
 
-        socket(graphics, leftPos + CodexLayout.ARCHIVE_SLOT_X, topPos + CodexLayout.ARCHIVE_SLOT_Y);
-        socket(graphics, leftPos + CodexLayout.CAPACITY_SLOT_X, topPos + CodexLayout.CAPACITY_SLOT_Y);
-        socket(graphics, leftPos + CodexLayout.TOME_SLOT_X, topPos + CodexLayout.TOME_SLOT_Y);
-        socket(graphics, leftPos + CodexLayout.SEALED_TOME_SLOT_X, topPos + CodexLayout.SEALED_TOME_SLOT_Y);
+        HsGuiPainting.socket(graphics, leftPos + CodexLayout.ARCHIVE_SLOT_X, topPos + CodexLayout.ARCHIVE_SLOT_Y);
+        HsGuiPainting.socket(graphics, leftPos + CodexLayout.CAPACITY_SLOT_X, topPos + CodexLayout.CAPACITY_SLOT_Y);
+        HsGuiPainting.socket(graphics, leftPos + CodexLayout.TOME_SLOT_X, topPos + CodexLayout.TOME_SLOT_Y);
+        HsGuiPainting.socket(graphics, leftPos + CodexLayout.SEALED_TOME_SLOT_X, topPos + CodexLayout.SEALED_TOME_SLOT_Y);
     }
 
     @Override
@@ -141,19 +134,6 @@ public class CodexScreen extends AbstractContainerScreen<CodexMenu> {
     private static boolean inRow(double relX, double relY, int rowY) {
         return relX >= CodexLayout.LIST_X && relX < CodexLayout.LIST_X + CodexLayout.LIST_WIDTH
                 && relY >= rowY && relY < rowY + CodexLayout.LIST_ROW_HEIGHT;
-    }
-
-    private static void panel(GuiGraphicsExtractor graphics, int x, int y, int width, int height) {
-        graphics.fill(x, y, x + width, y + height, PANEL_EDGE);
-        graphics.fill(x + 1, y + 1, x + width - 1, y + height - 1, PANEL_BODY);
-        graphics.fill(x + 1, y + 1, x + width - 1, y + 2, PANEL_LIGHT);
-        graphics.fill(x + 1, y + 1, x + 2, y + height - 1, PANEL_LIGHT);
-        graphics.fill(x + width - 2, y + 1, x + width - 1, y + height - 1, PANEL_DARK);
-        graphics.fill(x + 1, y + height - 2, x + width - 1, y + height - 1, PANEL_DARK);
-    }
-
-    private static void socket(GuiGraphicsExtractor graphics, int itemX, int itemY) {
-        graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SLOT_SPRITE, itemX - 1, itemY - 1, 18, 18);
     }
 
     @Override

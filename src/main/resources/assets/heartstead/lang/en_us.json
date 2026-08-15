@@ -76,6 +76,8 @@
   "item.heartstead.core.tier_next": "Next tier: %s",
   "item.heartstead.core.tier_cost": "%s × %s",
   "item.heartstead.core.tier_cost_join": "%s, %s",
+  "item.heartstead.core.yield": "Produces: %s",
+  "item.heartstead.core.yield.generic": "%s drops",
   "block.heartstead.soul_cage": "Soul Cage",
   "block.heartstead.verdant_planter": "Verdant Planter",
   "block.heartstead.paddock": "Paddock",
@@ -88,5 +90,26 @@
   "gui.heartstead.core_housing.empty.soul": "Socket a Soul Core",
   "gui.heartstead.core_housing.empty.verdant": "Socket a Verdant Core",
   "gui.heartstead.core_housing.empty.pastoral": "Socket a Pastoral Core",
-  "gui.heartstead.core_housing.empty.lithic": "Socket a Lithic Core"
+  "gui.heartstead.core_housing.empty.lithic": "Socket a Lithic Core",
+  "gui.heartstead.core_housing.experience": "%s XP",
+  "gui.heartstead.core_housing.collect": "Collect",
+
+  "heartstead.classic_core.ominous": "Ominous Raid",
+  "heartstead.classic_core.barter": "Piglin Barter",
+  "heartstead.classic_core.guardian": "Elder Guardian",
+  "heartstead.classic_core.wither_skull": "Wither Skeleton",
+  "heartstead.classic_core.ender": "Ender",
+  "heartstead.classic_core.shulker": "Shulker",
+
+  "heartstead.classic_core.golem.yield": "Iron Ingots",
+  "heartstead.classic_core.ominous.yield": "Raid loot",
+  "heartstead.classic_core.barter.yield": "Piglin bartering loot",
+  "heartstead.classic_core.guardian.yield": "Prismarine Shards and Crystals",
+  "heartstead.classic_core.tidal.yield": "chance of Nautilus Shells and Tridents",
+  "heartstead.classic_core.wither_skull.yield": "Wither Skeleton Skulls",
+  "heartstead.classic_core.ender.yield": "Ender Pearls",
+  "heartstead.classic_core.shulker.yield": "Shulker Shells",
+  "heartstead.classic_core.slime.yield": "Slimeballs",
+  "heartstead.classic_core.apiary.yield": "Honeycomb and Honey Bottles",
+  "heartstead.classic_core.geode.yield": "Amethyst Shards"
 }

@@ -438,6 +438,15 @@ blocks.
 Output goes to small internal storage — **or straight into your Vault if a Linked Funnel is below.**
 That is the integration payoff, and the moment the two flagship systems click together.
 
+**Cores also accrue experience**, alongside items and on the same clock — every production cycle
+grants a fixed amount of XP, sized off what the vanilla action the core replaces would actually award
+a player doing it themselves (§12.4, §12.5). It scales with tier exactly the way item yield does:
+tier only changes cycles per hour, not what one cycle is worth. XP is not blocked by a full item
+buffer — it isn't an item, and has nowhere to overflow. It collects the same way the buffer does:
+accrue while away, then take it explicitly — a **Collect** button in the housing screen next to a
+running total, not orbs dropped into the world, so an unloaded chunk never has to spawn anything to
+pay out what it owes.
+
 **No core ever yields a Sigil.** Not at any housing, any tier, or through any loot table it inherits.
 This is not a balance preference, it is the rule that keeps the economy from bootstrapping: cores
 are bought with Sigils, so a core that produced Sigils would produce cores, and the curve goes
@@ -886,12 +895,18 @@ attune to by playing. Adding any of these back is one line of JSON if playtestin
 
 **Housings (§4.2)**
 
-| Block | Recipe | Base rate, tier I |
-|---|---|---|
-| **Soul Cage** | 9 Iron Bars | 1 loot roll / 20s |
-| **Verdant Planter** | Composter + 4 Dirt around it | 1 harvest / 30s |
-| **Paddock** | 4 Oak Fence + 4 Hay | 1 yield / 45s |
-| **Quarry Node** | 8 Deepslate Bricks + Amethyst Shard | 8 blocks / 20s |
+| Block | Recipe | Base rate, tier I | XP/cycle |
+|---|---|---|---|
+| **Soul Cage** | 9 Iron Bars | 1 loot roll / 20s | 4 |
+| **Verdant Planter** | Composter + 4 Dirt around it | 1 harvest / 30s | 0 |
+| **Paddock** | 4 Oak Fence + 4 Hay | 1 yield / 45s | 3 |
+| **Quarry Node** | 8 Deepslate Bricks + Amethyst Shard | 8 blocks / 20s | 0 |
+
+XP/cycle applies to a generic (non-§5) core socketed in that housing — a zombie Soul Core, a wheat
+Verdant Core. It is sized off what the vanilla action itself awards: an average hostile-mob kill (4)
+and a breed (3) both grant XP in vanilla; harvesting a crop and mining plain stone, dirt or sand do
+not, so those two housings' generic baseline is 0. §5's classic cores override this the same way they
+override the base rate and loot table — see §12.5.
 
 **Rate tiering (§4.3)**
 
@@ -907,19 +922,22 @@ Offline accrual cap: `core_accrual_cap_hours`, default 24 in-game hours of yield
 
 Each also takes a Core Sigil. All rates are multiplied by `core_rate_multiplier` (§12.7).
 
-| Core | Replaces | Tier | Housing | Prime reagents | Imprint | Base rate, tier I |
-|---|---|---|---|---|---|---|
-| **Golem** | Iron farm | T1 | Soul Cage | 4 Iron Block + Poppy | *Counted:* build 4 iron golems while carrying it | 1 ingot / 40s — **90/hr** |
-| **Ominous** | Raid farm | T2 | Soul Cage | 4 Emerald Block + Ominous Bottle | *Milestone:* complete a level-5 ominous raid | 1 roll / 90s, totem 4% — **1.6 totems/hr** |
-| **Barter** | Piglin barter farm | T2 | Soul Cage | 4 Gold Block + Crying Obsidian | *Milestone:* barter with a piglin | 1 barter / 30s — **120/hr** |
-| **Guardian** | Guardian farm | T2 | Soul Cage | 4 Prismarine Brick + Sponge | *Milestone:* kill an Elder Guardian | 1 roll / 25s — **144/hr** |
-| **Tidal** | Drowned / trident farm | T2 | Soul Cage | 4 Prismarine + Nautilus Shell | *Counted:* kill 16 drowned | 1 roll / 30s, trident 0.5% — **0.6 tridents/hr** |
-| **Wither Skull** | Skull farm | T2 | Soul Cage | 4 Nether Brick + Wither Skeleton Skull | *Milestone:* kill a wither skeleton in a fortress | 1 roll / 45s, skull 2% — **1.6 skulls/hr** |
-| **Ender** | Enderman XP farm | T3 | Soul Cage | 4 Obsidian + 4 Ender Pearl | *Milestone:* kill the Ender Dragon | 1 roll / 20s + XP — **180 pearls/hr** |
-| **Shulker** | Shulker shell farm | T3 | Soul Cage | 4 Purpur Block + Shulker Shell | *Milestone:* kill a shulker in an End city | **10 shells/hr** |
-| **Slime** | Slime farm | T1 | Soul Cage | 4 Slime Block + Moss Block | *Counted:* kill 16 slimes | 1 slimeball / 30s — **120/hr** |
-| **Apiary** | Honey farm | T1 | Paddock | 4 Honeycomb + 4 Flowers | *Counted:* breed 8 bees | 1 comb or bottle / 60s — **60/hr** |
-| **Geode** | Amethyst farm | T1 | Quarry Node | 4 Amethyst Block + Calcite | *Counted:* mine 32 amethyst clusters | 4 shards / 60s — **240/hr** |
+| Core | Replaces | Tier | Housing | Prime reagents | Imprint | Base rate, tier I | XP/cycle |
+|---|---|---|---|---|---|---|---|
+| **Golem** | Iron farm | T1 | Soul Cage | 4 Iron Block + Poppy | *Counted:* build 4 iron golems while carrying it | 1 ingot / 40s — **90/hr** | 0 |
+| **Ominous** | Raid farm | T2 | Soul Cage | 4 Emerald Block + Ominous Bottle | *Milestone:* complete a level-5 ominous raid | 1 roll / 90s, totem 4% — **1.6 totems/hr** | 8 |
+| **Barter** | Piglin barter farm | T2 | Soul Cage | 4 Gold Block + Crying Obsidian | *Milestone:* barter with a piglin | 1 barter / 30s — **120/hr** | 0 |
+| **Guardian** | Guardian farm | T2 | Soul Cage | 4 Prismarine Brick + Sponge | *Milestone:* kill an Elder Guardian | 1 roll / 25s — **144/hr** | 10 |
+| **Tidal** | Drowned / trident farm | T2 | Soul Cage | 4 Prismarine + Nautilus Shell | *Counted:* kill 16 drowned | 1 roll / 30s, trident 0.5% — **0.6 tridents/hr** | 5 |
+| **Wither Skull** | Skull farm | T2 | Soul Cage | 4 Nether Brick + Wither Skeleton Skull | *Milestone:* kill a wither skeleton in a fortress | 1 roll / 45s, skull 2% — **1.6 skulls/hr** | 5 |
+| **Ender** | Enderman XP farm | T3 | Soul Cage | 4 Obsidian + 4 Ender Pearl | *Milestone:* kill the Ender Dragon | 1 roll / 20s + XP — **180 pearls/hr** | 5 |
+| **Shulker** | Shulker shell farm | T3 | Soul Cage | 4 Purpur Block + Shulker Shell | *Milestone:* kill a shulker in an End city | **10 shells/hr** | 5 |
+| **Slime** | Slime farm | T1 | Soul Cage | 4 Slime Block + Moss Block | *Counted:* kill 16 slimes | 1 slimeball / 30s — **120/hr** | 3 |
+| **Apiary** | Honey farm | T1 | Paddock | 4 Honeycomb + 4 Flowers | *Counted:* breed 8 bees | 1 comb or bottle / 60s — **60/hr** | 3 |
+| **Geode** | Amethyst farm | T1 | Quarry Node | 4 Amethyst Block + Calcite | *Counted:* mine 32 amethyst clusters | 4 shards / 60s — **240/hr** | 0 |
+
+XP/cycle is sized off the vanilla action's own XP award (an Enderman kill, a Guardian kill, a breed),
+flagged for playtesting the same way the rates above already are — see §4.2.
 
 **How far below a real farm these sit**, which is the number that matters for pillar 5 — tier I
 against a competent technical build:
@@ -1005,4 +1023,6 @@ Codec-backed JSON, loaded on server start (CONVENTIONS.md §5).
 | `core.tier2_multiplier`, `core.tier3_multiplier` | 2.5, 6.0 | §12.4 rate tiers |
 | `core.housing_slots` | 9 | §4.2 internal storage. **Never played** — §4.2 says only "small" |
 | `core.settle_interval_ticks` | 20 | How often a *loaded* housing re-runs the same settle-from-timestamp calculation. Not a rate: changing it cannot change total yield |
+| `core.soul_cage_xp_per_cycle`, `core.paddock_xp_per_cycle`, `core.verdant_planter_xp_per_cycle`, `core.quarry_node_xp_per_cycle` | 4, 3, 0, 0 | §4.2/§12.4 — generic (non-§5) core XP per cycle, per housing |
+| `classic_cores.*.xp_per_cycle` | §12.5 | Per-classic-core XP per cycle, overriding the generic baseline the same way `period_ticks` overrides the base rate |
 | `lives.*` | §12.6 | Cap, loss per death, floor |

@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:empty",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "minecraft:nautilus_shell" }
+      ],
+      "conditions": [
+        { "condition": "minecraft:random_chance", "chance": 0.03 }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "minecraft:item", "name": "minecraft:trident" }
+      ],
+      "conditions": [
+        { "condition": "minecraft:random_chance", "chance": 0.005 }
+      ]
+    }
+  ]
+}

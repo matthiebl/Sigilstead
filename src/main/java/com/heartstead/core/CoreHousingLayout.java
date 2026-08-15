@@ -28,8 +28,16 @@ public final class CoreHousingLayout {
     public static final int STATUS_X = 8;
     public static final int STATUS_Y = 40;
 
+    /** The accrued-XP row: the count on the left, the Collect button on the right. */
+    public static final int XP_TEXT_X = 8;
+    public static final int XP_Y = 52;
+    public static final int COLLECT_BUTTON_WIDTH = 50;
+    public static final int COLLECT_BUTTON_HEIGHT = 14;
+    public static final int COLLECT_BUTTON_X = PANEL_WIDTH - 8 - COLLECT_BUTTON_WIDTH;
+    public static final int COLLECT_BUTTON_Y = XP_Y - 3;
+
     public static final int BUFFER_X = 8;
-    public static final int BUFFER_Y = 52;
+    public static final int BUFFER_Y = XP_Y + 16;
     public static final int BUFFER_COLUMNS = 9;
 
     public static final int PLAYER_INV_X = 8;

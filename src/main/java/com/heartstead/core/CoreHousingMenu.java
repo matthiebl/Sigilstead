@@ -42,13 +42,19 @@ import net.minecraft.world.item.ItemStack;
  * progress, handing the core back is progress, so the two sides could trade the same core forever.
  * Refusing before anything moves removes the whole class of problem rather than the one symptom.
  *
- * <p>{@link #STATUS} is a one-int {@link ContainerData} rather than a payload: it is three states the
- * screen prints as a line of text, and vanilla already syncs container data every tick.
+ * <p>{@link #STATUS} and {@link #XP} are a two-int {@link ContainerData} rather than a payload: they
+ * are small numbers the screen prints as text, and vanilla already syncs container data every tick.
+ * Collecting the XP, unlike reading it, is a real action and goes over
+ * {@link com.heartstead.network.CoreHousingCollectXpPayload} instead, the same way the Vault's
+ * activate button is a payload while its state is a sync payload.
  */
 public final class CoreHousingMenu extends AbstractContainerMenu {
 
     /** The status int the screen renders. */
     public static final int STATUS = 0;
+
+    /** The floored, not-yet-collected experience the screen renders and the Collect button spends. */
+    public static final int XP = 1;
 
     public static final int STATUS_EMPTY = 0;
     public static final int STATUS_RUNNING = 1;
@@ -63,7 +69,7 @@ public final class CoreHousingMenu extends AbstractContainerMenu {
     /** Client side: no block entity, and a stand-in container the server's slot updates write into. */
     public CoreHousingMenu(int containerId, Inventory playerInventory, CoreHousingOpenData openData) {
         this(containerId, playerInventory, new SimpleContainer(1 + openData.bufferSlots()), null, openData,
-                new SimpleContainerData(1));
+                new SimpleContainerData(2));
     }
 
     /** Server side, backed by the real housing. */
@@ -94,6 +100,9 @@ public final class CoreHousingMenu extends AbstractContainerMenu {
         return new ContainerData() {
             @Override
             public int get(int index) {
+                if (index == XP) {
+                    return (int) Math.floor(housing.storedExperience());
+                }
                 if (housing.refused()) {
                     return STATUS_REFUSED;
                 }
@@ -102,12 +111,12 @@ public final class CoreHousingMenu extends AbstractContainerMenu {
 
             @Override
             public void set(int index, int value) {
-                // Server-authoritative: the client never writes status back (CONVENTIONS.md §5).
+                // Server-authoritative: the client never writes status or XP back (CONVENTIONS.md §5).
             }
 
             @Override
             public int getCount() {
-                return 1;
+                return 2;
             }
         };
     }
@@ -124,6 +133,18 @@ public final class CoreHousingMenu extends AbstractContainerMenu {
     /** What the screen prints: empty, running, or §4.3-refused. */
     public int status() {
         return status.get(STATUS);
+    }
+
+    /** The floored, not-yet-collected experience the screen's counter and Collect button read. */
+    public int xp() {
+        return status.get(XP);
+    }
+
+    /** The housing screen's Collect button. A no-op for the client-side stand-in menu. */
+    public void handleCollectXp(ServerPlayer player) {
+        if (housing != null) {
+            housing.collectExperience(player);
+        }
     }
 
     private int firstPlayerSlot() {
