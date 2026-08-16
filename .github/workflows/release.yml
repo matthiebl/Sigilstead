@@ -1,0 +1,59 @@
+name: Release
+
+# Tag-driven. `git tag v0.2.0 && git push origin v0.2.0` builds that commit and
+# publishes a GitHub Release with the jars attached.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to build, without the leading v (e.g. 0.2.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # The tag is the source of truth for the version; gradle.properties only
+      # carries the in-development default.
+      - name: Resolve version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            VERSION="${GITHUB_REF_NAME#v}"
+          fi
+          echo "mod_version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "minecraft_version=$(grep -E '^minecraft_version=' gradle.properties | cut -d= -f2)" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        run: ./gradlew build -Pmod_version=${{ steps.version.outputs.mod_version }} --stacktrace
+
+      - name: GameTest
+        run: ./gradlew runGametest -Pmod_version=${{ steps.version.outputs.mod_version }} --stacktrace
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Heartstead ${{ steps.version.outputs.mod_version }} for MC ${{ steps.version.outputs.minecraft_version }}
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || format('v{0}', steps.version.outputs.mod_version) }}
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.mod_version, '-') }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            build/libs/*.jar
