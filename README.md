@@ -58,6 +58,13 @@ It installs keg-only, so it won't disturb an existing JDK 17/21.
 
 The jar lands in `build/libs/`. Install Fabric Loader 0.19.3+ and Fabric API alongside it.
 
+## Adding a version
+
+```
+git tag -a v0.x.x -m "Heartstead 0.x.x"
+git push origin v0.x.x
+```
+
 ## Repo layout
 
 ```
@@ -78,20 +85,3 @@ heartstead/
 │   └── test/java/                   # plain JUnit, no world
 └── docs/
 ```
-
-**Content is still data-driven.** Recipes, loot tables and advancements are JSON in
-`src/main/resources/data/` exactly as they'd be in a data pack — being a mod didn't change that.
-
-## Why a mod and not a data pack
-
-Short version: a data pack cannot register a block, and this design has a dozen of them. Several
-flagship systems are inventory UIs that data packs can't draw. And the mod can test itself.
-
-The cost, accepted: **no Realms** (it takes data packs, not mods), both sides must install for
-multiplayer, and releases trail new Minecraft versions.
-
-## Adding it to an existing world
-
-It works, but there is **no catch-up path**. A world with chests full of diamonds still has zero
-Sigils, and the only way to get them is to go exploring — same as a fresh world. That's
-deliberate: the economy is the point of the mod.

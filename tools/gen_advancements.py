@@ -47,6 +47,20 @@ def has(*items):
     }
 
 
+def has_all(items):
+    """minecraft:inventory_changed on *every* one of `items` — "you can craft this right now".
+
+    Each entry in an inventory_changed `items` list is a separate predicate that must find a
+    matching stack, so a list of one-item predicates is an AND, where has()'s single predicate
+    holding several items is an OR. Counts are deliberately not checked: the predicate matches
+    per-stack, so requiring 8 deepslate bricks would fail a player holding two stacks of four.
+    """
+    return {
+        "trigger": "minecraft:inventory_changed",
+        "conditions": {"items": [{"items": item} for item in items]},
+    }
+
+
 def hs(path, **conditions):
     """One of the heartstead: criterion triggers registered by HsTriggers."""
     criterion = {"trigger": f"heartstead:{path}"}
@@ -114,8 +128,9 @@ TREE = [
     (
         "vault_sigil", "sigil", "heartstead:vault_sigil", "task",
         "Or Buy Storage",
-        "Craft a Vault Sigil. It creates the Vault, then makes it bigger, then makes it reach "
-        "further. It is also the most expensive of the three.",
+        "Craft a Vault Sigil. The Vault itself is free — this is what makes it bigger, makes it "
+        "reach further, and puts it back if you move the Anchor. It is the most expensive of the "
+        "three.",
         {"crafted": has("heartstead:vault_sigil")},
     ),
     (
@@ -132,10 +147,14 @@ TREE = [
 
     # --- the Vault (§2) -----------------------------------------------------------------------
     (
-        "vault_anchor", "vault_sigil", "heartstead:vault_anchor", "task",
+        # Off root, not off vault_sigil: §2.1's first Anchor activates free and the Satchel is a
+        # T1 vanilla craft, so nothing from here to vault_deposited costs a Sigil. Hanging it off
+        # the Sigil said the opposite, and the branch below is where the currency actually starts.
+        "vault_anchor", "root", "heartstead:vault_anchor", "task",
         "Somewhere to Come Back To",
         "Craft a Vault Anchor. One per world, and it holds everything the Vault is: its contents, "
-        "its size and how far it reaches. Place it where your base is going to stay.",
+        "its size and how far it reaches. It costs no Sigil and the first activation is free — "
+        "place it where your base is going to stay.",
         {"crafted": has("heartstead:vault_anchor")},
     ),
     (
@@ -402,6 +421,30 @@ UNLOCKS = {
 NOT_IN_BOOK = {"core_upgrade"}
 
 
+def recipe_ingredients(recipe):
+    """Every distinct item or tag a recipe consumes, in a stable order.
+
+    The staging gate above is a *progression* statement and is often not an ingredient at all —
+    the Anchor is amethyst, copper, a pearl and a barrel, gated on a Vault Sigil. That gap is why
+    the second unlock path below exists, and this is where it reads the truth from.
+    """
+    with open(os.path.join(RECIPE_DIR, f"{recipe}.json")) as handle:
+        data = json.load(handle)
+
+    kind = data["type"]
+    if kind == "minecraft:crafting_shaped":
+        raw = list(data["key"].values())
+    elif kind == "minecraft:crafting_shapeless":
+        raw = list(data["ingredients"])
+    else:
+        raise SystemExit(
+            f"{recipe}: unhandled recipe type {kind}. Teach recipe_ingredients about it, or add "
+            "it to NOT_IN_BOOK if it is not a recipe-book entry."
+        )
+
+    return list(dict.fromkeys(raw))
+
+
 # ---------------------------------------------------------------------------------------------
 # emit
 # ---------------------------------------------------------------------------------------------
@@ -475,9 +518,14 @@ def build_recipe_unlocks():
                     "conditions": {"recipe": f"heartstead:{recipe}"},
                 },
                 "has_ingredient": has(UNLOCKS[recipe]),
+                "has_components": has_all(recipe_ingredients(recipe)),
             },
-            # OR: either you found the gating item, or something else already gave you the recipe.
-            "requirements": [["has_the_recipe", "has_ingredient"]],
+            # OR: the staging gate, or you can already make the thing, or something else granted
+            # the recipe. The second is not redundant — the gate is usually not an ingredient, so
+            # without it the book hides recipes the player could craft this second, which for the
+            # T1 Vault (§2.1: the first Anchor is free) hid the whole system behind a Nether trip
+            # for the ender eye in a Vault Sigil.
+            "requirements": [["has_the_recipe", "has_ingredient", "has_components"]],
             "rewards": {"recipes": [f"heartstead:{recipe}"]},
         })
     return len(recipes)

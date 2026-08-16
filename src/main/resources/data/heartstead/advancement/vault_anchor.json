@@ -28,7 +28,7 @@
       }
     }
   },
-  "parent": "heartstead:vault_sigil",
+  "parent": "heartstead:root",
   "requirements": [
     [
       "crafted"

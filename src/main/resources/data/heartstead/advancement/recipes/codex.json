@@ -18,12 +18,29 @@
           }
         ]
       }
+    },
+    "has_components": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:bookshelf"
+          },
+          {
+            "items": "minecraft:lectern"
+          },
+          {
+            "items": "minecraft:amethyst_shard"
+          }
+        ]
+      }
     }
   },
   "requirements": [
     [
       "has_the_recipe",
-      "has_ingredient"
+      "has_ingredient",
+      "has_components"
     ]
   ],
   "rewards": {

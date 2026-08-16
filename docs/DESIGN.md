@@ -541,6 +541,13 @@ is what pays (§12.1).
 
 `keepInventory true`, XP kept. **The entire cost of dying moves to health.**
 
+That gamerule is **the mod's job to set, not the operator's** — a world where death costs a heart
+*and* your inventory charges twice for one death, which is the opposite of the trade this section
+makes. Heartstead sets `keepInventory` to `true` once on server start (vanilla's rule keeps XP with
+it), skipping it if `keep_inventory_on_death` is `false` (§12.7). It is not re-asserted every tick:
+an operator running `/gamerule keepInventory false` mid-session gets what they asked for, and the
+config field is how that choice survives a restart.
+
 - Consume a **Heart Sigil** → +1 max heart via a `max_health` attribute modifier.
 - There is a cap, a per-death loss and a **floor below which death never takes you** — pillar 4.
   Numbers and the harder-mode toggles are in §12.6.
@@ -631,13 +638,19 @@ Four chains hang off it, matching the four systems:
 | Chain | From | Steps |
 |---|---|---|
 | **Spine** | `root` | first Sigil → the three surcharges (§1.1), one branch each |
-| **Vault** | `vault_sigil` | Anchor → activation → deposit → Satchel → Pouch → withdrawal → capacity → reach ×3 → Funnel |
+| **Vault** | `root` | Anchor → activation → deposit → Satchel → Pouch → withdrawal → capacity → reach ×3 → Funnel |
 | **Cores** | `core_sigil` | primed core → attunement → socket → first yield → tier III; the eleven (§5) as a side branch |
 | **Codex** | `root` | Codex → archive → Tome → teach a librarian; the two §3 enchantments as a side branch |
 | **Lives** | `heart_sigil` | consume one → the 20-heart cap (§6) |
 
 The Codex chain hangs off the root rather than off a Sigil because §3.3's block costs no Sigil — the
 tree's shape should say which systems the currency gates and which it does not.
+
+**The Vault chain hangs off the root for the same reason**, and used to hang off `vault_sigil`,
+which was simply wrong: §2.1 gives the first Anchor a world ever has a *free* activation, and the
+Satchel is a vanilla craft. Nothing from the Anchor through activation, Satchel and first deposit
+costs a Sigil, so the branch that does — Pouch, capacity, reach — is where the currency enters the
+chain and where the tree now says it does.
 
 Three advancements are `challenge`-type, and they are the three ends of the longest ladders: End-wide
 reach (§2.3), a tier III core (§4.3), and the 20-heart cap (§6). Everything else is `task`, except
@@ -649,7 +662,9 @@ with no advancement granting it **never appears in the recipe book at all**, whi
 Heartstead recipe shipped in through Phase 4. This layer is what makes the §7.1 Artisan's Table
 useful for Heartstead's own content.
 
-Unlocks are staged so the book teaches rather than dumps:
+**Every recipe unlocks two ways, and either is enough.**
+
+**Path A — staging**, so the book teaches rather than dumps:
 
 | Holding | Unlocks |
 |---|---|
@@ -659,6 +674,23 @@ Unlocks are staged so the book teaches rather than dumps:
 | `core_sigil` | the four primed cores and their reverts |
 | a primed core | that family's housing, and the §5 eleven of that family |
 | `codex` | Tome |
+
+**Path B — you can already make it.** Holding every ingredient a recipe lists unlocks that recipe,
+which is how vanilla's own book behaves.
+
+Path B is not redundant, because **a staging gate is usually not an ingredient**. The Vault Anchor
+is amethyst, copper, an ender pearl and a barrel — no Sigil anywhere — yet Path A alone hid it
+behind a Vault Sigil, which needs an ender eye, which needs blaze powder, which needs the Nether.
+The §2.1 T1 system that activates for free was gated on a Nether trip *by the tutorial*, and the
+same shape hid the Codex, the Tome, the Funnel, the Satchel and the four §4.3 housings. A book that
+hides a recipe the player could craft this second is lying to them, and the staging is meant to
+order discovery, not to withhold it.
+
+Path B is deliberately **uniform across every recipe** rather than a hand-kept list of exceptions:
+"can you make it" is a question the recipe file already answers, so the generator reads it rather
+than being told. Where a recipe's ingredients include a Heartstead item, Path B is strictly harder
+than Path A and changes nothing — you cannot hold a Wither Skeleton Skull and a Core Sigil without
+having done the work either gate was asking for. Counts are not checked, matching vanilla.
 
 #### Constraints
 
@@ -1076,6 +1108,7 @@ Codec-backed JSON, loaded on server start (CONVENTIONS.md §5).
 | `vault.reach_tier_sigils` | 1 | Dimensional Sigils per reach tier |
 | `vault.funnel_items_per_transfer` | 16 | §2.1 Linked Funnel throughput, per hopper cycle. Never played |
 | `deposit_requires_reach` | `false` | Turns §2.0's free deposit off, making deposit obey reach too |
+| `keep_inventory_on_death` | `true` | §6 — whether the mod sets `keepInventory` on server start |
 | `bundle_slots` | 9 | §2.2 Bundle override. **Not yet implemented** — the field lands with the override |
 | `enchantment.abundance_chance_per_level` | 0.6 | §3.1/§12.6 — the per-level Abundance bonus roll |
 | `enchantment.abundance_book_chance` | 0.06 | §3.1 mineshaft/trial chamber Abundance book rate |

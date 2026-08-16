@@ -18,12 +18,29 @@
           }
         ]
       }
+    },
+    "has_components": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:obsidian"
+          },
+          {
+            "items": "minecraft:ender_pearl"
+          },
+          {
+            "items": "heartstead:core_sigil"
+          }
+        ]
+      }
     }
   },
   "requirements": [
     [
       "has_the_recipe",
-      "has_ingredient"
+      "has_ingredient",
+      "has_components"
     ]
   ],
   "rewards": {

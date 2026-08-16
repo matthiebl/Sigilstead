@@ -6,10 +6,13 @@ import com.heartstead.config.HsConfig;
 import com.heartstead.config.HsConfigManager;
 import com.heartstead.registry.HsAttachments;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.level.gamerules.GameRules;
 
 /**
  * DESIGN.md §6: consuming a Life Heart raises max health by one heart, capped at 20; dying costs
@@ -29,8 +32,34 @@ public final class LivesSystem {
     }
 
     public static void register() {
+        ServerLifecycleEvents.SERVER_STARTED.register(LivesSystem::onServerStarted);
         ServerPlayerEvents.JOIN.register(LivesSystem::onJoin);
         ServerPlayerEvents.AFTER_RESPAWN.register(LivesSystem::onAfterRespawn);
+    }
+
+    /**
+     * DESIGN.md §6 opens with {@code keepInventory true} — the heart loss is meant to <em>replace</em>
+     * losing your things, not stack on top of it. Nothing was enforcing that, so on a default world
+     * a death charged both. The mod sets the rule itself on start, once, rather than relying on the
+     * operator having read the docs.
+     *
+     * <p>Once per start, not every tick: a running {@code /gamerule keepInventory false} is an
+     * operator saying they want the vanilla penalty back for this session, and fighting them every
+     * tick would make the rule unsettable. {@code keep_inventory_on_death: false} in the config is
+     * how you make that stick across restarts.
+     */
+    private static void onServerStarted(MinecraftServer server) {
+        if (!HsConfigManager.get().keepInventoryOnDeath()) {
+            return;
+        }
+        var rules = server.getGameRules();
+        if (rules.get(GameRules.KEEP_INVENTORY)) {
+            return;
+        }
+        rules.set(GameRules.KEEP_INVENTORY, true, server);
+        Heartstead.LOG.info(
+                "Set keepInventory true (DESIGN.md §6 — dying costs hearts, not your inventory). "
+                        + "Set keep_inventory_on_death false in heartstead.json to leave it alone.");
     }
 
     private static void onJoin(ServerPlayer player) {

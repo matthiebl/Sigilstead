@@ -18,12 +18,29 @@
           }
         ]
       }
+    },
+    "has_components": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:nether_brick"
+          },
+          {
+            "items": "minecraft:wither_skeleton_skull"
+          },
+          {
+            "items": "heartstead:core_sigil"
+          }
+        ]
+      }
     }
   },
   "requirements": [
     [
       "has_the_recipe",
-      "has_ingredient"
+      "has_ingredient",
+      "has_components"
     ]
   ],
   "rewards": {
