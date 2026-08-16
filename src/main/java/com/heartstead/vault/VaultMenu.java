@@ -1,5 +1,6 @@
 package com.heartstead.vault;
 
+import com.heartstead.advancement.HsTriggers;
 import com.heartstead.config.HsConfigManager;
 import com.heartstead.network.VaultStatePayload;
 import com.heartstead.network.VaultSyncPayload;
@@ -126,10 +127,21 @@ public final class VaultMenu extends AbstractContainerMenu {
 
         ServerLevel level = player.level();
         if (kind == VaultUpgradeKind.CAPACITY) {
+            boolean wasActivated = Vault.get(level).activated();
+            int spentBefore = Vault.get(level).sigilsSpent();
             spendPlainSigils(level, stack);
+            // §7.3 recognition only. Split so a Sigil that only paid for reactivation doesn't
+            // report a capacity purchase it did not make.
+            if (!wasActivated && Vault.get(level).activated()) {
+                HsTriggers.VAULT_ACTIVATED.trigger(player);
+            }
+            if (Vault.get(level).sigilsSpent() > spentBefore) {
+                HsTriggers.VAULT_UPGRADED.trigger(player, kind);
+            }
         } else if (!kind.isSatisfied(Vault.get(level)) && Vault.get(level).activated()) {
             Vault.grantReach(level, kind.dimension());
             stack.shrink(1);
+            HsTriggers.VAULT_UPGRADED.trigger(player, kind);
         }
         upgradeContainer.setItem(index, stack.isEmpty() ? ItemStack.EMPTY : stack);
     }
@@ -163,7 +175,9 @@ public final class VaultMenu extends AbstractContainerMenu {
         if (!access.hasAnchorTab()) {
             return;
         }
-        if (!Vault.tryActivate(player.level(), player)) {
+        if (Vault.tryActivate(player.level(), player)) {
+            HsTriggers.VAULT_ACTIVATED.trigger(player);
+        } else {
             player.sendSystemMessage(Component.translatable("gui.heartstead.vault.need_vault_sigil"), true);
         }
     }
@@ -194,6 +208,7 @@ public final class VaultMenu extends AbstractContainerMenu {
         }
         carried.shrink(moved);
         setCarried(carried.isEmpty() ? ItemStack.EMPTY : carried);
+        HsTriggers.VAULT_DEPOSITED.trigger(player);
     }
 
     /**
@@ -258,6 +273,9 @@ public final class VaultMenu extends AbstractContainerMenu {
         // only termination signal. A capped Vault refusing a deposit leaves the slot unchanged, so
         // returning a non-empty "copy" here regardless of progress spins that loop forever.
         boolean depositedNothing = leftover.getCount() == original.getCount();
+        if (!depositedNothing && player instanceof ServerPlayer serverPlayer) {
+            HsTriggers.VAULT_DEPOSITED.trigger(serverPlayer);
+        }
         return depositedNothing ? ItemStack.EMPTY : copy;
     }
 
@@ -299,6 +317,8 @@ public final class VaultMenu extends AbstractContainerMenu {
         int withdrawn = Vault.withdrawInto(level, item, count, player.getInventory());
         if (withdrawn == 0) {
             player.sendSystemMessage(Component.translatable("gui.heartstead.vault.inventory_full"), true);
+        } else {
+            HsTriggers.VAULT_WITHDREW.trigger(player);
         }
     }
 

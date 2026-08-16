@@ -34,7 +34,8 @@
       "com.heartstead.gametest.CoreVaultGameTests",
       "com.heartstead.gametest.CoreHousingMenuGameTests",
       "com.heartstead.gametest.CoreUpgradeGameTests",
-      "com.heartstead.gametest.CoreImprintTagGameTests"
+      "com.heartstead.gametest.CoreImprintTagGameTests",
+      "com.heartstead.gametest.DiscoveryPathGameTests"
     ]
   },
   "mixins": [

@@ -1,5 +1,6 @@
 package com.heartstead.item;
 
+import com.heartstead.advancement.HsTriggers;
 import com.heartstead.codex.Codex;
 import com.heartstead.codex.SealedTomeData;
 import com.heartstead.registry.HsComponents;
@@ -83,6 +84,7 @@ public class SealedTomeItem extends Item {
         stack.shrink(1);
         TaughtTradeInjector.teach(villager, data.enchantment(), holder, data.level(), price);
         player.sendSystemMessage(Component.translatable("gui.heartstead.codex.taught"));
+        HsTriggers.VILLAGER_TAUGHT.trigger(player);
         return Optional.of(InteractionResult.SUCCESS);
     }
 

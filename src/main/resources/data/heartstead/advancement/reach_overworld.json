@@ -1,0 +1,31 @@
+{
+  "display": {
+    "icon": {
+      "id": "heartstead:overworld_vault_sigil"
+    },
+    "title": {
+      "translate": "advancements.heartstead.reach_overworld.title"
+    },
+    "description": {
+      "translate": "advancements.heartstead.reach_overworld.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "bought": {
+      "trigger": "heartstead:vault_upgraded",
+      "conditions": {
+        "kind": "overworld_reach"
+      }
+    }
+  },
+  "parent": "heartstead:vault_activated",
+  "requirements": [
+    [
+      "bought"
+    ]
+  ]
+}

@@ -585,13 +585,22 @@ Villagers **regenerate `Offers` on level-up and on restock**, which wipes any in
   merge. Trade manipulation is **version-sensitive** — pin the format range tightly and re-test the
   villager path on every release.
 
-### 7.3 Advancements — **deliberately deferred**
+### 7.3 The discovery path — advancements as the tutorial
 
-The pack will have an advancement tree. It is **not designed yet, and that is on purpose.**
+**The problem this solves.** Every system in §§2–6 is invisible on the first day. A player who has
+never read this wiki gets a Sigil from a chest and has no way to learn that it buys three different
+things, that a Vault exists, or that a farm can be replaced by a core. Nothing in the pack tells
+them. That is a discovery failure, not a balance one, and it is what this section fixes.
+
+**The tree is the tutorial.** Heartstead ships a single advancement tab that steps a player through
+the pack in the order the systems actually unlock, with each advancement's description saying what
+the thing *is* rather than congratulating them for reaching it.
+
+#### The bounty cut still stands
 
 An earlier draft specified a "bounty" system: three advancement chains — explore, fight, build —
-paying reward crates. **Cut 2026-08-01.** The reasoning is worth keeping, because it is the test any
-future version has to pass:
+paying reward crates. **Cut 2026-08-01, and still cut.** The reasoning is the test every version of
+this section has to pass:
 
 Bounties were a *second* reward channel bolted alongside the first. §1 already pays you for exploring,
 fighting and building — that is the entire point of the Sigil. Paying twice for the same activity
@@ -599,16 +608,71 @@ doesn't reinforce the loop, it obscures how well the loop works, and it makes th
 impossible to tune honestly. **This objection is strictly stronger under the unified currency**: with
 one item feeding three systems, a second source of it moves every dial in the pack at once.
 
-So: **ship the economy first, play it, then decide.** If normal progression turns out to under-reward
-exploring, fighting or building, that is a §12.1 drop-rate problem before it is an advancement
-problem — and §10 ranks Sigil rates as the highest-impact dial for exactly this reason.
+**The discovery path passes that test because it pays nothing.** Every advancement in it grants
+recognition and — where it applies — a *recipe book unlock*, which is information the player already
+had the right to. Zero Sigils, zero items, zero XP. `rewards.loot` and `rewards.experience` do not
+appear anywhere in `data/heartstead/advancement/`, and adding them reopens the argument above.
 
-What advancements should be when they arrive: **recognition, not currency.** Vanilla advancements
-mark that you did a thing; they don't pay you for it. A Heartstead tree that names milestones —
-your first Vault Sigil, a fully attuned core, End-wide reach — costs nothing to balance and can be
-designed at the end, once the systems it describes have stopped moving.
+That is also why this was buildable before playtesting, against the old "design them last" gate: the
+gate existed because a *reward* tree cannot be tuned until the economy is played. A tree that pays
+nothing has nothing to tune, and the systems it describes have stopped moving — Phases 0–4 have all
+shipped. What playtesting may still change is the *wording and ordering*, which is cheap.
 
-Design them last, and only after playtesting. Nothing in the build order (§9) depends on them.
+#### Two layers
+
+**Layer 1 — the visible tree** (`data/heartstead/advancement/*.json`). One tab, rooted at
+`heartstead:root`, which is granted by `minecraft:tick`: **the tab is there from the first second of
+a new world**, before the player owns anything. A root gated on an item would hide the entire
+tutorial from exactly the player who needs it. The root's description is the pack's one-paragraph
+pitch. It sets `show_toast: false` and `announce_to_chat: false`, so appearing costs no noise.
+
+Four chains hang off it, matching the four systems:
+
+| Chain | From | Steps |
+|---|---|---|
+| **Spine** | `root` | first Sigil → the three surcharges (§1.1), one branch each |
+| **Vault** | `vault_sigil` | Anchor → activation → deposit → Satchel → Pouch → withdrawal → capacity → reach ×3 → Funnel |
+| **Cores** | `core_sigil` | primed core → attunement → socket → first yield → tier III; the eleven (§5) as a side branch |
+| **Codex** | `root` | Codex → archive → Tome → teach a librarian; the two §3 enchantments as a side branch |
+| **Lives** | `heart_sigil` | consume one → the 20-heart cap (§6) |
+
+The Codex chain hangs off the root rather than off a Sigil because §3.3's block costs no Sigil — the
+tree's shape should say which systems the currency gates and which it does not.
+
+Three advancements are `challenge`-type, and they are the three ends of the longest ladders: End-wide
+reach (§2.3), a tier III core (§4.3), and the 20-heart cap (§6). Everything else is `task`, except
+the one-of-each-Sigil `goal` that names §1.1's tension explicitly.
+
+**Layer 2 — recipe unlocks** (`data/heartstead/advancement/recipes/*.json`), hidden, parented to a
+display-less `heartstead:recipes/root`, exactly as vanilla does it. This is not decoration: a recipe
+with no advancement granting it **never appears in the recipe book at all**, which is the state every
+Heartstead recipe shipped in through Phase 4. This layer is what makes the §7.1 Artisan's Table
+useful for Heartstead's own content.
+
+Unlocks are staged so the book teaches rather than dumps:
+
+| Holding | Unlocks |
+|---|---|
+| `sigil` | the three surcharges, and the Codex |
+| `vault_sigil` | Anchor, Satchel, Funnel, the three dimensional Sigils |
+| `satchel` | Vault Pouch |
+| `core_sigil` | the four primed cores and their reverts |
+| a primed core | that family's housing, and the §5 eleven of that family |
+| `codex` | Tome |
+
+#### Constraints
+
+- **Data-driven** (CLAUDE.md rule 5). The tree is JSON, emitted by `tools/gen_advancements.py` — the
+  generator is the artifact and the JSON is build output, per CONVENTIONS.md §6. It also emits the
+  `advancements.heartstead.*` lang block, so titles and descriptions live in one place.
+- **New criteria, not new systems.** Heartstead events that vanilla cannot observe are exposed as
+  registered criterion triggers under `heartstead:` (`vault_activated`, `vault_deposited`,
+  `vault_withdrew`, `vault_upgraded`, `core_attuned`, `core_socketed`, `core_yield_collected`,
+  `codex_archived`, `villager_taught`, `heart_level`). They fire from the existing server-side call
+  sites and hold no state of their own.
+- **No second book.** A custom guidebook screen was considered and deferred, not rejected — see
+  OPEN-QUESTIONS.md. The advancement tooltip already renders a title, an icon and a description in
+  vanilla's own frame, which is most of what a guide page is, and it needs no new UI.
 
 ---
 
@@ -645,6 +709,7 @@ Ship in this order. Each phase is independently playable.
 | **2** | The Vault (§2) | Biggest lift. **Write the conservation GameTests first** (§2.6). First real blocks and screen handlers — establish those patterns here |
 | **3** | Codex (§3.3) + Artisan's Table (§7.1) + librarian teaching | The most novel feature, and the one most likely to attract users. Reuses Phase 2's block and screen patterns |
 | **4** | Cores (§4, incl. §5 classic farm replacements) | Needs the Vault for its best version |
+| **5** | The discovery path (§7.3) | Last, because it describes the other four. Pays nothing, so it needed no economy data to design |
 
 ---
 

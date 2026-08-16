@@ -1,0 +1,101 @@
+{
+  "display": {
+    "icon": {
+      "id": "heartstead:primed_soul_core"
+    },
+    "title": {
+      "translate": "advancements.heartstead.classic_core.title"
+    },
+    "description": {
+      "translate": "advancements.heartstead.classic_core.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "guardian_core": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "heartstead:guardian_core"
+      }
+    },
+    "wither_skull_core": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "heartstead:wither_skull_core"
+      }
+    },
+    "ender_core": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "heartstead:ender_core"
+      }
+    },
+    "shulker_core": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "heartstead:shulker_core"
+      }
+    },
+    "ominous_core": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "heartstead:ominous_core"
+      }
+    },
+    "barter_core": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "heartstead:barter_core"
+      }
+    },
+    "golem_core": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "heartstead:golem_core"
+      }
+    },
+    "slime_core": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "heartstead:slime_core"
+      }
+    },
+    "tidal_core": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "heartstead:tidal_core"
+      }
+    },
+    "geode_core": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "heartstead:geode_core"
+      }
+    },
+    "apiary_core": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "heartstead:apiary_core"
+      }
+    }
+  },
+  "parent": "heartstead:primed_core",
+  "requirements": [
+    [
+      "guardian_core",
+      "wither_skull_core",
+      "ender_core",
+      "shulker_core",
+      "ominous_core",
+      "barter_core",
+      "golem_core",
+      "slime_core",
+      "tidal_core",
+      "geode_core",
+      "apiary_core"
+    ]
+  ]
+}

@@ -1,6 +1,7 @@
 package com.heartstead.lives;
 
 import com.heartstead.Heartstead;
+import com.heartstead.advancement.HsTriggers;
 import com.heartstead.config.HsConfig;
 import com.heartstead.config.HsConfigManager;
 import com.heartstead.registry.HsAttachments;
@@ -81,6 +82,11 @@ public final class LivesSystem {
     }
 
     private static void applyModifier(ServerPlayer player, int hearts) {
+        // DESIGN.md §7.3 — every path that changes a heart count lands here, so it is the one place
+        // the criterion needs to fire from. Join and respawn re-apply too, which is what lets an
+        // existing world grant the §6 milestones a player already earned before this tree shipped.
+        HsTriggers.HEART_LEVEL.trigger(player, hearts);
+
         double extraHealth = (hearts - HeartLevel.STARTING_HEARTS) * 2.0;
         var attribute = player.getAttribute(Attributes.MAX_HEALTH);
         if (attribute == null) {

@@ -11,7 +11,32 @@ unwritten.
 
 ## Blocking — must be resolved before the phase that needs them
 
-*(none)*
+### [OPEN] The Funnel's configuration surface — the wiki and the request disagree
+Blocking the Linked Funnel bug fix (PROMPTS.md, Known bugs, Bug 1), and it is a real disagreement
+rather than a gap.
+
+[DESIGN.md](DESIGN.md) §2.1 says the Funnel is configured **in the world, with no screen**: empty
+hand cycles input/output as a block state, right-click with an item sets the output filter. The
+stated reason is CLAUDE.md's "capability is not a mandate" — two fields do not earn a screen handler,
+and the mode being a block state means it is visible without a sync packet.
+
+Asked for on 2026-08-15: a **custom interface** controlling input, output and filters, with the
+Funnel modelled and behaving like a hopper.
+
+Both are defensible and they are not compatible:
+
+- **In-world (current spec).** No screen to draw — which matters while the UI pass (Bug 2) is open.
+  But it makes every right-click destructive: there is currently no way to touch a Funnel without
+  reconfiguring it, which is a large part of why it feels broken.
+- **A screen.** Room for more than one filter, a visible mode toggle, and interaction that is not
+  accidental. Costs a fourth screen in a mod whose existing three need work, and the mode either
+  stops being a block state or has to be kept in sync with one.
+
+A middle option exists and is not currently written down anywhere: keep the block state, keep
+sneak-right-click as the in-world toggle, and put the *filter* behind a screen — the field that
+actually needs more than one slot.
+
+**Resolve by writing the choice into §2.1**, then fix the bug against it.
 
 ---
 
@@ -138,6 +163,24 @@ Pouch = withdrawal (the powerful one).
 ### ~~[RESOLVED 2026-08-01] Where do Sigil fragments come from?~~
 Superseded. There are no fragments and no advancement pays one (§7.3); the sub-unit question is
 reopened in a different form above as "is one Sigil too coarse a unit".
+
+### [OPEN] Does the discovery path need a guidebook as well?
+[DESIGN.md](DESIGN.md) §7.3 shipped as an advancement tree plus a recipe-unlock layer, and
+deliberately **not** as a custom book screen. The tree covers title, icon, one-paragraph explanation
+and ordering; the recipe book covers drawn crafting grids. What neither covers is longer-form lore,
+and a toast you have already dismissed.
+
+Deferred rather than rejected, for two reasons: the cheap half was worth shipping alone, and adding
+a fourth custom screen while the existing three are being reworked (PROMPTS.md, Bug 2) would inherit
+that problem. **Decide after playing the tree**, not before — the follow-up prompt in PROMPTS.md
+asks the only question that settles it.
+
+### ~~[RESOLVED 2026-08-15] Advancements — whether to have them at all~~
+**Built**, as [DESIGN.md](DESIGN.md) §7.3's discovery path. The 2026-08-01 gate ("design them last,
+after playtesting") was about a *reward* tree, which cannot be tuned before the economy is played.
+This one pays nothing — no Sigils, no loot, no experience — so there was nothing to tune, and the
+discovery gap it closes was real on day one of any world. The bounty objection below is untouched
+and still binding.
 
 ### ~~[RESOLVED 2026-08-01] Bounty advancements~~
 **Cut**, along with the reward crates and the capstone Sigils. Reasoning is preserved in

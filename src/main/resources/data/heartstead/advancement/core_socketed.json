@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "heartstead:soul_cage"
+    },
+    "title": {
+      "translate": "advancements.heartstead.core_socketed.title"
+    },
+    "description": {
+      "translate": "advancements.heartstead.core_socketed.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "socketed": {
+      "trigger": "heartstead:core_socketed"
+    }
+  },
+  "parent": "heartstead:core_housing",
+  "requirements": [
+    [
+      "socketed"
+    ]
+  ]
+}

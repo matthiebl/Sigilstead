@@ -1,0 +1,67 @@
+{
+  "display": {
+    "icon": {
+      "id": "heartstead:sigil"
+    },
+    "title": {
+      "translate": "advancements.heartstead.three_ways.title"
+    },
+    "description": {
+      "translate": "advancements.heartstead.three_ways.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "core": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "heartstead:core_sigil"
+            ]
+          }
+        ]
+      }
+    },
+    "heart": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "heartstead:heart_sigil"
+            ]
+          }
+        ]
+      }
+    },
+    "vault": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "heartstead:vault_sigil"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "parent": "heartstead:sigil",
+  "requirements": [
+    [
+      "core"
+    ],
+    [
+      "heart"
+    ],
+    [
+      "vault"
+    ]
+  ]
+}

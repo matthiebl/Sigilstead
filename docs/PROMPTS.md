@@ -1,348 +1,210 @@
 # Heartstead — Claude Code prompts
 
-Ready-to-paste prompts, in build order. Rules that apply to all of them:
+Ready-to-paste prompts for the work that is **still open**. Rules that apply to all of them:
 
 - **Run Claude Code from the repo root.**
-- **Reference wiki sections, don't re-describe features.** "Implement §4.2 Soul Cage per the wiki"
-  keeps drift down; re-explaining invites a second, subtly different design.
-- **One phase per session.** Never ask for the whole mod.
+- **Reference wiki sections, don't re-describe features.** "Implement §7.1 per the wiki" keeps drift
+  down; re-explaining invites a second, subtly different design.
+- **One task per session.** Never ask for the whole mod.
 - **Read the real API before writing against it.** 26.x ships unobfuscated, so the jar has true
   names — `javap -cp ~/.gradle/caches/fabric-loom/26.2/minecraft-common.jar <class>`, or
   `./gradlew genSources` for full bodies. Every tutorial predating 26.1 is wrong about names
   (`ResourceLocation` is now `Identifier`) and usually about shapes too. See REFERENCES.md.
-- **Claude Code can verify its own work now** (`build`, `test`, `runGametest`). Expect it to. What it
+- **Claude Code can verify its own work** (`build`, `test`, `runGametest`). Expect it to. What it
   still can't judge is feel — balance and UI pleasantness need `runClient` and you.
 
 Phase numbers match [DESIGN.md](DESIGN.md) §9.
 
 ## Status
 
-| Phase | Status |
-|---|---|
-| 0.1 — Registration foundation | ✅ Done — redone against v0.4 by 2.5a |
-| 0.2 — Loot tables | ✅ Done — redone against v0.4 by 2.5b |
-| 0.5a — Villager trade persistence | ✅ Done |
-| 1 — Lives | ✅ Done — item renamed to Heart Sigil by 2.5a |
-| 2 — The Vault (storage) | ✅ Done — **reworked in v0.4** |
-| 2 — The Vault (screen) | ✅ Done — **reworked in v0.4** |
-| 2.5a — Rename the spine | ✅ Done |
-| 2.5b — Redo the drop tables | ✅ Done |
-| 2.5c — Rework the Vault | ✅ Done |
-| 3 — Codex | ⬜ Not started |
-| 3 — Artisan's Table | ⬜ Not started |
-| 4 — Cores | ✅ Done |
-| 4 — Classic farm replacements | ✅ Done |
+Phases 0 through 4 have shipped. Rather than keep their prompts, this file keeps what they left
+behind; the prompts themselves are in the git history.
 
-**Up next: Phase 3 — Codex and Artisan's Table.**
+| Phase | Content | Status |
+|---|---|---|
+| 0 | §1 spine, §12.1 Sigil sources, §12.2 recipes | ✅ |
+| 0.5 | §7.2 villager trade persistence | ✅ |
+| 1 | §6 lives and death | ✅ |
+| 2 | §2 the Vault — storage layer and screen | ✅ |
+| 2.5 | Economy retrofit to spec v0.4 (rename, drop tables, Vault rework) | ✅ |
+| 3 | §3.1–3.2 enchantments, §3.3 Codex | ✅ |
+| 3 | §7.1 Artisan's Table and Kit | ⬜ **open** |
+| 4 | §4 cores, §5 the eleven classic replacements | ✅ |
+| — | §2.2 Bundle override | ⬜ **open, unclaimed by any phase** |
+| 5 | §7.3 the discovery path — advancement tree + recipe unlocks | ✅ |
 
-DESIGN.md moved to v0.4 after Phases 0–2 shipped. The spine went from two items (Heart Shard →
-Vital Heart) to one found Sigil with three children, and the Vault gained activation, reach tiers and
-container rules. All three tasks have landed: the §1 spine, the §12.1 drop table, the §12.2 recipes
-and now §2 in full — activation, the deposit/withdraw split, reach as world state, the container
-rules and the two-tab screen. Phase 3 can build on the transfer path without writing it twice.
+Two bugs found before the first real playtest are tracked below, under **Known bugs**. Neither is
+fixed; both are reproducible from `runClient`.
 
-**One thing 2.5c did not build: the §2.2 Bundle override** (replacing the vanilla Bundle with a
-`bundle_slots`-wide UI inventory). It is a separate item feature, not one of 2.5c's specced
-behaviour changes, and only the *nesting half* of §2.5 was in scope — Satchels and Pouches refuse to
-fit inside container items, which vanilla already enforces for bundles and shulker boxes. The
-override is unclaimed by any phase; it needs one.
+Phases 0–2 shipped against spec v0.3; v0.4 unified the currency and reworked the Vault, and Phase
+2.5 closed that gap in three separate commits (rename, then drop tables, then behaviour). The v0.3
+spine — `heart_shard` / `vital_heart` — no longer exists anywhere and has no migration path; this is
+a pre-release mod, so old ids were deleted outright rather than aliased.
 
-Not yet built: the Codex, Tome, Artisan's Table and Kit (Phase 3), and every §12.4 / §12.5 core prime
-and housing recipe (Phase 4). Their result items do not exist yet.
+**Up next: the Artisan's Table.** It is the last unbuilt block in the spec, and the Vault's sync path
+was deliberately built with it in mind as a second consumer (REFERENCES.md; see the comments on
+`VaultSyncPayload` and `VaultClientCache`, and the standing `TODO Phase 3` in `HeartsteadClient`).
 
 ---
 
-## Phase 0 — Items and the heart economy
-
-### 0.1 — Registration foundation ✅
+## Open — §7.1 Artisan's Table and Kit
 
 ```
-Read docs/DESIGN.md §1 and docs/CONVENTIONS.md §2.
-
-Show me the real 26.2 Item.Properties construction signature before writing any
-registration code — read it out of the jar with javap (26.x is unobfuscated) or via
-./gradlew genSources. I want the API shape confirmed, not inferred from a tutorial.
-
-Then implement HsComponents and HsItems with the three §1 items: heart_shard,
-vital_heart, vault_sigil. Real registered items, creative tab entry, lang keys, item
-models, and the two placeholder textures already in
-src/main/resources/assets/heartstead/textures/item/.
-
-Also add the Vital Heart crafting recipe as JSON in data/heartstead/recipe/.
-
-Run ./gradlew build when done and report the actual result.
-```
-
-> **Superseded by v0.4.** The spine is no longer heart_shard → vital_heart. It is one found `sigil`
-> plus `core_sigil`, `heart_sigil`, `vault_sigil` and the three dimensional variants (§1, §12.2).
-> Phase 2.5 does the rename; this prompt is kept only so the git history reads.
-
-### 0.2 — Loot tables ✅
-
-```
-Add Heart Shard to loot per docs/DESIGN.md §1: dungeon, mineshaft, temple and shipwreck
-chests at 30% for 1-2; trial vaults; fishing treasure; 0.5% from any hostile mob; 10%
-from Evoker and Elder Guardian.
-
-26.2's entity predicate format is a component-style map that REJECTS unknown
-sub-predicates, so 1.21.x examples are wrong. Show me one predicate and confirm it
-before generating the rest.
-
-Consider whether a Fabric loot-table-modification callback is a better fit than
-overriding vanilla loot table JSON outright — overriding conflicts with every other mod
-that touches the same table. Recommend one and say why.
-```
-
-> **Superseded by v0.4.** The whole drop table changed and moved to §12.1 — different item, roughly
-> quarter rates on chests and mobs, new boss and mini-boss entries north of 50%, and two hard
-> exclusions (nothing killed by a core, and never the Wither). Phase 2.5 redoes it.
-
-Phase 0 ends there. **There is no advancement or bounty work in this phase** — read DESIGN.md §7.3
-before proposing any. Advancements are deferred until the §1 economy has actually been played.
-
----
-
-## Phase 0.5 — Risk spike
-
-Still the riskiest mechanic. It ships with a GameTest instead of a manual checklist.
-
-### 0.5a — Villager trade persistence ✅
-
-```
-Build a proof of concept for docs/DESIGN.md §7.2 ONLY.
-
-Inject a fixed trade onto a librarian and make it survive the villager regenerating
-Offers on level-up and restock. Then write GameTests asserting it survives: level-up,
-restock, chunk unload/reload, and world reload.
-
-Run ./gradlew runGametest and report real output. If the tests can't cover world reload,
-say so and give me a manual checklist for that case only.
-```
-
----
-
-## Phase 1 — Lives ✅
-
-```
-Implement docs/DESIGN.md §6: Life Heart item and recipe, max_health attribute modifier
-on consume, the 20-heart cap, -1 heart on death with a floor of 5, and the harder-mode
-config toggles.
-
-Player state uses attachments per CONVENTIONS.md §2.2, with a versioned codec. Every
-number in §6 is a config field per §5 of CONVENTIONS.md, not a literal.
-
-GameTest the floor: die repeatedly, assert health never goes below it.
-
-Note DESIGN.md §1.1 — Blank Core must stay cheaper than Life Heart. Don't change either
-recipe without flagging it.
-```
-
-> **Partly superseded by v0.4.** The mechanic is unchanged and still shipped; the item is now the
-> **Heart Sigil** and its numbers moved to §12.6. Phase 2.5a does the rename. The §1.1 guardrail
-> survives verbatim, with Core Sigil in Blank Core's place.
-
----
-
-## Phase 2 — The Vault ✅
-
-The biggest lift, and the first real blocks and screen handlers in the project.
-
-```
-Write the GameTest suite for docs/DESIGN.md §2.5 FIRST, before any Vault implementation:
-deposit N / withdraw N exact conservation, full inventory on withdraw, capacity boundary,
-mid-transfer shutdown, and concurrent access from two players. They should fail for the
-right reason (no implementation) when you run them.
-
-Then implement the storage layer per §2.1-2.3 with a versioned codec, and make the tests
-pass. No UI in this task.
-
-The Vault is WORLD state, not player state — codec-backed SavedData per CONVENTIONS.md
-§4, one Anchor per world, shared contents and pooled Sigil capacity. Concurrent access is
-a first-class case here, not an edge case. Access-item range (§2.2) is the only per-player
-part.
-```
-
-Then, separately:
-
-```
-Now the Vault screen per §2.4 — a real ScreenHandler with a scrollable slot grid, live
-search, click-to-withdraw, shift-click-to-deposit and sort.
-
-Screen classes go in src/client per CONVENTIONS.md §3; the screen handler itself is
-common. Watch the client/server split — a leak here crashes dedicated servers.
-
-The client needs a synced snapshot of Vault contents. Phase 3's Artisan needs the same
-thing (REFERENCES.md) — build ONE sync path and design it with that second consumer in
-mind.
-
-All mutation is server-side; the screen sends intents, never results.
-
-This is the first block + block entity + screen handler in the project. Establish those
-patterns carefully — the Codex and the cores will copy them.
-```
-
----
-
-## Phase 2.5 — Economy retrofit ⬜
-
-Phases 0–2 shipped against spec v0.3. DESIGN.md v0.4 unified the currency and reworked the Vault.
-This phase closes the gap. **Do it before Phase 3** — the Codex and the Artisan both build on the
-Vault's transfer path and on §1's item ids, and doing them first means doing them twice.
-
-Three tasks, in order. Don't merge them; the first is a rename and the second changes behaviour, and
-mixing those makes the diff unreviewable.
-
-### 2.5a — Rename the spine
-
-```
-Read docs/DESIGN.md §1 and §12.2, then retire the v0.3 spine.
-
-heart_shard and vital_heart are GONE, replaced by one found item `sigil`. life_heart
-becomes `heart_sigil`; the not-yet-built Blank Core is now `core_sigil`. Add `vault_sigil`
-plus `overworld_vault_sigil`, `nether_vault_sigil` and `end_vault_sigil`.
-
-Rename the Java too — HsItems fields, LifeHeartItem, HeartShardLoot, and the lives
-package's references. Registry ids, lang keys, models and textures all move with them.
-This is a pre-release mod with no players, so there is NO migration path and no legacy id
-aliasing: delete the old ids outright.
-
-Then write the §12.2 recipes as JSON. The §1.1 guardrail is a hard constraint — Core Sigil
-must stay the cheapest of the three surcharges. Say so if any recipe you write breaks it.
-
-./gradlew build and report the real result.
-```
-
-### 2.5b — Redo the drop tables
-
-```
-Replace the v0.3 Heart Shard loot with the §12.1 Sigil table. Every chest, mob and boss
-entry, including the new ones (Ravager, Warden, Ender Dragon first-kill vs respawn).
-
-TWO EXCLUSIONS, and they are the reason the economy doesn't bootstrap — read §4.2 and
-§12.1 before writing either:
-
-1. No mob killed by a core ever drops a Sigil. Cores don't exist until Phase 4, so build
-   the hook now and leave it obviously named, or Phase 4 will not remember to add it.
-2. The Wither never drops a Sigil, even on a player kill. The §5 Wither Skull Core makes
-   skulls passively, so skulls -> Wither -> Sigils is the loop in disguise.
-
-Keep the Fabric loot-table-modification callback approach from 0.2 rather than overriding
-vanilla JSON.
-
-GameTest exclusion 2 at minimum: kill a Wither, assert zero Sigils.
-```
-
-### 2.5c — Rework the Vault
-
-```
-Read docs/DESIGN.md §2 in full, then bring the Phase 2 Vault up to v0.4.
-
-Behaviour changes, all specced:
-
-- §2.1 activation. First Anchor a world ever has activates free; every activation after
-  costs a Vault Sigil; breaking an activated Anchor loses the activation but NEVER the
-  capacity or reach already bought. The anti-softlock fallback (a Vault Sigil sitting in
-  the Vault can pay) is part of this, and a held Sigil is always preferred.
-- §2.1 block hardening: PushReaction.BLOCK, explosion resistance, and the dragon_immune
-  and wither_immune tags.
-- §2.0 the deposit/withdraw split. Deposit is unrestricted from anywhere. Withdrawal needs
-  the §12.3 reach tier covering where the player is standing. This is ONE rule and it
-  applies to the Satchel, the Pouch and the Linked Funnel's output mode alike.
-- §2.3 reach tiers as world state alongside capacity, bought with the dimensional Sigils.
-- §2.5 the container rules, both directions: the Vault rejects any item with a non-empty
-  container or bundle_contents component, and the Bundle override refuses to nest.
-- §2.4 the two-tab Anchor screen. Tab 1 (activation and upgrades) is always available
-  including when dormant; tab 2 (storage) is locked until activated.
-
-Every number comes from §12.3 and §12.7 as config, not literals.
-
-The §2.6 conservation suite still has to pass unchanged — if a test needs editing to go
-green, that is a finding to report, not a test to edit. Add cases for: activation across a
-world reload, a withdrawal attempted from a dimension the world hasn't bought, and deposit
-while the Anchor's chunk is unloaded.
-
-./gradlew build && ./gradlew runGametest, and report real output.
-```
-
----
-
-## Phase 3 — Codex and Artisan's Table ⬜
-
-```
-Implement docs/DESIGN.md §3.3 — the Codex block and block entity, Archive / Tome / Teach
-flows, tier capacities, and the fixed librarian prices.
-
-Reuse the Phase 0.5a persistence approach for the librarian side; read that code first
-rather than reinventing it.
-
-The archive is PER PLAYER (a codec-backed attachment), not per block — any Codex shows
-you your own archive. The capacity upgrades are consumed per player too.
-```
-
-Then, separately:
-
-```
-Implement docs/DESIGN.md §7.1 — Artisan's Table and Kit.
+Implement docs/DESIGN.md §7.1 — Artisan's Table (T1 block) and Artisan's Kit (T2
+portable). Both recipes are in §12.2 and neither exists yet.
 
 Read REFERENCES.md "the recipe book is reusable" first. Do NOT build a recipe browser:
 extend the vanilla crafting menu and return RecipeBookType.CRAFTING, which inherits
 search, category tabs, craftable-only and click-to-fill off the live RecipeManager.
 
 The only new work is the two Vault hooks in that REFERENCES section. Route every
-withdrawal through the Phase 2 transfer code — a second item-moving path is how the
-Vault gets a dupe bug, and it would invalidate the §2.5 suite.
+withdrawal through the existing Phase 2 transfer code in com.heartstead.vault — a second
+item-moving path is how the Vault gets a dupe bug, and it would invalidate the §2.6 suite.
+The client-side Vault snapshot already exists and was designed for exactly this second
+consumer; reuse VaultSyncPayload rather than adding a payload.
+
+Pulling ingredients out of the Vault IS a withdrawal, so it obeys §2.0 reach: the Table is
+always in local reach, the Kit used in the world needs the tier covering where the player
+stands. Falls out of the existing rule — do not add a second concept for it.
+
+Screen classes go in src/client per CONVENTIONS.md §3. Follow the patterns the Vault and
+Codex screens already established rather than inventing a third.
+
+GameTest the reach rule at minimum: craft from the Kit in an unbought dimension and assert
+the withdrawal is refused. Then ./gradlew build && ./gradlew runGametest and report real
+output.
+```
+
+## Open — §2.2 the Bundle override
+
+Unclaimed by any phase, which is why it is still here. `bundle_slots` is deliberately absent from
+`HsConfig` today (see the comment there) — this task adds it.
+
+```
+Implement the §2.2 Bundle override: replace vanilla Bundle behaviour with a UI-based
+inventory of `bundle_slots` slots. Read the balance flag in §2.2 before starting — this is
+the one place the design overwrites a vanilla item, and the slot count is the largest
+unvalidated T1 buff in the pack.
+
+Constraints already in the codebase, do not regress them:
+- The Satchel crafts FROM a vanilla Bundle (§12.2), so the override must not break that
+  recipe or the Satchel's own behaviour.
+- §2.5 nesting already works in the other direction — Satchels and Pouches refuse to go
+  inside container items, and the Vault rejects any stack with non-empty container or
+  bundle_contents. See Vault.java. The override must keep both true.
+
+bundle_slots is a config field per §12.7 and CONVENTIONS.md §5, currently absent from
+HsConfig on purpose. Add it there.
+
+./gradlew build && ./gradlew runGametest and report real output.
 ```
 
 ---
 
-## Phase 4 — Cores ✅ (§4.1–4.3; the §5 eleven are still open)
+## Known bugs
+
+Both were found reading the code and the assets, not from a session — so **reproduce them in
+`runClient` before believing the diagnosis in either prompt.**
+
+### Bug 1 — the Linked Funnel does not work, and does not look like a Funnel
+
+Reported: nothing about it functions in play. Two things are certainly wrong before anything else
+is investigated:
+
+- **It renders as a plain full cube.** `models/block/linked_funnel_input.json` and
+  `..._output.json` are both `minecraft:block/cube_bottom_top`. There is no hopper-shaped model, no
+  facing state, and nothing visually distinguishes input mode from output mode except the texture.
+- **`useItemOn` swallows every right-click with an item in hand**
+  ([LinkedFunnelBlock.java:89](../src/main/java/com/heartstead/block/LinkedFunnelBlock.java#L89)),
+  setting the filter from whatever you happen to be holding — including when you were trying to
+  place a block against it. Combined with empty-hand cycling the mode, there is no way to interact
+  with a Funnel without changing its configuration.
+
+> **This request contradicts the wiki and the conflict is unresolved.** DESIGN.md §2.1 says the
+> Funnel is configured in the world, with no screen, and gives a reason ("two fields do not earn a
+> screen handler"). A custom interface with input/output control and filters is a different design.
+> That decision is logged in OPEN-QUESTIONS.md — **settle it there first**, then implement, then
+> update §2.1 in the same change.
 
 ```
-Implement docs/DESIGN.md §4: the prime -> imprint attunement in §4.1, the four housing
-blocks in §4.2, and rate tiering in §4.3. The Core Sigil itself already exists from
-Phase 2.5a — don't re-add it. Every recipe, threshold and rate comes from §12.4.
+The Linked Funnel (DESIGN.md §2.1) does not work in play. Before changing anything:
+reproduce it in runClient and tell me what actually fails — placement, ticking,
+transfer, or the interaction handler eating every right-click.
 
-§4.2's no-Sigils-from-cores rule is absolute and is the reason the economy doesn't
-bootstrap. Phase 2.5b left a hook for it; wire every core loot table through that hook and
-GameTest it — socket a core, run it, assert zero Sigils ever appear in its output.
+Then fix it in three parts, in this order, and don't merge them:
 
-Attunement state is a data component on the stack per §4.1. Get the hand rules exactly
-right: an un-attuned core only takes a target from the main hand or offhand, but once it
-HAS a target every carried core progresses in parallel from anywhere in the inventory.
+1. Behaviour. LinkedFunnelBlockEntity already routes everything through the §2.6-tested
+   Vault transfer path; keep that. If the bug is in the block rather than the block
+   entity, say so rather than rewriting the transfer code.
+2. Model. A real hopper-shaped 3D model with a facing block state, input and output
+   visually distinct. Vanilla's hopper model is the reference; do not blit a cube.
+3. Interface. Read the OPEN-QUESTIONS.md entry "the Funnel's configuration surface"
+   first — §2.1 currently forbids a screen, and that has to be resolved before a screen
+   handler is written. If it resolves to a screen: input/output toggle and a filter slot
+   that holds a type without consuming the item, following the Vault and Codex screen
+   patterns rather than a third one, screen classes in src/client per CONVENTIONS.md §3.
 
-Offline accrual per §4.2: settle the whole elapsed delta from ONE stored timestamp on
-chunk load, capped at core_accrual_cap_hours. Never require a chunkloader. GameTest it —
-advance the world clock, unload and reload the chunk, assert the yield matches the
-formula and doesn't double-count. That's the bug this design invites.
-
-The one-active-core-per-target rule in §4.3 is world-level SavedData and is enforced by
-REFUSING the socket, not by placing something dormant. GameTest the duplicate-socket path
-including across a world reload.
-
-Vault integration from §4.2 is the payoff — build it in this phase.
-
-core_rate_multiplier ships at 1.0 but is a config field; I expect to lower it.
+GameTest the transfer in both directions, including the §2.0 rule that output mode is
+refused outside the Vault's reach. ./gradlew build && ./gradlew runGametest, real output.
 ```
 
-Then, separately:
+### Bug 2 — the interfaces do not feel like Minecraft
+
+Reported: rounding is wrong and the screens read as not-vanilla. This covers every screen the mod
+has — Vault (both tabs), Codex, core housing — so it is one pass, not four.
+
+`HsGuiPainting` is where the shared drawing lives, and it is the right place for the fix; the
+individual screens should end up with less painting code, not more.
 
 ```
-Implement the eleven classic farm replacements in docs/DESIGN.md §5, with every recipe,
-imprint and rate taken from §12.5.
+Every Heartstead screen (Vault §2.4, Codex §3.3, core housing §4.2) reads as
+not-quite-Minecraft. Corner rounding is wrong and the panels don't sit in vanilla's own
+visual language.
 
-These need NO new blocks — every one sockets into a §4.2 housing. The housing supplies
-the family, the core supplies the rate and the loot table. It should come out as eleven
-recipes and eleven loot tables plus the imprint conditions, and almost no new Java.
+Start by reading vanilla's own widget sprites and nine-slice definitions out of the jar
+rather than guessing at radii — 26.2 ships them as sprite JSON, and matching them is the
+whole job. Report what vanilla actually uses before changing a pixel.
 
-Note the two imprint shapes in §5 (milestone vs counted) and which cores use which.
+Then fix it centrally in src/client/.../screen/HsGuiPainting.java. Every screen should
+come out of this using MORE of the shared painting and less of its own.
 
-Before implementing, check my tier-I and tier-III numbers against the comparison table at
-the end of §12.5 and tell me if any are wrong — those rates have never been played.
+Do not redesign layouts or add features — §2.4's two-tab shape, the Codex's flows and the
+housing's slots all stay exactly as they are. This is presentation only.
+
+I have to judge this one in runClient, so end by telling me what to look at.
+```
+
+### Follow-up — a graphical guidebook
+
+Deliberately not built alongside §7.3's advancement tree. The reasoning is in §7.3's last bullet:
+the tooltip already renders a title, an icon and a description in vanilla's frame, which is most of
+a guide page for none of the cost — and **building a new custom screen while Bug 2 is open would
+inherit the same problem.** Do Bug 2 first, then decide whether the tree left a real gap.
+
+The gap it would fill, if one is felt: the tree cannot draw a crafting grid. §7.3 unlocks the
+recipes into the vanilla recipe book instead, which does draw them.
+
+```
+Play the §7.3 advancement tree from a fresh world and tell me which of these you
+actually wanted and did not get: a drawn crafting grid, longer-form lore, or a page you
+can re-read after the toast is gone. Then design the smallest thing that gives me that
+one — and check whether the vanilla recipe book already does it before proposing a
+screen.
 ```
 
 ---
 
 ## Utility prompts
+
+### Playtest follow-up
+
+The whole of §12 is unplayed. After a session in `runClient`:
+
+```
+I played <X> and <Y> felt wrong. Find the dial in DESIGN.md §12 that controls it, check
+§10 for what else that dial moves, and tell me what a change would cost elsewhere before
+changing anything.
+```
 
 ### Update the wiki after a decision
 
@@ -369,4 +231,6 @@ Loader during the initial setup. Query the meta APIs directly.
 Audit the repo for anything still using a placeholder: TODO markers, placeholder
 textures, hardcoded values that should be config, and any file referencing a name other
 than heartstead. List them; don't fix them yet.
+
+Every texture in assets/heartstead/textures is currently a stand-in (commit c0251d5).
 ```

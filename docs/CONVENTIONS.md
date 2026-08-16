@@ -136,6 +136,11 @@ Prefer a **data generator** (Fabric's `DataGeneratorEntrypoint`) over hand-writt
 structurally repetitive — loot tables, recipes, models, tags. The generator is the artifact; the JSON
 is build output. Generated JSON is never hand-edited.
 
+`tools/gen_advancements.py` is the same idea applied to content: it emits the whole of DESIGN.md
+§7.3 — the advancement tree, the hidden recipe-unlock layer and the `advancements.heartstead.*` lang
+block — and it fails loudly if a recipe exists with no unlock, which is the one mistake that would
+silently keep a recipe out of the recipe book forever. Edit the script, re-run it, commit both.
+
 The same rule covers the placeholder item art. `tools/gen_sigil_textures.py` draws all seven §1
 Sigil textures from one stone-disc routine plus a rune grid per item, so they stay a coherent set;
 the committed PNGs are its output. Retune the script and re-run it — hand-editing a PNG loses the

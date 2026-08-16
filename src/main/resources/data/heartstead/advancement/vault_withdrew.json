@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:hopper"
+    },
+    "title": {
+      "translate": "advancements.heartstead.vault_withdrew.title"
+    },
+    "description": {
+      "translate": "advancements.heartstead.vault_withdrew.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "withdrew": {
+      "trigger": "heartstead:vault_withdrew"
+    }
+  },
+  "parent": "heartstead:vault_pouch",
+  "requirements": [
+    [
+      "withdrew"
+    ]
+  ]
+}

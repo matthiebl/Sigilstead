@@ -1,6 +1,7 @@
 package com.heartstead.core;
 
 import com.heartstead.Heartstead;
+import com.heartstead.advancement.HsTriggers;
 import com.heartstead.config.HsConfigManager;
 import com.heartstead.registry.HsComponents;
 import com.heartstead.registry.HsItems;
@@ -240,7 +241,7 @@ public final class CoreImprint {
         for (CoreSlot slot : carriedSlots(player)) {
             CoreAttunement attunement = primedAttunement(slot.get(), family);
             if (attunement != null && attunement.targets(target)) {
-                slot.set(applied(slot.get(), attunement.advanced(), family, threshold));
+                slot.set(applied(player, slot.get(), attunement.advanced(), family, threshold));
                 player.getInventory().setChanged();
                 return;
             }
@@ -260,7 +261,7 @@ public final class CoreImprint {
             ItemStack stack = player.getItemBySlot(slot);
             CoreAttunement attunement = primedAttunement(stack, family);
             if (attunement != null && attunement.unattuned()) {
-                player.setItemSlot(slot, applied(stack, attunement.lockTo(target), family, threshold));
+                player.setItemSlot(slot, applied(player, stack, attunement.lockTo(target), family, threshold));
                 return;
             }
         }
@@ -271,14 +272,19 @@ public final class CoreImprint {
      * — at the threshold — the finished Core carrying it. An {@link ItemStack}'s item is final, so
      * §4.1's "the stack converts into the finished Core" is a slot replacement, which is why every
      * caller writes the result back through the slot it came from.
+     *
+     * <p>The conversion is also the only moment §4.1 ever completes, so it is where DESIGN.md §7.3's
+     * attunement criterion fires. Purely observational — the return value does not depend on it.
      */
-    private static ItemStack applied(ItemStack stack, CoreAttunement attunement, CoreFamily family, int threshold) {
+    private static ItemStack applied(
+            ServerPlayer player, ItemStack stack, CoreAttunement attunement, CoreFamily family, int threshold) {
         if (!attunement.complete(threshold)) {
             stack.set(HsComponents.CORE_ATTUNEMENT, attunement);
             return stack;
         }
         ItemStack finished = new ItemStack(HsItems.core(family));
         finished.set(HsComponents.CORE_ATTUNEMENT, attunement);
+        HsTriggers.CORE_ATTUNED.trigger(player);
         return finished;
     }
 

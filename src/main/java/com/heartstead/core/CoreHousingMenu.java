@@ -1,5 +1,6 @@
 package com.heartstead.core;
 
+import com.heartstead.advancement.HsTriggers;
 import com.heartstead.blockentity.CoreHousingBlockEntity;
 import com.heartstead.item.CoreItem;
 import com.heartstead.registry.HsComponents;
@@ -65,6 +66,9 @@ public final class CoreHousingMenu extends AbstractContainerMenu {
     private final CoreHousingOpenData openData;
     private final ContainerData status;
 
+    /** Whoever opened this menu. Only DESIGN.md §7.3's criteria read it; nothing branches on it. */
+    private final Player owner;
+
 
     /** Client side: no block entity, and a stand-in container the server's slot updates write into. */
     public CoreHousingMenu(int containerId, Inventory playerInventory, CoreHousingOpenData openData) {
@@ -85,6 +89,7 @@ public final class CoreHousingMenu extends AbstractContainerMenu {
         this.housing = housing;
         this.openData = openData;
         this.status = status;
+        this.owner = playerInventory.player;
 
         addSlot(new CoreSlot());
         for (int index = 0; index < openData.bufferSlots(); index++) {
@@ -200,6 +205,24 @@ public final class CoreHousingMenu extends AbstractContainerMenu {
         public int getMaxStackSize() {
             return 1;
         }
+
+        /**
+         * DESIGN.md §7.3 — the socket criterion. {@link #mayPlace} has already applied every §4.2 and
+         * §4.3 rule by the time this runs, so reaching here <em>is</em> "the housing accepted it";
+         * there is no second acceptance check to keep in sync.
+         */
+        @Override
+        public void setByPlayer(ItemStack stack, ItemStack old) {
+            super.setByPlayer(stack, old);
+            if (old.isEmpty()
+                    && stack.getItem() instanceof CoreItem core
+                    && owner instanceof ServerPlayer serverPlayer) {
+                CoreAttunement attunement = stack.get(HsComponents.CORE_ATTUNEMENT);
+                if (attunement != null) {
+                    HsTriggers.CORE_SOCKETED.trigger(serverPlayer, core.family(), attunement.tier());
+                }
+            }
+        }
     }
 
     /** A finished, target-locked core of this housing's family — everything but the §4.3 check. */
@@ -278,6 +301,15 @@ public final class CoreHousingMenu extends AbstractContainerMenu {
         @Override
         public boolean mayPlace(ItemStack stack) {
             return false;
+        }
+
+        /** DESIGN.md §7.3 — a core stops being a promise the first time yield leaves the buffer. */
+        @Override
+        public void onTake(Player taker, ItemStack stack) {
+            super.onTake(taker, stack);
+            if (!stack.isEmpty() && taker instanceof ServerPlayer serverPlayer) {
+                HsTriggers.CORE_YIELD_COLLECTED.trigger(serverPlayer);
+            }
         }
     }
 

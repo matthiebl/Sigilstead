@@ -1,5 +1,6 @@
 package com.heartstead.codex;
 
+import com.heartstead.advancement.HsTriggers;
 import com.heartstead.network.CodexSyncPayload;
 import com.heartstead.registry.HsItems;
 import com.heartstead.registry.HsMenuTypes;
@@ -78,6 +79,7 @@ public final class CodexMenu extends AbstractContainerMenu {
         if (Codex.tryArchive(player, stack)) {
             archiveContainer.setItem(0, ItemStack.EMPTY);
             sync(player);
+            HsTriggers.CODEX_ARCHIVED.trigger(player);
         }
     }
 

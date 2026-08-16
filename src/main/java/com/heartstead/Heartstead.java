@@ -1,5 +1,6 @@
 package com.heartstead;
 
+import com.heartstead.advancement.HsTriggers;
 import com.heartstead.core.CoreImprint;
 import com.heartstead.economy.SigilBossDrops;
 import com.heartstead.economy.SigilLoot;
@@ -51,6 +52,7 @@ public class Heartstead implements ModInitializer {
         HsPayloads.register();
         HsCreativeTabs.register();
         HsAttachments.register();
+        HsTriggers.register();
         SigilLoot.register();
         SigilBossDrops.register();
         EnchantmentBlockLoot.register();
