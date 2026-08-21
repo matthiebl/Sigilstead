@@ -4,6 +4,7 @@ import com.heartstead.block.LinkedFunnelBlock;
 import com.heartstead.config.HsConfigManager;
 import com.heartstead.registry.HsBlockEntities;
 import com.heartstead.vault.Vault;
+import com.heartstead.vault.VaultKey;
 import com.heartstead.vault.VaultReach;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -41,9 +42,11 @@ public class LinkedFunnelBlockEntity extends BlockEntity {
     private int cooldown;
 
     /**
-     * Output mode's filter. A bare {@link Item}, not an {@link ItemStack} — the Vault stores counts
-     * per item type (§2.3), so a filter carrying components could name something the Vault can never
-     * contain, and the player would watch a correctly configured Funnel do nothing forever.
+     * Output mode's filter. A bare {@link Item}, not an {@link ItemStack}: the Funnel is configured
+     * by right-clicking it with something, and a filter that also captured that item's components
+     * would silently mean "only pull swords with exactly this enchantment and exactly this much
+     * durability left" — a correctly configured Funnel doing nothing forever. It dispenses whichever
+     * stored variants match the item, oldest deposit first.
      */
     private Item filter;
 
@@ -156,29 +159,34 @@ public class LinkedFunnelBlockEntity extends BlockEntity {
             return;
         }
 
-        int stored = Vault.get(level).count(filter);
+        // One variant per cycle: mixing variants into a single insert would need one destination
+        // check per variant anyway, and the next cycle picks up whatever is left.
+        VaultKey key = Vault.firstVariantOf(level, filter).orElse(null);
+        if (key == null) {
+            return;
+        }
+        int stored = Vault.get(level).count(key);
         if (stored <= 0) {
             return;
         }
-        int room = roomFor(below, filter, Math.min(transferBatch(), stored));
+        int room = roomFor(below, key.stack(), Math.min(transferBatch(), stored));
         if (room <= 0) {
             return;
         }
 
-        int withdrawn = Vault.withdraw(level, filter, room);
+        int withdrawn = Vault.withdraw(level, key, room);
         if (withdrawn <= 0) {
             return;
         }
-        ItemStack leftover = insertInto(below, new ItemStack(filter, withdrawn));
+        ItemStack leftover = insertInto(below, key.stack(withdrawn));
         if (!leftover.isEmpty()) {
             Vault.deposit(level, leftover);
         }
         below.setChanged();
     }
 
-    /** How many of {@code item} the container would actually accept, capped at {@code limit}. */
-    private static int roomFor(Container container, Item item, int limit) {
-        ItemStack probe = new ItemStack(item);
+    /** How many of {@code probe}'s exact variant the container would accept, capped at {@code limit}. */
+    private static int roomFor(Container container, ItemStack probe, int limit) {
         int maxStackSize = Math.min(container.getMaxStackSize(), probe.getMaxStackSize());
         int room = 0;
         for (int slot = 0; slot < container.getContainerSize() && room < limit; slot++) {
@@ -191,7 +199,7 @@ public class LinkedFunnelBlockEntity extends BlockEntity {
             ItemStack existing = container.getItem(slot);
             if (existing.isEmpty()) {
                 room += maxStackSize;
-            } else if (existing.is(item) && existing.getComponentsPatch().isEmpty()) {
+            } else if (ItemStack.isSameItemSameComponents(existing, probe)) {
                 room += Math.max(0, maxStackSize - existing.getCount());
             }
         }
@@ -204,7 +212,7 @@ public class LinkedFunnelBlockEntity extends BlockEntity {
 
         for (int slot = 0; slot < container.getContainerSize() && !stack.isEmpty(); slot++) {
             ItemStack existing = container.getItem(slot);
-            if (existing.isEmpty() || !existing.is(stack.getItem()) || !existing.getComponentsPatch().isEmpty()) {
+            if (existing.isEmpty() || !ItemStack.isSameItemSameComponents(existing, stack)) {
                 continue;
             }
             int room = maxStackSize - existing.getCount();

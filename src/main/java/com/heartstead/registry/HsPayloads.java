@@ -81,7 +81,7 @@ public final class HsPayloads {
         ServerPlayNetworking.registerGlobalReceiver(VaultWithdrawPayload.TYPE, (payload, context) -> context.server().execute(() -> {
             ServerPlayer player = context.player();
             if (player.containerMenu instanceof VaultMenu vaultMenu) {
-                vaultMenu.handleWithdraw(player, payload.item(), payload.count());
+                vaultMenu.handleWithdraw(player, payload.key(), payload.count());
             }
         }));
 

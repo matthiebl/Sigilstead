@@ -25,6 +25,7 @@
       "com.heartstead.gametest.VaultMenuGameTests",
       "com.heartstead.gametest.VaultActivationGameTests",
       "com.heartstead.gametest.VaultUpgradeSlotGameTests",
+      "com.heartstead.gametest.VaultVariantGameTests",
       "com.heartstead.gametest.CodexGameTests",
       "com.heartstead.gametest.CodexTeachGameTests",
       "com.heartstead.gametest.CoreImprintGameTests",

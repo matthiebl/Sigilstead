@@ -1,8 +1,10 @@
 package com.heartstead.vault;
 
 import com.heartstead.Heartstead;
+import com.mojang.datafixers.util.Either;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -14,6 +16,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.datafix.DataFixTypes;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.SavedData;
 import net.minecraft.world.level.saveddata.SavedDataType;
@@ -37,20 +40,76 @@ import net.minecraft.world.level.saveddata.SavedDataType;
  * <p>Carries a schema version so a future shape change has somewhere to migrate from instead of
  * guessing at an unversioned blob (CONVENTIONS.md §4). Everything v2 added is an optional field with
  * a v1-safe default, so a v1 blob loads as a dormant Vault that has never been activated — which is
- * exactly what a pre-activation world was.
+ * exactly what a pre-activation world was. v3 re-keyed {@code contents} from a bare {@link Item} to
+ * a {@link VaultKey}, so stacks keep their components; the field decodes either shape and a v1/v2
+ * blob's items load as component-free keys, which is exactly what they were.
+ *
+ * <p><b>Two indexes over one map.</b> {@code contents} counts per {@link VaultKey} — that is what a
+ * grid cell and a withdrawal address. {@code itemTotals} is a derived per-{@link Item} rollup, and
+ * it is what §2.3's capacity check reads: the distinct-type cap counts item types, and the per-type
+ * depth cap pools every variant of one item. Both are maintained together in {@link #add} and
+ * {@link #remove}, never recomputed by callers.
  *
  * <p>Raw map mutation lives here; capacity enforcement lives in {@link Vault}, which is the
  * intended entry point for everything but this class's own package.
  */
 public final class VaultData extends SavedData {
 
-    public static final int CURRENT_VERSION = 2;
+    public static final int CURRENT_VERSION = 3;
+
+    // Declared ahead of TYPE on purpose: TYPE's initializer calls codec(), and a static field
+    // read before its own declaration is null rather than a compile error.
+    /**
+     * v3's shape: an ordered list of {variant, count}, because a map keyed on a full
+     * {@link ItemStack} has no sane string key to hash on. The list also keeps insertion order,
+     * which is the order the §2.4 grid falls back to when the player hasn't picked a sort.
+     */
+    private static final Codec<List<Map.Entry<VaultKey, Integer>>> V3_CONTENTS_CODEC =
+            RecordCodecBuilder.<Map.Entry<VaultKey, Integer>>create(instance -> instance
+                    .group(
+                            VaultKey.CODEC.fieldOf("item").forGetter(Map.Entry::getKey),
+                            Codec.intRange(1, Integer.MAX_VALUE).fieldOf("count").forGetter(Map.Entry::getValue))
+                    .apply(instance, Map::entry))
+                    .listOf();
+
+    /** v1/v2's shape: counts per bare item id. Read-only — nothing writes it any more. */
+    private static final Codec<Map<Item, Integer>> LEGACY_CONTENTS_CODEC =
+            Codec.unboundedMap(BuiltInRegistries.ITEM.byNameCodec(), Codec.intRange(1, Integer.MAX_VALUE));
+
+    /**
+     * Decodes either shape and always encodes v3, so an existing world migrates the first time it
+     * saves. A pre-v3 blob's items become component-free keys, which is what they already were —
+     * nothing in a v2 Vault could carry components, since the old contents map had nowhere to put
+     * them.
+     */
+    private static final Codec<Map<VaultKey, Integer>> CONTENTS_CODEC =
+            Codec.either(V3_CONTENTS_CODEC, LEGACY_CONTENTS_CODEC)
+                    .xmap(
+                            either -> either.map(VaultData::fromEntries, VaultData::fromLegacy),
+                            contents -> Either.left(List.copyOf(contents.entrySet())));
+
+    private static Map<VaultKey, Integer> fromEntries(List<Map.Entry<VaultKey, Integer>> entries) {
+        Map<VaultKey, Integer> map = new LinkedHashMap<>();
+        for (Map.Entry<VaultKey, Integer> entry : entries) {
+            map.merge(entry.getKey(), entry.getValue(), Integer::sum);
+        }
+        return map;
+    }
+
+    private static Map<VaultKey, Integer> fromLegacy(Map<Item, Integer> legacy) {
+        Map<VaultKey, Integer> map = new LinkedHashMap<>();
+        legacy.forEach((item, count) -> map.merge(VaultKey.of(item), count, Integer::sum));
+        return map;
+    }
 
     public static final SavedDataType<VaultData> TYPE =
             new SavedDataType<>(Heartstead.id("vault"), VaultData::createNew, codec(), DataFixTypes.LEVEL);
 
     private final int version;
-    private final Map<Item, Integer> contents;
+    private final Map<VaultKey, Integer> contents;
+
+    /** Per-{@link Item} rollup of {@link #contents}, for §2.3's two capacity caps. Never persisted. */
+    private final Map<Item, Integer> itemTotals = new LinkedHashMap<>();
     private int sigilsSpent;
     private Optional<BlockPos> anchorPos;
     private Optional<ResourceKey<Level>> anchorDimension;
@@ -67,7 +126,7 @@ public final class VaultData extends SavedData {
 
     private VaultData(
             int version,
-            Map<Item, Integer> contents,
+            Map<VaultKey, Integer> contents,
             int sigilsSpent,
             Optional<BlockPos> anchorPos,
             Optional<ResourceKey<Level>> anchorDimension,
@@ -76,6 +135,7 @@ public final class VaultData extends SavedData {
             List<ResourceKey<Level>> reachTiers) {
         this.version = version;
         this.contents = new LinkedHashMap<>(contents);
+        this.contents.forEach((key, count) -> itemTotals.merge(key.item(), count, Integer::sum));
         this.sigilsSpent = sigilsSpent;
         this.anchorPos = anchorPos;
         this.anchorDimension = anchorDimension;
@@ -92,9 +152,7 @@ public final class VaultData extends SavedData {
         return RecordCodecBuilder.create(instance -> instance
                 .group(
                         Codec.INT.fieldOf("version").forGetter(v -> v.version),
-                        Codec.unboundedMap(BuiltInRegistries.ITEM.byNameCodec(), Codec.intRange(1, Integer.MAX_VALUE))
-                                .fieldOf("contents")
-                                .forGetter(v -> Map.copyOf(v.contents)),
+                        CONTENTS_CODEC.fieldOf("contents").forGetter(v -> v.contents),
                         Codec.intRange(0, Integer.MAX_VALUE)
                                 .fieldOf("sigils_spent")
                                 .forGetter(v -> v.sigilsSpent),
@@ -108,23 +166,50 @@ public final class VaultData extends SavedData {
                 .apply(instance, VaultData::new));
     }
 
-    /** Stored count for one item type; zero if the Vault holds none. */
-    public int count(Item item) {
-        return contents.getOrDefault(item, 0);
+    /** Stored count for one variant — item and components together; zero if the Vault holds none. */
+    public int count(VaultKey key) {
+        return contents.getOrDefault(key, 0);
     }
 
-    /** Number of distinct item types currently stored, for the §2.3 distinct-type capacity check. */
+    /**
+     * Stored count for an item across <em>every</em> variant of it, which is what §2.3's per-type
+     * depth cap limits. Ten enchanted swords and one plain one are eleven here.
+     */
+    public int count(Item item) {
+        return itemTotals.getOrDefault(item, 0);
+    }
+
+    /**
+     * Number of distinct item types currently stored, for the §2.3 distinct-type capacity check.
+     * Counted per {@link Item}, not per variant — see {@link VaultKey} for why enchanting a sword
+     * must not cost a Vault slot.
+     */
     public int distinctTypeCount() {
-        return contents.size();
+        return itemTotals.size();
+    }
+
+    /** The stored variants of {@code item}, in insertion order. Empty if the Vault holds none. */
+    public List<VaultKey> variantsOf(Item item) {
+        List<VaultKey> keys = new ArrayList<>();
+        for (VaultKey key : contents.keySet()) {
+            if (key.item() == item) {
+                keys.add(key);
+            }
+        }
+        return keys;
     }
 
     public int sigilsSpent() {
         return sigilsSpent;
     }
 
-    /** Immutable snapshot of every distinct type currently stored, for {@link VaultMenu}'s client sync. */
-    public Map<Item, Integer> contents() {
-        return Map.copyOf(contents);
+    /**
+     * Immutable snapshot of every stored variant, in insertion order, for {@link VaultMenu}'s client
+     * sync. Ordered rather than {@code Map.copyOf} so the grid doesn't reshuffle itself every time
+     * the Vault is saved and reloaded.
+     */
+    public Map<VaultKey, Integer> contents() {
+        return java.util.Collections.unmodifiableMap(new LinkedHashMap<>(contents));
     }
 
     /** Bumped on every mutation; callers diff this against a last-seen value to know when to resync. */
@@ -192,24 +277,35 @@ public final class VaultData extends SavedData {
         }
     }
 
-    void add(Item item, int amount) {
+    void add(VaultKey key, int amount) {
         if (amount <= 0) {
             return;
         }
-        contents.merge(item, amount, Integer::sum);
+        contents.merge(key, amount, Integer::sum);
+        itemTotals.merge(key.item(), amount, Integer::sum);
         revision++;
         setDirty();
     }
 
-    void remove(Item item, int amount) {
+    void remove(VaultKey key, int amount) {
         if (amount <= 0) {
             return;
         }
-        int remaining = Math.max(0, count(item) - amount);
-        if (remaining == 0) {
-            contents.remove(item);
+        int stored = count(key);
+        int taken = Math.min(stored, amount);
+        if (taken <= 0) {
+            return;
+        }
+        if (stored == taken) {
+            contents.remove(key);
         } else {
-            contents.put(item, remaining);
+            contents.put(key, stored - taken);
+        }
+        int itemRemaining = itemTotals.getOrDefault(key.item(), 0) - taken;
+        if (itemRemaining <= 0) {
+            itemTotals.remove(key.item());
+        } else {
+            itemTotals.put(key.item(), itemRemaining);
         }
         revision++;
         setDirty();

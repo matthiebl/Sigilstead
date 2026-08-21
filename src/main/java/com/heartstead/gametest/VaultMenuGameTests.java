@@ -1,6 +1,7 @@
 package com.heartstead.gametest;
 
 import com.heartstead.vault.Vault;
+import com.heartstead.vault.VaultKey;
 import com.heartstead.vault.VaultMenu;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -67,7 +68,7 @@ public class VaultMenuGameTests {
 
         ServerPlayer player = helper.makeMockServerPlayerInLevel();
         VaultMenu menu = new VaultMenu(0, player.getInventory());
-        menu.handleWithdraw(player, item, 12);
+        menu.handleWithdraw(player, VaultKey.of(item), 12);
 
         int afterWithdraw = Vault.get(level).count(item);
         int inInventory = countInInventory(player, item);
@@ -164,7 +165,7 @@ public class VaultMenuGameTests {
         for (int i = 0; i < 200; i++) {
             menu.broadcastChanges();
         }
-        menu.handleWithdraw(player, fillerTypes[0], 3);
+        menu.handleWithdraw(player, VaultKey.of(fillerTypes[0]), 3);
         for (int i = 0; i < 50; i++) {
             menu.broadcastChanges();
         }

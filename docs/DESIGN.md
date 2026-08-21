@@ -163,7 +163,10 @@ world's position claim. Deliberately breaking it is the only way to lose an acti
 The Funnel is configured **in the world, not in a screen**: right-clicking it with an empty hand
 cycles input/output (the mode is a block state, so it is visible and needs no sync packet), and
 right-clicking with an item sets the output filter to that item's type. Nothing is consumed. Two
-fields do not earn a screen handler. Throughput is `vault.funnel_items_per_transfer` (§12.7).
+fields do not earn a screen handler. The filter is the item type, not the exact stack: a filter that
+also captured the item's components would mean "only the sword with exactly this enchantment and
+exactly this much durability left", so an output Funnel dispenses whichever stored variants match,
+oldest deposit first. Throughput is `vault.funnel_items_per_transfer` (§12.7).
 
 ### 2.2 Access side (items)
 
@@ -195,6 +198,17 @@ Both are properties of the **world**, bought at the Anchor, shared by everyone. 
 server, four players each bringing back two gets everyone to the next tier.
 
 **Capacity** — how much fits. Costs plain **Vault Sigils**. Table in §12.3.
+
+**A "type" is an item, not a variant.** The Vault stores an item *with its components* — a stack
+keeps its enchantments, its remaining durability, its custom name, everything — and each distinct
+variant is its own cell in the grid, addressed and withdrawn on its own. Capacity, though, is
+counted per item: ten differently-enchanted diamond swords are ten cells but **one** of the tier's
+distinct types, and every variant of an item counts together against that one type's depth cap.
+
+That split is the point. Losing a tool's enchantments to storage would be item destruction, which
+§2.6 says players will not forgive; but charging a distinct-type slot per enchantment would make the
+capacity ladder price something the player doesn't think of as a kind of thing, and a modest
+enchanting habit would eat a whole tier. Preserve everything, charge for item types.
 
 **Reach** — how far withdrawal works. Costs a **dimensional Vault Sigil**, which is a Vault Sigil
 crafted with a proof item that only exists in the dimension it unlocks (§12.2). Table in §12.3.
@@ -230,7 +244,9 @@ The Anchor's screen has **two tabs**:
 
 2. **Storage** — the Vault itself, **locked until activated**.
    A scrollable slot grid showing stored stacks with counts, a live search field, click-to-withdraw,
-   shift-click-to-deposit, and sort. **This is the tab the screen opens on** — storage is what a
+   shift-click-to-deposit, and sort. Variants get their own cells (§2.3) and are told apart by their
+   own icon and tooltip — the durability bar, the glint, the name — rather than by any caption the
+   screen adds; search and sort read that same name, so a renamed item is findable by what it says. **This is the tab the screen opens on** — storage is what a
    player opens the Vault for, and tab 1 is somewhere they go deliberately. Pinned favourites and a
    recents page are still worth having.
 

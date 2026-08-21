@@ -3,6 +3,7 @@ package com.heartstead.vault;
 import com.heartstead.config.HsConfigManager;
 import com.heartstead.network.VaultAnchorPayload;
 import com.heartstead.registry.HsItems;
+import java.util.List;
 import java.util.Optional;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
@@ -84,7 +85,8 @@ public final class Vault {
             return true;
         }
         if (vault.count(HsItems.VAULT_SIGIL) >= cost) {
-            vault.remove(HsItems.VAULT_SIGIL, cost);
+            // A Sigil is componentless, so the plain key is the only variant that can be stored.
+            vault.remove(VaultKey.of(HsItems.VAULT_SIGIL), cost);
             vault.setActivated(true);
             return true;
         }
@@ -250,6 +252,8 @@ public final class Vault {
 
         VaultData vault = get(level);
         Item item = stack.getItem();
+        // Both caps are per item type, not per variant: an enchanted sword goes in beside the plain
+        // one for free, and the two of them share the type's depth allowance (VaultKey's javadoc).
         int existing = vault.count(item);
         VaultCapacityTier tier = VaultCapacityTier.forSigilsSpent(vault.sigilsSpent(), HsConfigManager.get().vault());
 
@@ -264,7 +268,7 @@ public final class Vault {
             return stack;
         }
 
-        vault.add(item, toDeposit);
+        vault.add(VaultKey.of(stack), toDeposit);
 
         ItemStack remainder = stack.copy();
         remainder.shrink(toDeposit);
@@ -283,15 +287,15 @@ public final class Vault {
         return deposit(level, stack);
     }
 
-    /** Removes up to {@code count} of {@code item} from the Vault and returns how many actually came out. */
-    public static int withdraw(ServerLevel level, Item item, int count) {
+    /** Removes up to {@code count} of one stored variant and returns how many actually came out. */
+    public static int withdraw(ServerLevel level, VaultKey key, int count) {
         if (count <= 0) {
             return 0;
         }
         VaultData vault = get(level);
-        int actual = Math.min(vault.count(item), count);
+        int actual = Math.min(vault.count(key), count);
         if (actual > 0) {
-            vault.remove(item, actual);
+            vault.remove(key, actual);
         }
         return actual;
     }
@@ -307,6 +311,14 @@ public final class Vault {
         return withdrawInto(level, item, count, player.getInventory());
     }
 
+    /** As {@link #withdrawIntoIfInReach(ServerLevel, Item, int, ServerPlayer)}, for one exact variant. */
+    public static int withdrawIntoIfInReach(ServerLevel level, VaultKey key, int count, ServerPlayer player) {
+        if (!VaultReach.canWithdrawAt(level, player.blockPosition())) {
+            return 0;
+        }
+        return withdrawInto(level, key, count, player.getInventory());
+    }
+
     /**
      * Withdraws up to {@code count} of {@code item} directly into {@code inventory}, constrained by
      * both Vault stock and free inventory space. Only removes from the Vault what actually fit, so a
@@ -317,21 +329,52 @@ public final class Vault {
      * when there's no room — exactly the kind of item-voiding bug §2.5 exists to catch, and one this
      * survival-facing system can't inherit just because a player happens to be in creative.
      */
-    public static int withdrawInto(ServerLevel level, Item item, int count, Inventory inventory) {
+    public static int withdrawInto(ServerLevel level, VaultKey key, int count, Inventory inventory) {
         if (count <= 0) {
             return 0;
         }
         VaultData vault = get(level);
-        int requested = Math.min(vault.count(item), count);
+        int requested = Math.min(vault.count(key), count);
         if (requested <= 0) {
             return 0;
         }
 
-        int actual = insertIntoMainSlots(inventory, item, requested);
+        int actual = insertIntoMainSlots(inventory, key, requested);
         if (actual > 0) {
-            vault.remove(item, actual);
+            vault.remove(key, actual);
         }
         return actual;
+    }
+
+    /**
+     * Withdraws {@code count} of {@code item} without caring which variant it comes from, draining
+     * stored variants in the order they were deposited. This is the convenience path for callers
+     * that only know an item type — the Linked Funnel's output filter (§2.1) and the tests. Anything
+     * a player clicks goes through the {@link VaultKey} overload instead, because a player pointed
+     * at a specific stack and expects that stack.
+     */
+    public static int withdrawInto(ServerLevel level, Item item, int count, Inventory inventory) {
+        if (count <= 0) {
+            return 0;
+        }
+        int remaining = count;
+        for (VaultKey key : get(level).variantsOf(item)) {
+            remaining -= withdrawInto(level, key, remaining, inventory);
+            if (remaining <= 0) {
+                break;
+            }
+        }
+        return count - remaining;
+    }
+
+    /**
+     * The stored variant of {@code item} that a variant-blind caller should take from next, or empty
+     * if the Vault holds none. Deposit order, so a Funnel eventually drains every variant rather
+     * than jamming on one it can't place.
+     */
+    public static Optional<VaultKey> firstVariantOf(ServerLevel level, Item item) {
+        List<VaultKey> variants = get(level).variantsOf(item);
+        return variants.isEmpty() ? Optional.empty() : Optional.of(variants.getFirst());
     }
 
     /**
@@ -371,14 +414,16 @@ public final class Vault {
         return true;
     }
 
-    private static int insertIntoMainSlots(Inventory inventory, Item item, int amount) {
+    private static int insertIntoMainSlots(Inventory inventory, VaultKey key, int amount) {
         var slots = inventory.getNonEquipmentItems();
-        int maxStackSize = new ItemStack(item).getMaxStackSize();
+        int maxStackSize = key.maxStackSize();
         int remaining = amount;
 
         for (int i = 0; i < slots.size() && remaining > 0; i++) {
             ItemStack existing = slots.get(i);
-            if (existing.isEmpty() || !existing.is(item)) {
+            // Same item *and* same components — merging an enchanted sword into a plain one's slot
+            // is exactly the data loss this whole path exists to prevent.
+            if (existing.isEmpty() || !key.matches(existing)) {
                 continue;
             }
             int room = maxStackSize - existing.getCount();
@@ -395,7 +440,7 @@ public final class Vault {
                 continue;
             }
             int toAdd = Math.min(maxStackSize, remaining);
-            inventory.setItem(i, new ItemStack(item, toAdd));
+            inventory.setItem(i, key.stack(toAdd));
             remaining -= toAdd;
         }
 

@@ -28,7 +28,6 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
 /**
@@ -218,7 +217,7 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         String query = searchBox == null ? "" : searchBox.getValue().toLowerCase(Locale.ROOT);
         List<VaultSyncPayload.Entry> filtered = new ArrayList<>();
         for (VaultSyncPayload.Entry entry : VaultClientCache.entries()) {
-            if (query.isEmpty() || displayName(entry.item()).toLowerCase(Locale.ROOT).contains(query)) {
+            if (query.isEmpty() || displayName(entry).toLowerCase(Locale.ROOT).contains(query)) {
                 filtered.add(entry);
             }
         }
@@ -227,8 +226,12 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         scrollRows = Math.min(scrollRows, maxScroll());
     }
 
-    private static String displayName(Item item) {
-        return item.getDefaultInstance().getHoverName().getString();
+    /**
+     * The name search and sort work on. Taken off the variant's own stack, not the item's default
+     * instance, so a renamed or enchanted item is findable by what the player actually sees on it.
+     */
+    private static String displayName(VaultSyncPayload.Entry entry) {
+        return entry.key().stack().getHoverName().getString();
     }
 
     private int maxScroll() {
@@ -365,7 +368,8 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
                 int index = firstIndex + row * VaultLayout.COLS + col;
                 if (index < visible.size()) {
                     VaultSyncPayload.Entry entry = visible.get(index);
-                    ItemStack display = new ItemStack(entry.item(), 1);
+                    // The variant's real stack, so damage bars, glints and custom names all draw.
+                    ItemStack display = entry.key().stack();
                     graphics.item(display, x, y);
                     graphics.itemDecorations(this.font, display, x, y, countLabel(entry.count()));
                 }
@@ -455,9 +459,9 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         if (tab == Tab.STORAGE) {
             VaultSyncPayload.Entry hovered = entryAt(relX, relY);
             if (hovered != null) {
-                // A real count, not the "1" the grid draws — the icon is a type, not a stack.
-                ItemStack tooltipStack = new ItemStack(hovered.item(), 1);
-                graphics.setTooltipForNextFrame(this.font, tooltipStack, mouseX, mouseY);
+                // The variant's own stack, so its enchantments and durability are in the tooltip —
+                // that is the only thing telling two otherwise identical cells apart (§2.4).
+                graphics.setTooltipForNextFrame(this.font, hovered.key().stack(), mouseX, mouseY);
             }
             return;
         }
@@ -538,8 +542,8 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
         if (hovered == null) {
             return super.mouseClicked(event, doubleClick);
         }
-        int count = event.button() == 1 ? 1 : new ItemStack(hovered.item()).getMaxStackSize();
-        ClientPlayNetworking.send(new VaultWithdrawPayload(hovered.item(), count));
+        int count = event.button() == 1 ? 1 : hovered.key().maxStackSize();
+        ClientPlayNetworking.send(new VaultWithdrawPayload(hovered.key(), count));
         return true;
     }
 
@@ -565,9 +569,9 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
     private enum SortMode {
         COUNT_DESC(Component.translatable("gui.heartstead.vault.sort.count"),
                 Comparator.<VaultSyncPayload.Entry>comparingInt(VaultSyncPayload.Entry::count).reversed()
-                        .thenComparing(e -> displayName(e.item()))),
+                        .thenComparing(Comparator.<VaultSyncPayload.Entry, String>comparing(VaultScreen::displayName))),
         NAME_ASC(Component.translatable("gui.heartstead.vault.sort.name"),
-                Comparator.comparing(e -> displayName(e.item())));
+                Comparator.<VaultSyncPayload.Entry, String>comparing(VaultScreen::displayName));
 
         private final Component label;
         private final Comparator<VaultSyncPayload.Entry> comparator;

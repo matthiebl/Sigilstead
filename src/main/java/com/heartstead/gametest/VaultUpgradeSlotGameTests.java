@@ -2,6 +2,7 @@ package com.heartstead.gametest;
 
 import com.heartstead.registry.HsItems;
 import com.heartstead.vault.Vault;
+import com.heartstead.vault.VaultKey;
 import com.heartstead.vault.VaultAccess;
 import com.heartstead.vault.VaultData;
 import com.heartstead.vault.VaultUpgradeKind;
@@ -243,7 +244,7 @@ public class VaultUpgradeSlotGameTests {
         menu.handleDepositCarried(player, false);
         int afterDeposit = Vault.get(level).count(net.minecraft.world.item.Items.COAL);
 
-        menu.handleWithdraw(player, net.minecraft.world.item.Items.COAL, 8);
+        menu.handleWithdraw(player, VaultKey.of(net.minecraft.world.item.Items.COAL), 8);
         int afterWithdrawAttempt = Vault.get(level).count(net.minecraft.world.item.Items.COAL);
         int inInventory = countInInventory(player, net.minecraft.world.item.Items.COAL);
 

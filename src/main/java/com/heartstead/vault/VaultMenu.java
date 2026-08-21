@@ -297,12 +297,15 @@ public final class VaultMenu extends AbstractContainerMenu {
      * inventory space by {@link Vault#withdrawInto}, so a full inventory or a stale client snapshot
      * can't lose or duplicate anything.
      *
+     * <p>The intent names a {@link VaultKey}, not an item: click one of ten enchanted swords and you
+     * get that sword back, components intact.
+     *
      * <p>Two gates ahead of that, in the order §2 defines them: does this access item grant the
      * withdrawal verb at all (§2.2), and does the Vault's reach cover where the player is standing
      * (§2.0, §2.3). The first is silent — the screen already draws a Satchel's grid as disabled
      * sockets, so a message would be telling the player something they can see.
      */
-    public void handleWithdraw(ServerPlayer player, Item item, int count) {
+    public void handleWithdraw(ServerPlayer player, VaultKey key, int count) {
         if (count <= 0 || !access.canWithdraw()) {
             return;
         }
@@ -311,10 +314,11 @@ public final class VaultMenu extends AbstractContainerMenu {
             player.sendSystemMessage(Component.translatable("gui.heartstead.vault.out_of_reach"), true);
             return;
         }
-        if (Vault.get(level).count(item) <= 0) {
+        // A key the Vault doesn't hold is a stale or forged snapshot; silently nothing.
+        if (Vault.get(level).count(key) <= 0) {
             return;
         }
-        int withdrawn = Vault.withdrawInto(level, item, count, player.getInventory());
+        int withdrawn = Vault.withdrawInto(level, key, count, player.getInventory());
         if (withdrawn == 0) {
             player.sendSystemMessage(Component.translatable("gui.heartstead.vault.inventory_full"), true);
         } else {
