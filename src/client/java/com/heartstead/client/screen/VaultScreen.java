@@ -79,7 +79,7 @@ public class VaultScreen extends AbstractContainerScreen<VaultMenu> {
     private Button activateButton;
     private final Button[] confirmButtons = new Button[VaultUpgradeKind.values().length];
 
-    private SortMode sortMode = SortMode.COUNT_DESC;
+    private SortMode sortMode = SortMode.NAME_ASC;
     private Tab tab = Tab.STORAGE;
     private int scrollRows;
     private List<VaultSyncPayload.Entry> visible = List.of();
