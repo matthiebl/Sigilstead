@@ -811,31 +811,88 @@ See OPEN-QUESTIONS.md.
 The one drop table that matters. Target: **~1 Sigil per 20–25 min of active exploring at T1, ~1 per
 10 min at T2.**
 
-**Chests**
+Retuned 2026-08-22 after early playtesting: the original table only covered five structure types,
+so a player who spent their first few hours searching buried treasure, villages and underwater
+ruins — none of which paid anything — read the economy as broken rather than unlucky. Every vanilla
+structure that can plausibly hold Sigil-worthy loot is priced now, split into three tiers
+(**common** — routine early exploring; **notable** — worth a deliberate detour; **high-value** —
+gates the toughest fights and longest journeys), and every rate that already existed moved up
+roughly 33–50% on top of that coverage expansion.
+
+**Chests — common tier**
 
 | Source | Chance | Amount |
 |---|---|---|
-| Dungeon / mineshaft / desert temple / jungle temple / shipwreck treasure | 12% | 1 |
-| Stronghold library / altar room | 25% | 1 |
-| Trial chamber vault (normal) | 20% | 1 |
-| Trial chamber vault (ominous) | 50% | 1 |
-| Bastion treasure | 50% | 1–2 |
-| Ancient city | 60% | 1–2 |
-| End city treasure | 50% | 1–2 |
-| Fishing treasure | 5% | 1 |
+| **Dungeon** | **100%** | 1 |
+| **Buried treasure** | **100%** | 1 |
+| Abandoned mineshaft | 25% | 1 |
+| Desert temple | 25% | 1 |
+| Jungle temple | 25% | 1 |
+| Shipwreck treasure | 25% | 1 |
+| Shipwreck map / supply | 15% | 1 |
+| Ruined portal | 15% | 1 |
+| Underwater ruin (small) | 15% | 1 |
+| Underwater ruin (big) | 30% | 1 |
+
+Dungeon and buried treasure are guaranteed rather than merely likely — both are single-chest
+structures, so a 100% chance is a real floor, not a statistical one. They're the two most common
+"just went exploring" structures, so this is the baseline every casual session can count on finding.
+
+**Chests — notable tier**
+
+| Source | Chance | Amount |
+|---|---|---|
+| Stronghold library / altar room | 35% | 1 |
+| Igloo | 20% | 1 |
+| Pillager outpost | 45% | 1 |
+| Nether fortress | 25% | 1 |
+
+**Chests — high-value tier**
+
+| Source | Chance | Amount |
+|---|---|---|
+| Trial chamber vault (normal) | 28% | 1 |
+| Trial chamber vault (ominous) | 68% | 1 |
+| Bastion treasure room | 68% | 1–2 |
+| Bastion — other rooms, bridge, hoglin stable | 25% each | 1 |
+| Ancient city | 80% | 1–2 |
+| End city treasure | 68% | 1–2 |
+| Woodland mansion | 75% | 1–2 |
+| Fishing treasure | 7% | 1 |
+
+A bastion no longer pays only from the treasure room. The other-rooms/bridge/hoglin-stable row
+prices three loot tables that each spawn several times as a bastion generates, so a full clear
+averages comfortably more than the treasure room's own roll on top of it — the reward is spread
+across the whole structure, in line with how much of it you actually have to fight through.
+
+**Chests — village**
+
+| Source | Chance | Amount |
+|---|---|---|
+| Any profession/house chest (all 13 tables) | 5% | 1 |
+
+One shared, deliberately low rate across every village loot table rather than a rate per building —
+a village generates several of them at once, so a full visit averages under one Sigil rather than
+being a jackpot from walking through the middle of town.
 
 **Mobs**
 
 | Source | Chance | Amount |
 |---|---|---|
-| Any hostile mob | 0.15% | 1 |
-| Ravager | 25% | 1 |
-| Evoker | 60% | 1 |
-| Elder Guardian | 60% | 1 |
+| Any hostile mob | 2% | 1 |
+| Ravager | 35% | 1 |
+| Evoker | 80% | 1 |
+| Elder Guardian | 80% | 1 |
 | Warden | 100% | 2 |
 | Ender Dragon — first kill | 100% | 5 |
 | Ender Dragon — each respawn | 100% | 1 |
 | **Wither** | **never** | — |
+
+`hostile_mob` is the only source that pays from routine, near-base play rather than a deliberate
+trip to a structure — the old 0.15% meant roughly 666 kills for one expected Sigil, statistically
+invisible over a normal session. 2% still keeps it well below every named miniboss, so fighting
+Warden- or Elder-Guardian-tier threats still reads as the bigger, deliberate payout it's meant to
+be — the two sources stay orthogonal, they just both moved up together.
 
 **Two exclusions, both load-bearing (§4.2):**
 
@@ -856,9 +913,14 @@ Exclusion 2 is a hard-coded deny-list, with no config field to switch the Wither
 
 **Which vanilla tables each chest row maps to.** The stronghold row is the library and crossing
 (altar room) tables only — corridor chests are excluded so one stronghold does not roll a dozen
-times. The shipwreck row is the treasure chest only, not supply or map. The trial chamber rows are
-the two top-level vault reward tables. The Ender Dragon ships an *empty* loot table and its
-first-kill/respawn split is world state, so its Sigils are paid on the death event instead.
+times. Shipwreck treasure, map and supply are three separate rows/tables, priced differently. The
+bastion secondary row covers `bastion_other`, `bastion_bridge` and `bastion_hoglin_stable` — three
+tables, each rolling once per instance of that room, not once per bastion. The village row covers
+all thirteen `chests/village/*` profession/house tables at one shared rate. The trial chamber rows
+are the two top-level vault reward tables, not the corridor/entrance/intersection supply chests
+scattered through the structure — those stay unpriced, same reasoning as stronghold corridors. The
+Ender Dragon ships an *empty* loot table and its first-kill/respawn split is world state, so its
+Sigils are paid on the death event instead.
 
 ### 12.2 Recipes
 

@@ -25,10 +25,11 @@ import net.minecraft.world.level.storage.loot.predicates.LootItemRandomChanceCon
 import net.minecraft.world.level.storage.loot.providers.number.UniformGenerator;
 
 /**
- * DESIGN.md §12.1 — the one drop table that matters. Injects the Sigil (§1) into structure chests,
- * trial chamber vaults, fishing treasure, hostile mobs and the four mini-bosses that carry a named
- * rate. The Ender Dragon is not here: it has an empty loot table and its first-kill / respawn split
- * cannot be expressed in one, so it lives in {@link SigilBossDrops}.
+ * DESIGN.md §12.1 — the one drop table that matters. Injects the Sigil (§1) into every vanilla
+ * structure that can plausibly hold Sigil-worthy loot, trial chamber vaults, fishing treasure,
+ * hostile mobs and the four mini-bosses that carry a named rate. The Ender Dragon is not here: it
+ * has an empty loot table and its first-kill / respawn split cannot be expressed in one, so it
+ * lives in {@link SigilBossDrops}.
  *
  * <p>Uses {@code fabric-loot-api-v3}'s {@link LootTableEvents#MODIFY} rather than overriding
  * vanilla loot table JSON — an override replaces the table outright and stomps every other mod
@@ -101,7 +102,7 @@ public final class SigilLoot {
 
             EntityType<?> entityType = ENTITY_LOOT_TABLES.get(key);
             if (entityType != null && entityType.getCategory() == MobCategory.MONSTER) {
-                addPool(tableBuilder, config.hostileMob(), true);
+                addPool(tableBuilder, config.mobs().hostileMob(), true);
             }
         });
     }
@@ -130,7 +131,7 @@ public final class SigilLoot {
      * <p>A §5 core settles its yield by rolling the loot table of the thing it replaces, without a
      * killing player in the loot context. Requiring one is therefore an exclusion a loot-table
      * refactor cannot silently undo, which is exactly what §11 warns about. It also matches §12.1's
-     * wording directly: the boss rates and the 0.15% hostile-mob rate "apply to player kills only".
+     * wording directly: the boss rates and the hostile-mob rate "apply to player kills only".
      */
     private static LootItemCondition.Builder notProducedByACore() {
         return LootItemKilledByPlayerCondition.killedByPlayer();
@@ -139,40 +140,77 @@ public final class SigilLoot {
     private static Map<ResourceKey<LootTable>, Function<SigilConfig, SigilDrop>> buildChestTableMap() {
         Map<ResourceKey<LootTable>, Function<SigilConfig, SigilDrop>> map = new HashMap<>();
 
-        // 12% for 1 — dungeon, mineshaft, desert temple, jungle temple, shipwreck treasure.
-        for (ResourceKey<LootTable> key : Set.of(
-                BuiltInLootTables.SIMPLE_DUNGEON,
-                BuiltInLootTables.ABANDONED_MINESHAFT,
-                BuiltInLootTables.DESERT_PYRAMID,
-                BuiltInLootTables.JUNGLE_TEMPLE,
-                BuiltInLootTables.SHIPWRECK_TREASURE)) {
-            map.put(key, SigilConfig::structureChest);
-        }
+        // --- common tier ---
+        map.put(BuiltInLootTables.SIMPLE_DUNGEON, c -> c.structures().common().dungeon());
+        map.put(BuiltInLootTables.BURIED_TREASURE, c -> c.structures().common().buriedTreasure());
+        map.put(BuiltInLootTables.ABANDONED_MINESHAFT, c -> c.structures().common().mineshaft());
+        map.put(BuiltInLootTables.DESERT_PYRAMID, c -> c.structures().common().desertPyramid());
+        map.put(BuiltInLootTables.JUNGLE_TEMPLE, c -> c.structures().common().jungleTemple());
+        map.put(BuiltInLootTables.SHIPWRECK_TREASURE, c -> c.structures().common().shipwreckTreasure());
+        map.put(BuiltInLootTables.SHIPWRECK_MAP, c -> c.structures().common().shipwreckMap());
+        map.put(BuiltInLootTables.SHIPWRECK_SUPPLY, c -> c.structures().common().shipwreckSupply());
+        map.put(BuiltInLootTables.RUINED_PORTAL, c -> c.structures().common().ruinedPortal());
+        map.put(BuiltInLootTables.UNDERWATER_RUIN_SMALL, c -> c.structures().common().underwaterRuinSmall());
+        map.put(BuiltInLootTables.UNDERWATER_RUIN_BIG, c -> c.structures().common().underwaterRuinBig());
 
-        // 25% for 1 — the stronghold. "Library / altar" in §12.1; the altar room's chests are
-        // vanilla's stronghold crossing table, and the corridor chests are deliberately left out so
-        // a single stronghold does not roll a dozen times.
-        map.put(BuiltInLootTables.STRONGHOLD_LIBRARY, SigilConfig::strongholdChest);
-        map.put(BuiltInLootTables.STRONGHOLD_CROSSING, SigilConfig::strongholdChest);
+        // --- notable tier ---
+        // "Library / altar" in §12.1; the altar room's chests are vanilla's stronghold crossing
+        // table, and the corridor chests are deliberately left out so a single stronghold does not
+        // roll a dozen times.
+        map.put(BuiltInLootTables.STRONGHOLD_LIBRARY, c -> c.structures().notable().strongholdChest());
+        map.put(BuiltInLootTables.STRONGHOLD_CROSSING, c -> c.structures().notable().strongholdChest());
+        map.put(BuiltInLootTables.IGLOO_CHEST, c -> c.structures().notable().igloo());
+        map.put(BuiltInLootTables.PILLAGER_OUTPOST, c -> c.structures().notable().pillagerOutpost());
+        map.put(BuiltInLootTables.NETHER_BRIDGE, c -> c.structures().notable().netherFortress());
 
+        // --- high-value tier ---
         // The two top-level vault reward tables — the ones the vault block actually rolls.
-        map.put(BuiltInLootTables.TRIAL_CHAMBERS_REWARD, SigilConfig::trialVault);
-        map.put(BuiltInLootTables.TRIAL_CHAMBERS_REWARD_OMINOUS, SigilConfig::ominousTrialVault);
+        map.put(BuiltInLootTables.TRIAL_CHAMBERS_REWARD, c -> c.structures().highValue().trialVault());
+        map.put(BuiltInLootTables.TRIAL_CHAMBERS_REWARD_OMINOUS,
+                c -> c.structures().highValue().ominousTrialVault());
+        map.put(BuiltInLootTables.BASTION_TREASURE, c -> c.structures().highValue().bastionTreasure());
+        // The rooms outside the treasure room — each spawns several times per bastion, so this one
+        // rate rolls repeatedly across a full clear rather than once. See SigilHighValueStructureConfig.
+        map.put(BuiltInLootTables.BASTION_OTHER, c -> c.structures().highValue().bastionSecondary());
+        map.put(BuiltInLootTables.BASTION_BRIDGE, c -> c.structures().highValue().bastionSecondary());
+        map.put(BuiltInLootTables.BASTION_HOGLIN_STABLE, c -> c.structures().highValue().bastionSecondary());
+        map.put(BuiltInLootTables.ANCIENT_CITY, c -> c.structures().highValue().ancientCity());
+        map.put(BuiltInLootTables.END_CITY_TREASURE, c -> c.structures().highValue().endCityTreasure());
+        map.put(BuiltInLootTables.WOODLAND_MANSION, c -> c.structures().highValue().woodlandMansion());
+        map.put(BuiltInLootTables.FISHING_TREASURE, c -> c.structures().highValue().fishingTreasure());
 
-        map.put(BuiltInLootTables.BASTION_TREASURE, SigilConfig::bastionTreasure);
-        map.put(BuiltInLootTables.ANCIENT_CITY, SigilConfig::ancientCity);
-        map.put(BuiltInLootTables.END_CITY_TREASURE, SigilConfig::endCityTreasure);
-        map.put(BuiltInLootTables.FISHING_TREASURE, SigilConfig::fishingTreasure);
+        // --- village ---
+        // One shared rate across every profession/house table — a village generates several of
+        // them at once, so each rolls independently at the same low rate rather than one dial each.
+        for (ResourceKey<LootTable> key : Set.of(
+                BuiltInLootTables.VILLAGE_WEAPONSMITH,
+                BuiltInLootTables.VILLAGE_TOOLSMITH,
+                BuiltInLootTables.VILLAGE_ARMORER,
+                BuiltInLootTables.VILLAGE_CARTOGRAPHER,
+                BuiltInLootTables.VILLAGE_MASON,
+                BuiltInLootTables.VILLAGE_SHEPHERD,
+                BuiltInLootTables.VILLAGE_BUTCHER,
+                BuiltInLootTables.VILLAGE_FLETCHER,
+                BuiltInLootTables.VILLAGE_FISHER,
+                BuiltInLootTables.VILLAGE_TANNERY,
+                BuiltInLootTables.VILLAGE_TEMPLE,
+                BuiltInLootTables.VILLAGE_DESERT_HOUSE,
+                BuiltInLootTables.VILLAGE_PLAINS_HOUSE,
+                BuiltInLootTables.VILLAGE_TAIGA_HOUSE,
+                BuiltInLootTables.VILLAGE_SNOWY_HOUSE,
+                BuiltInLootTables.VILLAGE_SAVANNA_HOUSE)) {
+            map.put(key, c -> c.structures().village());
+        }
 
         return Map.copyOf(map);
     }
 
     private static Map<ResourceKey<LootTable>, Function<SigilConfig, SigilDrop>> buildNamedMobTableMap() {
         Map<ResourceKey<LootTable>, Function<SigilConfig, SigilDrop>> map = new HashMap<>();
-        map.put(EntityTypes.RAVAGER.getDefaultLootTable().orElseThrow(), SigilConfig::ravager);
-        map.put(EntityTypes.EVOKER.getDefaultLootTable().orElseThrow(), SigilConfig::evoker);
-        map.put(EntityTypes.ELDER_GUARDIAN.getDefaultLootTable().orElseThrow(), SigilConfig::elderGuardian);
-        map.put(EntityTypes.WARDEN.getDefaultLootTable().orElseThrow(), SigilConfig::warden);
+        map.put(EntityTypes.RAVAGER.getDefaultLootTable().orElseThrow(), c -> c.mobs().ravager());
+        map.put(EntityTypes.EVOKER.getDefaultLootTable().orElseThrow(), c -> c.mobs().evoker());
+        map.put(EntityTypes.ELDER_GUARDIAN.getDefaultLootTable().orElseThrow(), c -> c.mobs().elderGuardian());
+        map.put(EntityTypes.WARDEN.getDefaultLootTable().orElseThrow(), c -> c.mobs().warden());
         return Map.copyOf(map);
     }
 

@@ -61,32 +61,32 @@ import net.minecraft.world.phys.Vec3;
  */
 public class SigilsteadGameTests {
 
-    /** DESIGN.md §12.1 — dungeon chests roll a Sigil at 12% for 1. Statistical, not exact. */
+    /** DESIGN.md §12.1 — dungeon chests roll a Sigil guaranteed, 100% for 1. */
     @GameTest
     public void sigilDungeonChestRate(GameTestHelper helper) {
-        double rate = sigilRateInChestTable(helper.getLevel(), BuiltInLootTables.SIMPLE_DUNGEON, 6000);
-        helper.succeedIf(() -> assertInRange("simple_dungeon sigil rate", rate, 0.08, 0.17));
+        double rate = sigilRateInChestTable(helper.getLevel(), BuiltInLootTables.SIMPLE_DUNGEON, 500);
+        helper.succeedIf(() -> assertInRange("simple_dungeon sigil rate", rate, 1.0, 1.0));
     }
 
-    /** DESIGN.md §12.1 — the ancient city is the richest chest source at 60% for 1-2. */
+    /** DESIGN.md §12.1 — the ancient city is the richest chest source at 80% for 1-2. */
     @GameTest
     public void sigilAncientCityChestRate(GameTestHelper helper) {
         double rate = sigilRateInChestTable(helper.getLevel(), BuiltInLootTables.ANCIENT_CITY, 3000);
-        helper.succeedIf(() -> assertInRange("ancient_city sigil rate", rate, 0.53, 0.67));
+        helper.succeedIf(() -> assertInRange("ancient_city sigil rate", rate, 0.73, 0.87));
     }
 
-    /** DESIGN.md §12.1 — 0.15% from an ordinary hostile mob, not a mini-boss rate. */
+    /** DESIGN.md §12.1 — 2% from an ordinary hostile mob, not a mini-boss rate. */
     @GameTest(maxTicks = 400)
     public void sigilOrdinaryHostileMobRate(GameTestHelper helper) {
-        double rate = sigilRateInEntityTable(helper, EntityTypes.ZOMBIE, 40000, true);
-        helper.succeedIf(() -> assertInRange("zombie sigil rate", rate, 0.0006, 0.0030));
+        double rate = sigilRateInEntityTable(helper, EntityTypes.ZOMBIE, 8000, true);
+        helper.succeedIf(() -> assertInRange("zombie sigil rate", rate, 0.015, 0.025));
     }
 
-    /** DESIGN.md §12.1 — the Evoker is a mini-boss at 60%, well north of the general hostile rate. */
+    /** DESIGN.md §12.1 — the Evoker is a mini-boss at 80%, well north of the general hostile rate. */
     @GameTest
     public void sigilEvokerMiniBossRate(GameTestHelper helper) {
         double rate = sigilRateInEntityTable(helper, EntityTypes.EVOKER, 3000, true);
-        helper.succeedIf(() -> assertInRange("evoker sigil rate", rate, 0.53, 0.67));
+        helper.succeedIf(() -> assertInRange("evoker sigil rate", rate, 0.73, 0.87));
     }
 
     /** DESIGN.md §12.1 — the Warden always pays, and pays 2. */

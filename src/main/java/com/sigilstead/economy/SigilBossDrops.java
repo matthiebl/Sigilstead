@@ -42,8 +42,8 @@ public final class SigilBossDrops {
             EnderDragonFight fight = level.getDragonFight();
             boolean firstKill = fight == null || !fight.hasPreviouslyKilledDragon();
             SigilDrop drop = firstKill
-                    ? HsConfigManager.get().sigil().enderDragonFirstKill()
-                    : HsConfigManager.get().sigil().enderDragonRespawn();
+                    ? HsConfigManager.get().sigil().mobs().enderDragonFirstKill()
+                    : HsConfigManager.get().sigil().mobs().enderDragonRespawn();
 
             if (drop.isDisabled()) {
                 return;
