@@ -16,7 +16,7 @@ loom {
     splitEnvironmentSourceSets()
 
     mods {
-        "heartstead" {
+        "sigilstead" {
             sourceSet sourceSets.main
             sourceSet sourceSets.client
         }

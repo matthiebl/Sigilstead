@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "sigilstead:block/linked_funnel_mouth",
+    "bottom": "sigilstead:block/linked_funnel_plate",
+    "side": "sigilstead:block/linked_funnel_side"
+  }
+}

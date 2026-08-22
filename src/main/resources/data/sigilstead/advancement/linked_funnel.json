@@ -1,0 +1,37 @@
+{
+  "display": {
+    "icon": {
+      "id": "sigilstead:linked_funnel"
+    },
+    "title": {
+      "translate": "advancements.sigilstead.linked_funnel.title"
+    },
+    "description": {
+      "translate": "advancements.sigilstead.linked_funnel.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "crafted": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "sigilstead:linked_funnel"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "parent": "sigilstead:vault_activated",
+  "requirements": [
+    [
+      "crafted"
+    ]
+  ]
+}

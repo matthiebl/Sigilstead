@@ -1,48 +1,48 @@
 {
   "schemaVersion": 1,
-  "id": "heartstead",
+  "id": "sigilstead",
   "version": "${version}",
-  "name": "Heartstead",
+  "name": "Sigilstead",
   "description": "Explore, don't grind. Removes the need for technical farms and chest-sorting, and pays you for exploring, fighting and building instead.",
   "authors": [
     "Matt"
   ],
   "contact": {},
   "license": "MIT",
-  "icon": "assets/heartstead/icon.png",
+  "icon": "assets/sigilstead/icon.png",
   "environment": "*",
   "entrypoints": {
     "main": [
-      "com.heartstead.Heartstead"
+      "com.sigilstead.Sigilstead"
     ],
     "client": [
-      "com.heartstead.client.HeartsteadClient"
+      "com.sigilstead.client.SigilsteadClient"
     ],
     "fabric-gametest": [
-      "com.heartstead.gametest.HeartsteadGameTests",
-      "com.heartstead.gametest.VillagerTradePersistenceGameTests",
-      "com.heartstead.gametest.VaultGameTests",
-      "com.heartstead.gametest.VaultMenuGameTests",
-      "com.heartstead.gametest.VaultActivationGameTests",
-      "com.heartstead.gametest.VaultUpgradeSlotGameTests",
-      "com.heartstead.gametest.VaultVariantGameTests",
-      "com.heartstead.gametest.CodexGameTests",
-      "com.heartstead.gametest.CodexTeachGameTests",
-      "com.heartstead.gametest.CoreImprintGameTests",
-      "com.heartstead.gametest.CoreYieldGameTests",
-      "com.heartstead.gametest.CoreAccrualGameTests",
-      "com.heartstead.gametest.CoreSocketGameTests",
-      "com.heartstead.gametest.CoreVaultGameTests",
-      "com.heartstead.gametest.CoreHousingMenuGameTests",
-      "com.heartstead.gametest.CoreUpgradeGameTests",
-      "com.heartstead.gametest.CoreImprintTagGameTests",
-      "com.heartstead.gametest.DiscoveryPathGameTests"
+      "com.sigilstead.gametest.SigilsteadGameTests",
+      "com.sigilstead.gametest.VillagerTradePersistenceGameTests",
+      "com.sigilstead.gametest.VaultGameTests",
+      "com.sigilstead.gametest.VaultMenuGameTests",
+      "com.sigilstead.gametest.VaultActivationGameTests",
+      "com.sigilstead.gametest.VaultUpgradeSlotGameTests",
+      "com.sigilstead.gametest.VaultVariantGameTests",
+      "com.sigilstead.gametest.CodexGameTests",
+      "com.sigilstead.gametest.CodexTeachGameTests",
+      "com.sigilstead.gametest.CoreImprintGameTests",
+      "com.sigilstead.gametest.CoreYieldGameTests",
+      "com.sigilstead.gametest.CoreAccrualGameTests",
+      "com.sigilstead.gametest.CoreSocketGameTests",
+      "com.sigilstead.gametest.CoreVaultGameTests",
+      "com.sigilstead.gametest.CoreHousingMenuGameTests",
+      "com.sigilstead.gametest.CoreUpgradeGameTests",
+      "com.sigilstead.gametest.CoreImprintTagGameTests",
+      "com.sigilstead.gametest.DiscoveryPathGameTests"
     ]
   },
   "mixins": [
-    "heartstead.mixins.json",
+    "sigilstead.mixins.json",
     {
-      "config": "heartstead.client.mixins.json",
+      "config": "sigilstead.client.mixins.json",
       "environment": "client"
     }
   ],

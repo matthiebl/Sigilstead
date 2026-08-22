@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "sigilstead:satchel",
+    "sigilstead:vault_sigil",
+    "minecraft:ender_eye"
+  ],
+  "result": {
+    "id": "sigilstead:vault_pouch"
+  }
+}

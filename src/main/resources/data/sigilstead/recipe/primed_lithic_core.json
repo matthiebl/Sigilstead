@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SFS",
+    "FCF",
+    "SFS"
+  ],
+  "key": {
+    "S": "minecraft:stone",
+    "F": "minecraft:flint",
+    "C": "sigilstead:core_sigil"
+  },
+  "result": {
+    "id": "sigilstead:primed_lithic_core"
+  }
+}

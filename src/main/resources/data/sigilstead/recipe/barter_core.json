@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "GYG",
+    " C ",
+    "G G"
+  ],
+  "key": {
+    "G": "minecraft:gold_block",
+    "Y": "minecraft:crying_obsidian",
+    "C": "sigilstead:core_sigil"
+  },
+  "result": {
+    "id": "sigilstead:primed_soul_core",
+    "components": {
+      "sigilstead:attunement": { "family": "soul", "target": "sigilstead:barter" }
+    }
+  }
+}

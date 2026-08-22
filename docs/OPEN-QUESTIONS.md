@@ -1,4 +1,4 @@
-# Heartstead — Open questions
+# Sigilstead — Open questions
 
 **[OPEN]** = not yet decided. Resolve one by writing the spec into [DESIGN.md](DESIGN.md), then
 delete the entry here.
@@ -223,7 +223,7 @@ inventing a browser (§7.1); core attunement is a tooltip and nothing else (§4.
 decision isn't reversible.
 
 ### ~~[RESOLVED 2026-08-01] Pack name~~
-**Heartstead**, committed. `heartstead` namespace, `com.heartstead` package. Availability against
+**Sigilstead**, committed. `sigilstead` namespace, `com.sigilstead` package. Availability against
 existing Minecraft projects was never formally checked — worth a look before publishing, but not a
 blocker.
 
@@ -232,4 +232,4 @@ blocker.
 
 ### ~~[RESOLVED 2026-07-31] Recipe ingredients can't check custom_data~~
 Resolved by becoming a Fabric mod. Items are real registered ids, so an ingredient of
-`heartstead:sigil` matches only a Sigil. **Do not reintroduce a base-item table.**
+`sigilstead:sigil` matches only a Sigil. **Do not reintroduce a base-item table.**

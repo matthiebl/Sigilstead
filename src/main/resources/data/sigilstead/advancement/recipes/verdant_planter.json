@@ -1,0 +1,48 @@
+{
+  "parent": "sigilstead:recipes/root",
+  "criteria": {
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "sigilstead:verdant_planter"
+      }
+    },
+    "has_ingredient": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "sigilstead:primed_verdant_core"
+            ]
+          }
+        ]
+      }
+    },
+    "has_components": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:dirt"
+          },
+          {
+            "items": "minecraft:composter"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_ingredient",
+      "has_components"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "sigilstead:verdant_planter"
+    ]
+  }
+}

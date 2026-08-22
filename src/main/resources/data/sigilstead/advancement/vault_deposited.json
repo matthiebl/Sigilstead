@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:chest"
+    },
+    "title": {
+      "translate": "advancements.sigilstead.vault_deposited.title"
+    },
+    "description": {
+      "translate": "advancements.sigilstead.vault_deposited.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "deposited": {
+      "trigger": "sigilstead:vault_deposited"
+    }
+  },
+  "parent": "sigilstead:satchel",
+  "requirements": [
+    [
+      "deposited"
+    ]
+  ]
+}

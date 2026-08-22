@@ -1,4 +1,4 @@
-# Heartstead — References
+# Sigilstead — References
 
 ---
 

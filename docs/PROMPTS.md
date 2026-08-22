@@ -1,4 +1,4 @@
-# Heartstead — Claude Code prompts
+# Sigilstead — Claude Code prompts
 
 Ready-to-paste prompts for the work that is **still open**. Rules that apply to all of them:
 
@@ -43,7 +43,7 @@ a pre-release mod, so old ids were deleted outright rather than aliased.
 
 **Up next: the Artisan's Table.** It is the last unbuilt block in the spec, and the Vault's sync path
 was deliberately built with it in mind as a second consumer (REFERENCES.md; see the comments on
-`VaultSyncPayload` and `VaultClientCache`, and the standing `TODO Phase 3` in `HeartsteadClient`).
+`VaultSyncPayload` and `VaultClientCache`, and the standing `TODO Phase 3` in `SigilsteadClient`).
 
 ---
 
@@ -58,7 +58,7 @@ extend the vanilla crafting menu and return RecipeBookType.CRAFTING, which inher
 search, category tabs, craftable-only and click-to-fill off the live RecipeManager.
 
 The only new work is the two Vault hooks in that REFERENCES section. Route every
-withdrawal through the existing Phase 2 transfer code in com.heartstead.vault — a second
+withdrawal through the existing Phase 2 transfer code in com.sigilstead.vault — a second
 item-moving path is how the Vault gets a dupe bug, and it would invalidate the §2.6 suite.
 The client-side Vault snapshot already exists and was designed for exactly this second
 consumer; reuse VaultSyncPayload rather than adding a payload.
@@ -115,7 +115,7 @@ is investigated:
   `..._output.json` are both `minecraft:block/cube_bottom_top`. There is no hopper-shaped model, no
   facing state, and nothing visually distinguishes input mode from output mode except the texture.
 - **`useItemOn` swallows every right-click with an item in hand**
-  ([LinkedFunnelBlock.java:89](../src/main/java/com/heartstead/block/LinkedFunnelBlock.java#L89)),
+  ([LinkedFunnelBlock.java:89](../src/main/java/com/sigilstead/block/LinkedFunnelBlock.java#L89)),
   setting the filter from whatever you happen to be holding — including when you were trying to
   place a block against it. Combined with empty-hand cycling the mode, there is no way to interact
   with a Funnel without changing its configuration.
@@ -157,7 +157,7 @@ has — Vault (both tabs), Codex, core housing — so it is one pass, not four.
 individual screens should end up with less painting code, not more.
 
 ```
-Every Heartstead screen (Vault §2.4, Codex §3.3, core housing §4.2) reads as
+Every Sigilstead screen (Vault §2.4, Codex §3.3, core housing §4.2) reads as
 not-quite-Minecraft. Corner rounding is wrong and the panels don't sit in vanilla's own
 visual language.
 
@@ -230,7 +230,7 @@ Loader during the initial setup. Query the meta APIs directly.
 ```
 Audit the repo for anything still using a placeholder: TODO markers, placeholder
 textures, hardcoded values that should be config, and any file referencing a name other
-than heartstead. List them; don't fix them yet.
+than sigilstead. List them; don't fix them yet.
 
-Every texture in assets/heartstead/textures is currently a stand-in (commit c0251d5).
+Every texture in assets/sigilstead/textures is currently a stand-in (commit c0251d5).
 ```

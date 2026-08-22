@@ -1,0 +1,131 @@
+package com.sigilstead.registry;
+
+import com.sigilstead.codex.CodexMenu;
+import com.sigilstead.core.CoreHousingMenu;
+import com.sigilstead.network.CodexArchivePayload;
+import com.sigilstead.network.CodexBuyCapacityPayload;
+import com.sigilstead.network.CodexSealPayload;
+import com.sigilstead.network.CodexSyncPayload;
+import com.sigilstead.network.CoreHousingCollectXpPayload;
+import com.sigilstead.network.VaultActivatePayload;
+import com.sigilstead.network.VaultAnchorPayload;
+import com.sigilstead.network.VaultConfirmUpgradePayload;
+import com.sigilstead.network.VaultDepositCarriedPayload;
+import com.sigilstead.network.VaultStatePayload;
+import com.sigilstead.network.VaultSyncPayload;
+import com.sigilstead.network.VaultTabPayload;
+import com.sigilstead.network.VaultWithdrawPayload;
+import com.sigilstead.vault.Vault;
+import com.sigilstead.vault.VaultMenu;
+import com.sigilstead.vault.VaultUpgradeKind;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.server.level.ServerPlayer;
+
+/**
+ * Custom payload registration for the Vault's client sync (DESIGN.md §2.4, REFERENCES.md — one sync
+ * path, reused by Phase 3's Artisan). Type registration and the server-side receivers are both
+ * common-safe; the client receivers live in {@code src/client} (CONVENTIONS.md §3).
+ *
+ * <p>Every serverbound receiver here is a thin shim onto {@link VaultMenu}, and each one first
+ * checks the sending player actually has a Vault menu open. That check is what stops a crafted
+ * packet spending the world's Sigils from across the map — the menu, not the packet, is what carries
+ * the §2.2 access level.
+ */
+public final class HsPayloads {
+
+    private HsPayloads() {
+    }
+
+    public static void register() {
+        PayloadTypeRegistry.clientboundPlay().register(VaultSyncPayload.TYPE, VaultSyncPayload.STREAM_CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(VaultAnchorPayload.TYPE, VaultAnchorPayload.STREAM_CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(VaultStatePayload.TYPE, VaultStatePayload.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(VaultWithdrawPayload.TYPE, VaultWithdrawPayload.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(VaultActivatePayload.TYPE, VaultActivatePayload.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(VaultTabPayload.TYPE, VaultTabPayload.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay()
+                .register(VaultDepositCarriedPayload.TYPE, VaultDepositCarriedPayload.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay()
+                .register(VaultConfirmUpgradePayload.TYPE, VaultConfirmUpgradePayload.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay()
+                .register(CoreHousingCollectXpPayload.TYPE, CoreHousingCollectXpPayload.STREAM_CODEC);
+
+        PayloadTypeRegistry.clientboundPlay().register(CodexSyncPayload.TYPE, CodexSyncPayload.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(CodexArchivePayload.TYPE, CodexArchivePayload.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(CodexBuyCapacityPayload.TYPE, CodexBuyCapacityPayload.STREAM_CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(CodexSealPayload.TYPE, CodexSealPayload.STREAM_CODEC);
+
+        ServerPlayNetworking.registerGlobalReceiver(CodexArchivePayload.TYPE, (payload, context) -> context.server().execute(() -> {
+            ServerPlayer player = context.player();
+            if (player.containerMenu instanceof CodexMenu codexMenu) {
+                codexMenu.handleArchive(player);
+            }
+        }));
+
+        ServerPlayNetworking.registerGlobalReceiver(CodexBuyCapacityPayload.TYPE, (payload, context) -> context.server().execute(() -> {
+            ServerPlayer player = context.player();
+            if (player.containerMenu instanceof CodexMenu codexMenu) {
+                codexMenu.handleBuyCapacity(player);
+            }
+        }));
+
+        ServerPlayNetworking.registerGlobalReceiver(CodexSealPayload.TYPE, (payload, context) -> context.server().execute(() -> {
+            ServerPlayer player = context.player();
+            if (player.containerMenu instanceof CodexMenu codexMenu) {
+                codexMenu.handleSeal(player, payload.enchantment());
+            }
+        }));
+
+        ServerPlayNetworking.registerGlobalReceiver(VaultWithdrawPayload.TYPE, (payload, context) -> context.server().execute(() -> {
+            ServerPlayer player = context.player();
+            if (player.containerMenu instanceof VaultMenu vaultMenu) {
+                vaultMenu.handleWithdraw(player, payload.key(), payload.count());
+            }
+        }));
+
+        ServerPlayNetworking.registerGlobalReceiver(VaultActivatePayload.TYPE, (payload, context) -> context.server().execute(() -> {
+            ServerPlayer player = context.player();
+            if (player.containerMenu instanceof VaultMenu vaultMenu) {
+                vaultMenu.handleActivate(player);
+            }
+        }));
+
+        ServerPlayNetworking.registerGlobalReceiver(VaultDepositCarriedPayload.TYPE, (payload, context) -> context.server().execute(() -> {
+            ServerPlayer player = context.player();
+            if (player.containerMenu instanceof VaultMenu vaultMenu) {
+                vaultMenu.handleDepositCarried(player, payload.single());
+            }
+        }));
+
+        ServerPlayNetworking.registerGlobalReceiver(VaultTabPayload.TYPE, (payload, context) -> context.server().execute(() -> {
+            ServerPlayer player = context.player();
+            if (player.containerMenu instanceof VaultMenu vaultMenu) {
+                vaultMenu.handleSetTab(payload.anchorTab());
+            }
+        }));
+
+        ServerPlayNetworking.registerGlobalReceiver(VaultConfirmUpgradePayload.TYPE, (payload, context) -> context.server().execute(() -> {
+            ServerPlayer player = context.player();
+            VaultUpgradeKind[] kinds = VaultUpgradeKind.values();
+            if (player.containerMenu instanceof VaultMenu vaultMenu && payload.kind() >= 0 && payload.kind() < kinds.length) {
+                vaultMenu.handleConfirmUpgrade(player, kinds[payload.kind()]);
+            }
+        }));
+
+        ServerPlayNetworking.registerGlobalReceiver(CoreHousingCollectXpPayload.TYPE, (payload, context) -> context.server().execute(() -> {
+            ServerPlayer player = context.player();
+            if (player.containerMenu instanceof CoreHousingMenu coreHousingMenu) {
+                coreHousingMenu.handleCollectXp(player);
+            }
+        }));
+
+        // A freshly-joined client needs the Anchor position even if it wasn't online to see it claimed —
+        // otherwise it can't veto its own placement of a second one until the next server round trip.
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            ServerPlayer player = handler.player;
+            ServerPlayNetworking.send(player, new VaultAnchorPayload(Vault.anchorPos(player.level())));
+        });
+    }
+}

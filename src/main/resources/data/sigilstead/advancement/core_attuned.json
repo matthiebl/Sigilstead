@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "sigilstead:verdant_core"
+    },
+    "title": {
+      "translate": "advancements.sigilstead.core_attuned.title"
+    },
+    "description": {
+      "translate": "advancements.sigilstead.core_attuned.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "attuned": {
+      "trigger": "sigilstead:core_attuned"
+    }
+  },
+  "parent": "sigilstead:primed_core",
+  "requirements": [
+    [
+      "attuned"
+    ]
+  ]
+}

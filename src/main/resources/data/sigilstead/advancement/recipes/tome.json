@@ -1,0 +1,51 @@
+{
+  "parent": "sigilstead:recipes/root",
+  "criteria": {
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "sigilstead:tome"
+      }
+    },
+    "has_ingredient": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "sigilstead:codex"
+            ]
+          }
+        ]
+      }
+    },
+    "has_components": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:book"
+          },
+          {
+            "items": "minecraft:lapis_lazuli"
+          },
+          {
+            "items": "minecraft:iron_ingot"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_ingredient",
+      "has_components"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "sigilstead:tome"
+    ]
+  }
+}

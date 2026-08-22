@@ -1,4 +1,4 @@
-# Heartstead — Design Wiki
+# Sigilstead — Design Wiki
 
 > **Status:** reconstructed spec, v0.4 · **Target:** Minecraft Java 26.2 · **Fabric mod**, Java 25 · see §8
 >
@@ -370,7 +370,7 @@ Two steps, the same shape for every core.
 
 **Step 1 — Prime (crafting).** A shaped recipe combines the Core Sigil with family reagents and
 yields a **Primed Core**. The *family* is now fixed; the *target* is not. The stack carries a
-`heartstead:attunement` component — `{ family, target: null, progress: 0 }`.
+`sigilstead:attunement` component — `{ family, target: null, progress: 0 }`.
 
 **Step 2 — Imprint (playing).** Hold the Primed Core and do the thing the core will replace. The
 first qualifying event writes the target; every later one of the same target increments progress. At
@@ -389,7 +389,7 @@ not a grind — a few minutes in a dark room, one small field, the pen you were 
 a stack of mining.
 
 **What each family may lock onto is an explicit allow-list, and it is data.** Four tags under
-`data/heartstead/tags/`, one per family — `soul_imprintable` and `pastoral_imprintable` under
+`data/sigilstead/tags/`, one per family — `soul_imprintable` and `pastoral_imprintable` under
 `entity_type/`, `verdant_imprintable` and `lithic_imprintable` under `block/`. Editing a target list
 is a JSON edit, not a recompile, and the defaults are in §12.4.
 
@@ -559,7 +559,7 @@ is what pays (§12.1).
 
 That gamerule is **the mod's job to set, not the operator's** — a world where death costs a heart
 *and* your inventory charges twice for one death, which is the opposite of the trade this section
-makes. Heartstead sets `keepInventory` to `true` once on server start (vanilla's rule keeps XP with
+makes. Sigilstead sets `keepInventory` to `true` once on server start (vanilla's rule keeps XP with
 it), skipping it if `keep_inventory_on_death` is `false` (§12.7). It is not re-asserted every tick:
 an operator running `/gamerule keepInventory false` mid-session gets what they asked for, and the
 config field is how that choice survives a restart.
@@ -615,7 +615,7 @@ never read this wiki gets a Sigil from a chest and has no way to learn that it b
 things, that a Vault exists, or that a farm can be replaced by a core. Nothing in the pack tells
 them. That is a discovery failure, not a balance one, and it is what this section fixes.
 
-**The tree is the tutorial.** Heartstead ships a single advancement tab that steps a player through
+**The tree is the tutorial.** Sigilstead ships a single advancement tab that steps a player through
 the pack in the order the systems actually unlock, with each advancement's description saying what
 the thing *is* rather than congratulating them for reaching it.
 
@@ -634,7 +634,7 @@ one item feeding three systems, a second source of it moves every dial in the pa
 **The discovery path passes that test because it pays nothing.** Every advancement in it grants
 recognition and — where it applies — a *recipe book unlock*, which is information the player already
 had the right to. Zero Sigils, zero items, zero XP. `rewards.loot` and `rewards.experience` do not
-appear anywhere in `data/heartstead/advancement/`, and adding them reopens the argument above.
+appear anywhere in `data/sigilstead/advancement/`, and adding them reopens the argument above.
 
 That is also why this was buildable before playtesting, against the old "design them last" gate: the
 gate existed because a *reward* tree cannot be tuned until the economy is played. A tree that pays
@@ -643,8 +643,8 @@ shipped. What playtesting may still change is the *wording and ordering*, which 
 
 #### Two layers
 
-**Layer 1 — the visible tree** (`data/heartstead/advancement/*.json`). One tab, rooted at
-`heartstead:root`, which is granted by `minecraft:tick`: **the tab is there from the first second of
+**Layer 1 — the visible tree** (`data/sigilstead/advancement/*.json`). One tab, rooted at
+`sigilstead:root`, which is granted by `minecraft:tick`: **the tab is there from the first second of
 a new world**, before the player owns anything. A root gated on an item would hide the entire
 tutorial from exactly the player who needs it. The root's description is the pack's one-paragraph
 pitch. It sets `show_toast: false` and `announce_to_chat: false`, so appearing costs no noise.
@@ -672,11 +672,11 @@ Three advancements are `challenge`-type, and they are the three ends of the long
 reach (§2.3), a tier III core (§4.3), and the 20-heart cap (§6). Everything else is `task`, except
 the one-of-each-Sigil `goal` that names §1.1's tension explicitly.
 
-**Layer 2 — recipe unlocks** (`data/heartstead/advancement/recipes/*.json`), hidden, parented to a
-display-less `heartstead:recipes/root`, exactly as vanilla does it. This is not decoration: a recipe
+**Layer 2 — recipe unlocks** (`data/sigilstead/advancement/recipes/*.json`), hidden, parented to a
+display-less `sigilstead:recipes/root`, exactly as vanilla does it. This is not decoration: a recipe
 with no advancement granting it **never appears in the recipe book at all**, which is the state every
-Heartstead recipe shipped in through Phase 4. This layer is what makes the §7.1 Artisan's Table
-useful for Heartstead's own content.
+Sigilstead recipe shipped in through Phase 4. This layer is what makes the §7.1 Artisan's Table
+useful for Sigilstead's own content.
 
 **Every recipe unlocks two ways, and either is enough.**
 
@@ -704,7 +704,7 @@ order discovery, not to withhold it.
 
 Path B is deliberately **uniform across every recipe** rather than a hand-kept list of exceptions:
 "can you make it" is a question the recipe file already answers, so the generator reads it rather
-than being told. Where a recipe's ingredients include a Heartstead item, Path B is strictly harder
+than being told. Where a recipe's ingredients include a Sigilstead item, Path B is strictly harder
 than Path A and changes nothing — you cannot hold a Wither Skeleton Skull and a Core Sigil without
 having done the work either gate was asking for. Counts are not checked, matching vanilla.
 
@@ -712,9 +712,9 @@ having done the work either gate was asking for. Counts are not checked, matchin
 
 - **Data-driven** (CLAUDE.md rule 5). The tree is JSON, emitted by `tools/gen_advancements.py` — the
   generator is the artifact and the JSON is build output, per CONVENTIONS.md §6. It also emits the
-  `advancements.heartstead.*` lang block, so titles and descriptions live in one place.
-- **New criteria, not new systems.** Heartstead events that vanilla cannot observe are exposed as
-  registered criterion triggers under `heartstead:` (`vault_activated`, `vault_deposited`,
+  `advancements.sigilstead.*` lang block, so titles and descriptions live in one place.
+- **New criteria, not new systems.** Sigilstead events that vanilla cannot observe are exposed as
+  registered criterion triggers under `sigilstead:` (`vault_activated`, `vault_deposited`,
   `vault_withdrew`, `vault_upgraded`, `core_attuned`, `core_socketed`, `core_yield_collected`,
   `codex_archived`, `villager_taught`, `heart_level`). They fire from the existing server-side call
   sites and hold no state of their own.
@@ -801,7 +801,7 @@ underestimates compounding passive income.
 
 **Every number and every recipe in the pack lives here.** The sections above describe what things are
 and why; this section is the only place to change what they cost. All of it is config (CONVENTIONS.md
-§5) or data-driven JSON (`src/main/resources/data/heartstead/`) — none of it is a Java literal.
+§5) or data-driven JSON (`src/main/resources/data/sigilstead/`) — none of it is a Java literal.
 
 **None of these numbers has been played.** They are internally consistent and reasoned; that is all.
 See OPEN-QUESTIONS.md.
@@ -983,7 +983,7 @@ applies, wherever the Anchor stands.
 | **Pastoral Core** | 4 Hay Bale + 4 Leather | Breed two animals | 8 breeds of the first species |
 | **Lithic Core** | 4 Stone + 4 Flint | Mine a stone or earth block | 64 of the first block type |
 
-**Imprint allow-lists (§4.1)** — four tags under `data/heartstead/tags/`, editable as JSON.
+**Imprint allow-lists (§4.1)** — four tags under `data/sigilstead/tags/`, editable as JSON.
 
 | Family | Tag | Default contents |
 |---|---|---|

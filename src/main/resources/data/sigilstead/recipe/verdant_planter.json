@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " D ",
+    "DCD",
+    " D "
+  ],
+  "key": {
+    "D": "minecraft:dirt",
+    "C": "minecraft:composter"
+  },
+  "result": {
+    "id": "sigilstead:verdant_planter"
+  }
+}

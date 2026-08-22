@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "HLH",
+    "LCL",
+    "HLH"
+  ],
+  "key": {
+    "H": "minecraft:hay_block",
+    "L": "minecraft:leather",
+    "C": "sigilstead:core_sigil"
+  },
+  "result": {
+    "id": "sigilstead:primed_pastoral_core"
+  }
+}

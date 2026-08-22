@@ -1,4 +1,4 @@
-# Heartstead — Conventions
+# Sigilstead — Conventions
 
 Decisions that keep code consistent across sessions. If you break one of these, change it here first.
 
@@ -8,13 +8,13 @@ Decisions that keep code consistent across sessions. If you break one of these, 
 
 | Thing | Value |
 |---|---|
-| Mod name | **Heartstead** |
-| Mod id / namespace | `heartstead` |
-| Java package | `com.heartstead` |
+| Mod name | **Sigilstead** |
+| Mod id / namespace | `sigilstead` |
+| Java package | `com.sigilstead` |
 | Target | Minecraft **26.2**, Java **25**, Fabric Loader 0.19.3, Fabric API 0.156.0+26.2 |
 | Mappings | **None** — 26.x ships unobfuscated. `implementation`, not `modImplementation`; `jar`, not `remapJar` |
 
-Every `Identifier` goes through `Heartstead.id(String)`. Never construct one inline; a typo'd
+Every `Identifier` goes through `Sigilstead.id(String)`. Never construct one inline; a typo'd
 namespace fails at runtime, not compile time.
 
 > **Note:** the class is `net.minecraft.resources.Identifier` in 26.x. It was called
@@ -29,7 +29,7 @@ project is a mod.
 
 Consequences:
 
-- **Recipes gate correctly.** An ingredient of `heartstead:sigil` matches *only* a Sigil.
+- **Recipes gate correctly.** An ingredient of `sigilstead:sigil` matches *only* a Sigil.
   There is no base-item table; do not reintroduce one.
 - **Blocks are blocks.** Vault Anchor, Soul Cage, Quarry Node and the rest are real blocks with their
   own block states, textures, and block entities. No marker entities shadowing a vanilla barrel, and
@@ -40,13 +40,13 @@ Consequences:
 
 | Kind | Convention | Example |
 |---|---|---|
-| Registry id | snake_case | `heartstead:vault_sigil` |
+| Registry id | snake_case | `sigilstead:vault_sigil` |
 | Registry holder field | SCREAMING_SNAKE | `HsItems.VAULT_SIGIL` |
 | Registry class | `Hs` + plural | `HsItems`, `HsBlocks`, `HsBlockEntities` |
-| Lang key | vanilla scheme | `item.heartstead.vault_sigil` |
+| Lang key | vanilla scheme | `item.sigilstead.vault_sigil` |
 
-One registry class per registry, all under `com.heartstead.registry`. Registration is called
-explicitly and in order from `Heartstead.onInitialize()` — never rely on static class-load timing.
+One registry class per registry, all under `com.sigilstead.registry`. Registration is called
+explicitly and in order from `Sigilstead.onInitialize()` — never rely on static class-load timing.
 
 ### 2.2 Per-stack state
 
@@ -74,7 +74,7 @@ src/test/java      plain JUnit — pure logic, no world
 A client-only class referenced from common code **crashes the dedicated server on load**, and it
 surfaces late. Keep the split honest: if it draws, it's in `src/client`.
 
-Package layout under `com.heartstead`:
+Package layout under `com.sigilstead`:
 
 ```
 registry/     HsItems, HsBlocks, HsBlockEntities, HsComponents, HsScreenHandlers, HsAttachments
@@ -129,7 +129,7 @@ Server-authoritative. Clients receive what they need to render, never to decide.
 ## 6. Data-driven content stays data-driven
 
 **Being a mod does not mean writing everything in Java.** Recipes, loot tables, advancements, tags
-and enchantments are still JSON, shipped in `src/main/resources/data/heartstead/`. Vanilla loot table
+and enchantments are still JSON, shipped in `src/main/resources/data/sigilstead/`. Vanilla loot table
 overrides go in `data/minecraft/`.
 
 Prefer a **data generator** (Fabric's `DataGeneratorEntrypoint`) over hand-written JSON for anything
@@ -137,7 +137,7 @@ structurally repetitive — loot tables, recipes, models, tags. The generator is
 is build output. Generated JSON is never hand-edited.
 
 `tools/gen_advancements.py` is the same idea applied to content: it emits the whole of DESIGN.md
-§7.3 — the advancement tree, the hidden recipe-unlock layer and the `advancements.heartstead.*` lang
+§7.3 — the advancement tree, the hidden recipe-unlock layer and the `advancements.sigilstead.*` lang
 block — and it fails loudly if a recipe exists with no unlock, which is the one mistake that would
 silently keep a recipe out of the recipe book forever. Edit the script, re-run it, commit both.
 
@@ -153,7 +153,7 @@ edit on the next run.
 - 4-space indent, 120 column soft limit, UTF-8, LF.
 - `final` on fields that don't change; package-private over public unless another package needs it.
 - Every class gets a javadoc saying what it's for and which design-wiki section it implements.
-- No `System.out` — use `Heartstead.LOG`.
+- No `System.out` — use `Sigilstead.LOG`.
 
 ---
 

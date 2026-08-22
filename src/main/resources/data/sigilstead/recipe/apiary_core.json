@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "HFH",
+    "FCF",
+    "HFH"
+  ],
+  "key": {
+    "H": "minecraft:honeycomb",
+    "F": "#minecraft:flowers",
+    "C": "sigilstead:core_sigil"
+  },
+  "result": {
+    "id": "sigilstead:primed_pastoral_core",
+    "components": {
+      "sigilstead:attunement": { "family": "pastoral", "target": "minecraft:bee" }
+    }
+  }
+}

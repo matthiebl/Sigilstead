@@ -1,0 +1,51 @@
+{
+  "parent": "sigilstead:recipes/root",
+  "criteria": {
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "sigilstead:core_sigil"
+      }
+    },
+    "has_ingredient": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "sigilstead:sigil"
+            ]
+          }
+        ]
+      }
+    },
+    "has_components": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:iron_ingot"
+          },
+          {
+            "items": "minecraft:redstone"
+          },
+          {
+            "items": "sigilstead:sigil"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_ingredient",
+      "has_components"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "sigilstead:core_sigil"
+    ]
+  }
+}

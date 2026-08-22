@@ -1,0 +1,31 @@
+{
+  "display": {
+    "icon": {
+      "id": "sigilstead:vault_sigil"
+    },
+    "title": {
+      "translate": "advancements.sigilstead.vault_capacity.title"
+    },
+    "description": {
+      "translate": "advancements.sigilstead.vault_capacity.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "bought": {
+      "trigger": "sigilstead:vault_upgraded",
+      "conditions": {
+        "kind": "capacity"
+      }
+    }
+  },
+  "parent": "sigilstead:vault_activated",
+  "requirements": [
+    [
+      "bought"
+    ]
+  ]
+}

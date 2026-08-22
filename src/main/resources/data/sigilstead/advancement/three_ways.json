@@ -1,0 +1,67 @@
+{
+  "display": {
+    "icon": {
+      "id": "sigilstead:sigil"
+    },
+    "title": {
+      "translate": "advancements.sigilstead.three_ways.title"
+    },
+    "description": {
+      "translate": "advancements.sigilstead.three_ways.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "core": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "sigilstead:core_sigil"
+            ]
+          }
+        ]
+      }
+    },
+    "heart": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "sigilstead:heart_sigil"
+            ]
+          }
+        ]
+      }
+    },
+    "vault": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "sigilstead:vault_sigil"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "parent": "sigilstead:sigil",
+  "requirements": [
+    [
+      "core"
+    ],
+    [
+      "heart"
+    ],
+    [
+      "vault"
+    ]
+  ]
+}

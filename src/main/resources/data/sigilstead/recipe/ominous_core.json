@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "EOE",
+    " C ",
+    "E E"
+  ],
+  "key": {
+    "E": "minecraft:emerald_block",
+    "O": "minecraft:ominous_bottle",
+    "C": "sigilstead:core_sigil"
+  },
+  "result": {
+    "id": "sigilstead:primed_soul_core",
+    "components": {
+      "sigilstead:attunement": { "family": "soul", "target": "sigilstead:ominous" }
+    }
+  }
+}

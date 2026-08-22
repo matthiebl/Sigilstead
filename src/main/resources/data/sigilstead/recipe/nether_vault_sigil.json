@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "sigilstead:vault_sigil",
+    "minecraft:ghast_tear",
+    "minecraft:blaze_powder"
+  ],
+  "result": {
+    "id": "sigilstead:nether_vault_sigil"
+  }
+}

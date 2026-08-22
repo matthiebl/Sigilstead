@@ -1,0 +1,101 @@
+{
+  "display": {
+    "icon": {
+      "id": "sigilstead:primed_soul_core"
+    },
+    "title": {
+      "translate": "advancements.sigilstead.classic_core.title"
+    },
+    "description": {
+      "translate": "advancements.sigilstead.classic_core.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "guardian_core": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "sigilstead:guardian_core"
+      }
+    },
+    "wither_skull_core": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "sigilstead:wither_skull_core"
+      }
+    },
+    "ender_core": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "sigilstead:ender_core"
+      }
+    },
+    "shulker_core": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "sigilstead:shulker_core"
+      }
+    },
+    "ominous_core": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "sigilstead:ominous_core"
+      }
+    },
+    "barter_core": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "sigilstead:barter_core"
+      }
+    },
+    "golem_core": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "sigilstead:golem_core"
+      }
+    },
+    "slime_core": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "sigilstead:slime_core"
+      }
+    },
+    "tidal_core": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "sigilstead:tidal_core"
+      }
+    },
+    "geode_core": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "sigilstead:geode_core"
+      }
+    },
+    "apiary_core": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "sigilstead:apiary_core"
+      }
+    }
+  },
+  "parent": "sigilstead:primed_core",
+  "requirements": [
+    [
+      "guardian_core",
+      "wither_skull_core",
+      "ender_core",
+      "shulker_core",
+      "ominous_core",
+      "barter_core",
+      "golem_core",
+      "slime_core",
+      "tidal_core",
+      "geode_core",
+      "apiary_core"
+    ]
+  ]
+}

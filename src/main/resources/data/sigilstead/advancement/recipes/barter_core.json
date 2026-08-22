@@ -1,0 +1,51 @@
+{
+  "parent": "sigilstead:recipes/root",
+  "criteria": {
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "sigilstead:barter_core"
+      }
+    },
+    "has_ingredient": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "sigilstead:primed_soul_core"
+            ]
+          }
+        ]
+      }
+    },
+    "has_components": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:gold_block"
+          },
+          {
+            "items": "minecraft:crying_obsidian"
+          },
+          {
+            "items": "sigilstead:core_sigil"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_ingredient",
+      "has_components"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "sigilstead:barter_core"
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "MBM",
+    "BCB",
+    "MBM"
+  ],
+  "key": {
+    "M": "minecraft:moss_block",
+    "B": "minecraft:bone_meal",
+    "C": "sigilstead:core_sigil"
+  },
+  "result": {
+    "id": "sigilstead:primed_verdant_core"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "ALA",
+    " C ",
+    "A A"
+  ],
+  "key": {
+    "A": "minecraft:amethyst_block",
+    "L": "minecraft:calcite",
+    "C": "sigilstead:core_sigil"
+  },
+  "result": {
+    "id": "sigilstead:primed_lithic_core",
+    "components": {
+      "sigilstead:attunement": { "family": "lithic", "target": "minecraft:amethyst_cluster" }
+    }
+  }
+}

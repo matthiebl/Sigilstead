@@ -2,7 +2,7 @@
 """
 Generate the 16x16 Sigil item textures (RGBA PNG). Stdlib only — no Pillow.
 
-    python3 tools/gen_sigil_textures.py src/main/resources/assets/heartstead/textures/item
+    python3 tools/gen_sigil_textures.py src/main/resources/assets/sigilstead/textures/item
 
 An optional second argument writes 10x nearest-neighbour previews to a directory for review.
 

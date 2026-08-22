@@ -1,0 +1,48 @@
+{
+  "parent": "sigilstead:recipes/root",
+  "criteria": {
+    "has_the_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "sigilstead:end_vault_sigil"
+      }
+    },
+    "has_ingredient": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "sigilstead:vault_sigil"
+            ]
+          }
+        ]
+      }
+    },
+    "has_components": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "sigilstead:vault_sigil"
+          },
+          {
+            "items": "minecraft:dragon_breath"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_ingredient",
+      "has_components"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "sigilstead:end_vault_sigil"
+    ]
+  }
+}

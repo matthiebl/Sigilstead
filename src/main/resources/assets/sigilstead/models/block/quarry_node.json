@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "sigilstead:block/quarry_node_top",
+    "side": "sigilstead:block/quarry_node_side"
+  }
+}

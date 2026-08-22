@@ -2,7 +2,7 @@
 """
 Generate the 16x16 DESIGN.md §4 core textures (RGBA PNG). Stdlib only — no Pillow.
 
-    python3 tools/gen_core_textures.py src/main/resources/assets/heartstead/textures
+    python3 tools/gen_core_textures.py src/main/resources/assets/sigilstead/textures
 
 An optional second argument writes 10x nearest-neighbour previews to a directory for review.
 

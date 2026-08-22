@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "sigilstead:block/verdant_planter_top",
+    "side": "sigilstead:block/verdant_planter_side"
+  }
+}

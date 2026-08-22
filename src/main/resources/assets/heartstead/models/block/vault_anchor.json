@@ -1,7 +1,0 @@
-{
-  "parent": "minecraft:block/cube_column",
-  "textures": {
-    "end": "heartstead:block/vault_anchor_top",
-    "side": "heartstead:block/vault_anchor_side"
-  }
-}

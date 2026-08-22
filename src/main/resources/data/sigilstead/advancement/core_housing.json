@@ -1,0 +1,40 @@
+{
+  "display": {
+    "icon": {
+      "id": "sigilstead:verdant_planter"
+    },
+    "title": {
+      "translate": "advancements.sigilstead.core_housing.title"
+    },
+    "description": {
+      "translate": "advancements.sigilstead.core_housing.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "crafted": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "sigilstead:verdant_planter",
+              "sigilstead:paddock",
+              "sigilstead:quarry_node",
+              "sigilstead:soul_cage"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "parent": "sigilstead:core_attuned",
+  "requirements": [
+    [
+      "crafted"
+    ]
+  ]
+}

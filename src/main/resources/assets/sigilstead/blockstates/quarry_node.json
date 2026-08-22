@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "sigilstead:block/quarry_node" }
+  }
+}

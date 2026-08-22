@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:wheat"
+    },
+    "title": {
+      "translate": "advancements.sigilstead.core_yield.title"
+    },
+    "description": {
+      "translate": "advancements.sigilstead.core_yield.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "collected": {
+      "trigger": "sigilstead:core_yield_collected"
+    }
+  },
+  "parent": "sigilstead:core_socketed",
+  "requirements": [
+    [
+      "collected"
+    ]
+  ]
+}

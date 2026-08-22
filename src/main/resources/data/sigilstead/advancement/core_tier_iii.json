@@ -1,0 +1,33 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:netherite_scrap"
+    },
+    "title": {
+      "translate": "advancements.sigilstead.core_tier_iii.title"
+    },
+    "description": {
+      "translate": "advancements.sigilstead.core_tier_iii.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "socketed": {
+      "trigger": "sigilstead:core_socketed",
+      "conditions": {
+        "tier": {
+          "min": 3
+        }
+      }
+    }
+  },
+  "parent": "sigilstead:core_socketed",
+  "requirements": [
+    [
+      "socketed"
+    ]
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "mode=input": { "model": "sigilstead:block/linked_funnel_input" },
+    "mode=output": { "model": "sigilstead:block/linked_funnel_output" }
+  }
+}

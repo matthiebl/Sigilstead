@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Generate DESIGN.md §7.3 — the discovery path: the whole advancement tree, the hidden recipe-unlock
-layer beneath it, and the `advancements.heartstead.*` lang block that names them.
+layer beneath it, and the `advancements.sigilstead.*` lang block that names them.
 
     python3 tools/gen_advancements.py
 
@@ -11,10 +11,10 @@ hand-edit the committed JSON, because the next run overwrites it.
 
 Two layers, both required and neither sufficient alone:
 
-  advancement/*.json          the visible tree — one tab, rooted at heartstead:root, which is
+  advancement/*.json          the visible tree — one tab, rooted at sigilstead:root, which is
                               granted by minecraft:tick so the tutorial exists before the player
                               owns anything (§7.3).
-  advancement/recipes/*.json  hidden, display-less, and the only reason Heartstead's recipes show
+  advancement/recipes/*.json  hidden, display-less, and the only reason Sigilstead's recipes show
                               up in the recipe book at all — a recipe no advancement grants is
                               never unlocked. Staged per §7.3's table so the book teaches.
 
@@ -26,11 +26,11 @@ import os
 import shutil
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-ADV = os.path.join(ROOT, "src/main/resources/data/heartstead/advancement")
-RECIPE_DIR = os.path.join(ROOT, "src/main/resources/data/heartstead/recipe")
-LANG = os.path.join(ROOT, "src/main/resources/assets/heartstead/lang/en_us.json")
+ADV = os.path.join(ROOT, "src/main/resources/data/sigilstead/advancement")
+RECIPE_DIR = os.path.join(ROOT, "src/main/resources/data/sigilstead/recipe")
+LANG = os.path.join(ROOT, "src/main/resources/assets/sigilstead/lang/en_us.json")
 
-# Vanilla's own tab backgrounds. A Heartstead one would be a fifth placeholder texture (commit
+# Vanilla's own tab backgrounds. A Sigilstead one would be a fifth placeholder texture (commit
 # c0251d5) pretending to be finished art; stone reads correctly and costs nothing.
 BACKGROUND = "minecraft:gui/advancements/backgrounds/stone"
 
@@ -62,8 +62,8 @@ def has_all(items):
 
 
 def hs(path, **conditions):
-    """One of the heartstead: criterion triggers registered by HsTriggers."""
-    criterion = {"trigger": f"heartstead:{path}"}
+    """One of the sigilstead: criterion triggers registered by HsTriggers."""
+    criterion = {"trigger": f"sigilstead:{path}"}
     if conditions:
         criterion["conditions"] = conditions
     return criterion
@@ -96,8 +96,8 @@ def stored_enchantment(enchantment):
 
 TREE = [
     (
-        "root", None, "heartstead:sigil", "task",
-        "Heartstead",
+        "root", None, "sigilstead:sigil", "task",
+        "Sigilstead",
         "Explore, fight and build. Sigils drop from doing those things, and everything here is "
         "bought with them — storage, farms, and hearts. Nothing here is built from redstone.",
         {"joined": {"trigger": "minecraft:tick"}},
@@ -105,43 +105,43 @@ TREE = [
 
     # --- the spine (§1) -----------------------------------------------------------------------
     (
-        "sigil", "root", "heartstead:sigil", "task",
+        "sigil", "root", "sigilstead:sigil", "task",
         "Something Worth Keeping",
         "Find a Sigil. They come from chests, bosses and the occasional mob — never from a farm. "
-        "This one item feeds all three of Heartstead's systems, so what you spend it on is the "
+        "This one item feeds all three of Sigilstead's systems, so what you spend it on is the "
         "whole choice.",
-        {"found": has("heartstead:sigil")},
+        {"found": has("sigilstead:sigil")},
     ),
     (
-        "core_sigil", "sigil", "heartstead:core_sigil", "task",
+        "core_sigil", "sigil", "sigilstead:core_sigil", "task",
         "The Cheapest of the Three",
         "Craft a Core Sigil. It is the cheapest thing a Sigil becomes, on purpose: replacing a "
         "farm should be the first thing you can afford.",
-        {"crafted": has("heartstead:core_sigil")},
+        {"crafted": has("sigilstead:core_sigil")},
     ),
     (
-        "heart_sigil", "sigil", "heartstead:heart_sigil", "task",
+        "heart_sigil", "sigil", "sigilstead:heart_sigil", "task",
         "Or Buy Survival",
         "Craft a Heart Sigil. Use it and you keep the heart — until you die, which costs one.",
-        {"crafted": has("heartstead:heart_sigil")},
+        {"crafted": has("sigilstead:heart_sigil")},
     ),
     (
-        "vault_sigil", "sigil", "heartstead:vault_sigil", "task",
+        "vault_sigil", "sigil", "sigilstead:vault_sigil", "task",
         "Or Buy Storage",
         "Craft a Vault Sigil. The Vault itself is free — this is what makes it bigger, makes it "
         "reach further, and puts it back if you move the Anchor. It is the most expensive of the "
         "three.",
-        {"crafted": has("heartstead:vault_sigil")},
+        {"crafted": has("sigilstead:vault_sigil")},
     ),
     (
-        "three_ways", "sigil", "heartstead:sigil", "goal",
+        "three_ways", "sigil", "sigilstead:sigil", "goal",
         "Three Ways to Spend It",
         "Hold a Core Sigil, a Heart Sigil and a Vault Sigil at the same time. Every Sigil you find "
         "is one of these three and not the other two — that tension is the point.",
         {
-            "core": has("heartstead:core_sigil"),
-            "heart": has("heartstead:heart_sigil"),
-            "vault": has("heartstead:vault_sigil"),
+            "core": has("sigilstead:core_sigil"),
+            "heart": has("sigilstead:heart_sigil"),
+            "vault": has("sigilstead:vault_sigil"),
         },
     ),
 
@@ -150,26 +150,26 @@ TREE = [
         # Off root, not off vault_sigil: §2.1's first Anchor activates free and the Satchel is a
         # T1 vanilla craft, so nothing from here to vault_deposited costs a Sigil. Hanging it off
         # the Sigil said the opposite, and the branch below is where the currency actually starts.
-        "vault_anchor", "root", "heartstead:vault_anchor", "task",
+        "vault_anchor", "root", "sigilstead:vault_anchor", "task",
         "Somewhere to Come Back To",
         "Craft a Vault Anchor. One per world, and it holds everything the Vault is: its contents, "
         "its size and how far it reaches. It costs no Sigil and the first activation is free — "
         "place it where your base is going to stay.",
-        {"crafted": has("heartstead:vault_anchor")},
+        {"crafted": has("sigilstead:vault_anchor")},
     ),
     (
-        "vault_activated", "vault_anchor", "heartstead:vault_anchor", "task",
+        "vault_activated", "vault_anchor", "sigilstead:vault_anchor", "task",
         "The Vault Wakes",
         "Activate the Anchor. The first one a world ever has is free; replacing it later costs a "
         "Vault Sigil, which is what stops the Vault being something you carry around.",
         {"activated": hs("vault_activated")},
     ),
     (
-        "satchel", "vault_activated", "heartstead:satchel", "task",
+        "satchel", "vault_activated", "sigilstead:satchel", "task",
         "Send It Home",
         "Craft a Satchel. It deposits into the Vault from anywhere, in any dimension, for free — "
         "no more walking home because your inventory filled up. It cannot take anything back out.",
-        {"crafted": has("heartstead:satchel")},
+        {"crafted": has("sigilstead:satchel")},
     ),
     (
         "vault_deposited", "satchel", "minecraft:chest", "task",
@@ -179,11 +179,11 @@ TREE = [
         {"deposited": hs("vault_deposited")},
     ),
     (
-        "vault_pouch", "satchel", "heartstead:vault_pouch", "task",
+        "vault_pouch", "satchel", "sigilstead:vault_pouch", "task",
         "The Other Verb",
         "Craft a Vault Pouch. It adds withdrawal — the powerful half — with search and sort. "
         "Spending a Vault Sigil on your own Pouch is one not spent on the world's Vault.",
-        {"crafted": has("heartstead:vault_pouch")},
+        {"crafted": has("sigilstead:vault_pouch")},
     ),
     (
         "vault_withdrew", "vault_pouch", "minecraft:hopper", "task",
@@ -193,87 +193,87 @@ TREE = [
         {"withdrew": hs("vault_withdrew")},
     ),
     (
-        "vault_capacity", "vault_activated", "heartstead:vault_sigil", "task",
+        "vault_capacity", "vault_activated", "sigilstead:vault_sigil", "task",
         "Room to Grow",
         "Spend a Vault Sigil on capacity at the Anchor. There is no ceiling on this one — it keeps "
         "taking Sigils for as long as you keep finding them.",
         {"bought": hs("vault_upgraded", kind="capacity")},
     ),
     (
-        "reach_overworld", "vault_activated", "heartstead:overworld_vault_sigil", "task",
+        "reach_overworld", "vault_activated", "sigilstead:overworld_vault_sigil", "task",
         "Overworld-Wide",
         "Buy Overworld reach with a Sigil crafted against an Echo Shard. The proof item is the "
         "gate: you cannot buy reach into somewhere you have never been.",
         {"bought": hs("vault_upgraded", kind="overworld_reach")},
     ),
     (
-        "reach_nether", "reach_overworld", "heartstead:nether_vault_sigil", "task",
+        "reach_nether", "reach_overworld", "sigilstead:nether_vault_sigil", "task",
         "Through the Portal",
         "Buy Nether reach. Reach tiers are per-dimension and not cumulative — each one names the "
         "place it unlocks.",
         {"bought": hs("vault_upgraded", kind="nether_reach")},
     ),
     (
-        "reach_end", "reach_nether", "heartstead:end_vault_sigil", "challenge",
+        "reach_end", "reach_nether", "sigilstead:end_vault_sigil", "challenge",
         "The Long Reach",
         "Buy End reach with a Sigil crafted against Dragon's Breath. Your whole storage, anywhere "
         "you can stand.",
         {"bought": hs("vault_upgraded", kind="end_reach")},
     ),
     (
-        "linked_funnel", "vault_activated", "heartstead:linked_funnel", "task",
+        "linked_funnel", "vault_activated", "sigilstead:linked_funnel", "task",
         "Set and Forget",
         "Craft a Linked Funnel. Hopper-speed, straight into the Vault from any farm anywhere — or "
         "one filtered item back out, if the reach covers where it stands.",
-        {"crafted": has("heartstead:linked_funnel")},
+        {"crafted": has("sigilstead:linked_funnel")},
     ),
 
     # --- cores (§4, §5) -----------------------------------------------------------------------
     (
-        "primed_core", "core_sigil", "heartstead:primed_verdant_core", "task",
+        "primed_core", "core_sigil", "sigilstead:primed_verdant_core", "task",
         "A Core With Nothing In It",
         "Craft a Primed Core. It does nothing yet. Carry it while you do the thing you want it to "
         "replace, and it learns that thing.",
         {"crafted": has(
-            "heartstead:primed_soul_core",
-            "heartstead:primed_verdant_core",
-            "heartstead:primed_pastoral_core",
-            "heartstead:primed_lithic_core",
+            "sigilstead:primed_soul_core",
+            "sigilstead:primed_verdant_core",
+            "sigilstead:primed_pastoral_core",
+            "sigilstead:primed_lithic_core",
         )},
     ),
     (
-        "classic_core", "primed_core", "heartstead:primed_soul_core", "task",
+        "classic_core", "primed_core", "sigilstead:primed_soul_core", "task",
         "The Specialists",
         "Craft one of the eleven classic cores — guardian, wither skull, ender, shulker, raid, "
         "barter and the rest. Each replaces a farm that used to need a schematic.",
         {
-            name: crafted(f"heartstead:{name}") for name in [
+            name: crafted(f"sigilstead:{name}") for name in [
                 "guardian_core", "wither_skull_core", "ender_core", "shulker_core", "ominous_core",
                 "barter_core", "golem_core", "slime_core", "tidal_core", "geode_core", "apiary_core",
             ]
         },
     ),
     (
-        "core_attuned", "primed_core", "heartstead:verdant_core", "task",
+        "core_attuned", "primed_core", "sigilstead:verdant_core", "task",
         "It Learns From You",
         "Finish attuning a core. Mine the block, farm the crop or fight the mob enough times while "
         "carrying it, and it becomes a finished Core locked to exactly that.",
         {"attuned": hs("core_attuned")},
     ),
     (
-        "core_housing", "core_attuned", "heartstead:verdant_planter", "task",
+        "core_housing", "core_attuned", "sigilstead:verdant_planter", "task",
         "Somewhere to Run It",
         "Craft a housing. Each family has its own — Planter, Paddock, Quarry Node, Soul Cage — and "
         "the housing decides which cores it will take.",
         {"crafted": has(
-            "heartstead:verdant_planter",
-            "heartstead:paddock",
-            "heartstead:quarry_node",
-            "heartstead:soul_cage",
+            "sigilstead:verdant_planter",
+            "sigilstead:paddock",
+            "sigilstead:quarry_node",
+            "sigilstead:soul_cage",
         )},
     ),
     (
-        "core_socketed", "core_housing", "heartstead:soul_cage", "task",
+        "core_socketed", "core_housing", "sigilstead:soul_cage", "task",
         "Retire the Farm",
         "Socket an attuned core. It produces whether or not you are there, whether or not the "
         "chunk is loaded — and one core per target per world, so there is nothing to scale by "
@@ -297,11 +297,11 @@ TREE = [
 
     # --- the Codex (§3) -----------------------------------------------------------------------
     (
-        "codex", "root", "heartstead:codex", "task",
+        "codex", "root", "sigilstead:codex", "task",
         "Written Down",
         "Craft a Codex. It costs no Sigil — enchanting is the one system the currency does not "
         "gate. Feed it a book and it remembers the enchantment forever.",
-        {"crafted": has("heartstead:codex")},
+        {"crafted": has("sigilstead:codex")},
     ),
     (
         "codex_archived", "codex", "minecraft:enchanted_book", "task",
@@ -311,11 +311,11 @@ TREE = [
         {"archived": hs("codex_archived")},
     ),
     (
-        "tome", "codex_archived", "heartstead:sealed_tome", "task",
+        "tome", "codex_archived", "sigilstead:sealed_tome", "task",
         "Take a Copy",
         "Seal a Tome against something in your archive. That is a copy of an enchantment you "
         "already own, on demand, at a fixed price.",
-        {"sealed": has("heartstead:sealed_tome")},
+        {"sealed": has("sigilstead:sealed_tome")},
     ),
     (
         "villager_taught", "tome", "minecraft:emerald", "goal",
@@ -329,13 +329,13 @@ TREE = [
         "Abundance",
         "Find the Abundance treasure enchantment. It multiplies what a block drops, and it is one "
         "of the two enchantments the pack adds.",
-        {"found": stored_enchantment("heartstead:abundance")},
+        {"found": stored_enchantment("sigilstead:abundance")},
     ),
     (
         "kiln_touch", "codex", "minecraft:furnace", "task",
         "Kiln Touch",
         "Find Kiln Touch. Blocks come out of the ground already smelted — no furnace, no fuel.",
-        {"found": stored_enchantment("heartstead:kiln_touch")},
+        {"found": stored_enchantment("sigilstead:kiln_touch")},
     ),
 
     # --- lives (§6) ---------------------------------------------------------------------------
@@ -359,16 +359,16 @@ TREE = [
 # the hidden recipe-unlock layer (§7.3's staging table)
 #
 # recipe -> the item whose possession unlocks it. A recipe with no advancement granting it never
-# appears in the recipe book at all, which is the state every Heartstead recipe shipped in.
+# appears in the recipe book at all, which is the state every Sigilstead recipe shipped in.
 # ---------------------------------------------------------------------------------------------
 
-SIGIL = "heartstead:sigil"
-VAULT_SIGIL = "heartstead:vault_sigil"
-CORE_SIGIL = "heartstead:core_sigil"
-SOUL = "heartstead:primed_soul_core"
-VERDANT = "heartstead:primed_verdant_core"
-PASTORAL = "heartstead:primed_pastoral_core"
-LITHIC = "heartstead:primed_lithic_core"
+SIGIL = "sigilstead:sigil"
+VAULT_SIGIL = "sigilstead:vault_sigil"
+CORE_SIGIL = "sigilstead:core_sigil"
+SOUL = "sigilstead:primed_soul_core"
+VERDANT = "sigilstead:primed_verdant_core"
+PASTORAL = "sigilstead:primed_pastoral_core"
+LITHIC = "sigilstead:primed_lithic_core"
 
 UNLOCKS = {
     # holding a Sigil: the three surcharges, and the Codex, which costs no Sigil at all
@@ -384,7 +384,7 @@ UNLOCKS = {
     "overworld_vault_sigil": VAULT_SIGIL,
     "nether_vault_sigil": VAULT_SIGIL,
     "end_vault_sigil": VAULT_SIGIL,
-    "vault_pouch": "heartstead:satchel",
+    "vault_pouch": "sigilstead:satchel",
 
     # holding a Core Sigil: the four families and their reverts
     "primed_soul_core": CORE_SIGIL,
@@ -414,10 +414,10 @@ UNLOCKS = {
     "apiary_core": PASTORAL,
 
     # holding a Codex
-    "tome": "heartstead:codex",
+    "tome": "sigilstead:codex",
 }
 
-# heartstead:core_upgrade is a custom recipe type applied in the housing screen, not a book entry.
+# sigilstead:core_upgrade is a custom recipe type applied in the housing screen, not a book entry.
 NOT_IN_BOOK = {"core_upgrade"}
 
 
@@ -462,8 +462,8 @@ def build_tree():
         advancement = {
             "display": {
                 "icon": {"id": icon},
-                "title": {"translate": f"advancements.heartstead.{name}.title"},
-                "description": {"translate": f"advancements.heartstead.{name}.description"},
+                "title": {"translate": f"advancements.sigilstead.{name}.title"},
+                "description": {"translate": f"advancements.sigilstead.{name}.description"},
                 "frame": kind,
                 "show_toast": parent is not None,
                 "announce_to_chat": False,
@@ -474,7 +474,7 @@ def build_tree():
         if parent is None:
             advancement["display"]["background"] = BACKGROUND
         else:
-            advancement["parent"] = f"heartstead:{parent}"
+            advancement["parent"] = f"sigilstead:{parent}"
 
         # three_ways is the one AND in the tree: §1.1's tension is only visible when you are
         # holding all three at once, so each criterion gets its own requirement group.
@@ -484,8 +484,8 @@ def build_tree():
             advancement["requirements"] = [list(criteria)]
 
         write(os.path.join(ADV, f"{name}.json"), advancement)
-        lang[f"advancements.heartstead.{name}.title"] = title
-        lang[f"advancements.heartstead.{name}.description"] = description
+        lang[f"advancements.sigilstead.{name}.title"] = title
+        lang[f"advancements.sigilstead.{name}.description"] = description
     return lang
 
 
@@ -511,11 +511,11 @@ def build_recipe_unlocks():
 
     for recipe in sorted(recipes):
         write(os.path.join(ADV, f"recipes/{recipe}.json"), {
-            "parent": "heartstead:recipes/root",
+            "parent": "sigilstead:recipes/root",
             "criteria": {
                 "has_the_recipe": {
                     "trigger": "minecraft:recipe_unlocked",
-                    "conditions": {"recipe": f"heartstead:{recipe}"},
+                    "conditions": {"recipe": f"sigilstead:{recipe}"},
                 },
                 "has_ingredient": has(UNLOCKS[recipe]),
                 "has_components": has_all(recipe_ingredients(recipe)),
@@ -526,7 +526,7 @@ def build_recipe_unlocks():
             # T1 Vault (§2.1: the first Anchor is free) hid the whole system behind a Nether trip
             # for the ender eye in a Vault Sigil.
             "requirements": [["has_the_recipe", "has_ingredient", "has_components"]],
-            "rewards": {"recipes": [f"heartstead:{recipe}"]},
+            "rewards": {"recipes": [f"sigilstead:{recipe}"]},
         })
     return len(recipes)
 
@@ -535,7 +535,7 @@ def merge_lang(entries):
     """Rewrite the advancements.* block in place, leaving every other key where it was."""
     with open(LANG) as handle:
         existing = json.load(handle)
-    kept = {k: v for k, v in existing.items() if not k.startswith("advancements.heartstead.")}
+    kept = {k: v for k, v in existing.items() if not k.startswith("advancements.sigilstead.")}
     kept.update(entries)
     with open(LANG, "w") as handle:
         json.dump(kept, handle, indent=2, ensure_ascii=False)

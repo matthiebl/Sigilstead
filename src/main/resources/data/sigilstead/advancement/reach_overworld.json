@@ -1,0 +1,31 @@
+{
+  "display": {
+    "icon": {
+      "id": "sigilstead:overworld_vault_sigil"
+    },
+    "title": {
+      "translate": "advancements.sigilstead.reach_overworld.title"
+    },
+    "description": {
+      "translate": "advancements.sigilstead.reach_overworld.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "bought": {
+      "trigger": "sigilstead:vault_upgraded",
+      "conditions": {
+        "kind": "overworld_reach"
+      }
+    }
+  },
+  "parent": "sigilstead:vault_activated",
+  "requirements": [
+    [
+      "bought"
+    ]
+  ]
+}

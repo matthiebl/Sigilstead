@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "BBB",
+    "BLB",
+    " A "
+  ],
+  "key": {
+    "B": "minecraft:bookshelf",
+    "L": "minecraft:lectern",
+    "A": "minecraft:amethyst_shard"
+  },
+  "result": {
+    "id": "sigilstead:codex"
+  }
+}

@@ -1,4 +1,4 @@
-# Heartstead
+# Sigilstead
 
 > A Fabric mod that deletes technical Minecraft as a *prerequisite* — without deleting Minecraft.
 > Explore, fight and build; don't grind, AFK, or build rectangles.
@@ -61,27 +61,27 @@ The jar lands in `build/libs/`. Install Fabric Loader 0.19.3+ and Fabric API alo
 ## Adding a version
 
 ```
-git tag -a v0.x.x -m "Heartstead 0.x.x"
+git tag -a v0.x.x -m "Sigilstead 0.x.x"
 git push origin v0.x.x
 ```
 
 ## Repo layout
 
 ```
-heartstead/
+sigilstead/
 ├── build.gradle  settings.gradle  gradle.properties   # versions live here
 ├── src/
-│   ├── main/java/com/heartstead/
-│   │   ├── Heartstead.java          # common entrypoint
+│   ├── main/java/com/sigilstead/
+│   │   ├── Sigilstead.java          # common entrypoint
 │   │   ├── registry/                # HsItems, HsBlocks, HsComponents, ...
 │   │   ├── vault/ core/ codex/ lives/ economy/ enchantment/
 │   │   ├── config/  util/
 │   │   └── gametest/                # in-world automated tests
 │   ├── main/resources/
 │   │   ├── fabric.mod.json
-│   │   ├── assets/heartstead/       # textures, models, lang
-│   │   └── data/heartstead/         # recipes, loot tables, advancements, tags
-│   ├── client/java/com/heartstead/client/    # screens, renderers, keybinds
+│   │   ├── assets/sigilstead/       # textures, models, lang
+│   │   └── data/sigilstead/         # recipes, loot tables, advancements, tags
+│   ├── client/java/com/sigilstead/client/    # screens, renderers, keybinds
 │   └── test/java/                   # plain JUnit, no world
 └── docs/
 ```

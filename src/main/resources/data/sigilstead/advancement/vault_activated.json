@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "sigilstead:vault_anchor"
+    },
+    "title": {
+      "translate": "advancements.sigilstead.vault_activated.title"
+    },
+    "description": {
+      "translate": "advancements.sigilstead.vault_activated.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "activated": {
+      "trigger": "sigilstead:vault_activated"
+    }
+  },
+  "parent": "sigilstead:vault_anchor",
+  "requirements": [
+    [
+      "activated"
+    ]
+  ]
+}

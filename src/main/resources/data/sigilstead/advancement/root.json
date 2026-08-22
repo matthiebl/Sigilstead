@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "sigilstead:sigil"
+    },
+    "title": {
+      "translate": "advancements.sigilstead.root.title"
+    },
+    "description": {
+      "translate": "advancements.sigilstead.root.description"
+    },
+    "frame": "task",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "hidden": false,
+    "background": "minecraft:gui/advancements/backgrounds/stone"
+  },
+  "criteria": {
+    "joined": {
+      "trigger": "minecraft:tick"
+    }
+  },
+  "requirements": [
+    [
+      "joined"
+    ]
+  ]
+}

@@ -1,4 +1,4 @@
-# Heartstead
+# Sigilstead
 
 A **Fabric mod** for Minecraft Java 26.2 that removes the need for technical farms and chest-sorting,
 and rewards exploring, fighting and building instead.
@@ -28,8 +28,8 @@ before changing any of them.
 
 ## Non-negotiables
 
-1. **Namespace `heartstead`, package `com.heartstead`.** Every `ResourceLocation` goes through
-   `Heartstead.id(String)`.
+1. **Namespace `sigilstead`, package `com.sigilstead`.** Every `ResourceLocation` goes through
+   `Sigilstead.id(String)`.
 2. **Items and blocks are real registered objects.** No `custom_data` identity markers, no marker
    entities standing in for blocks, no base-item table. That era is over.
 3. **Per-stack state uses data components; per-player state uses attachments; world state uses

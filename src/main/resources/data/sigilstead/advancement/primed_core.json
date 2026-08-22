@@ -1,0 +1,40 @@
+{
+  "display": {
+    "icon": {
+      "id": "sigilstead:primed_verdant_core"
+    },
+    "title": {
+      "translate": "advancements.sigilstead.primed_core.title"
+    },
+    "description": {
+      "translate": "advancements.sigilstead.primed_core.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "crafted": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "sigilstead:primed_soul_core",
+              "sigilstead:primed_verdant_core",
+              "sigilstead:primed_pastoral_core",
+              "sigilstead:primed_lithic_core"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "parent": "sigilstead:core_sigil",
+  "requirements": [
+    [
+      "crafted"
+    ]
+  ]
+}

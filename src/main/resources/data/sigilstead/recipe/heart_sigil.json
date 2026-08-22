@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "sigilstead:sigil",
+    "minecraft:golden_apple"
+  ],
+  "result": {
+    "id": "sigilstead:heart_sigil"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "sigilstead:soul_cage"
+    },
+    "title": {
+      "translate": "advancements.sigilstead.core_socketed.title"
+    },
+    "description": {
+      "translate": "advancements.sigilstead.core_socketed.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "hidden": false
+  },
+  "criteria": {
+    "socketed": {
+      "trigger": "sigilstead:core_socketed"
+    }
+  },
+  "parent": "sigilstead:core_housing",
+  "requirements": [
+    [
+      "socketed"
+    ]
+  ]
+}

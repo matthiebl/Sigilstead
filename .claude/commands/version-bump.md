@@ -2,7 +2,7 @@
 description: Retarget the mod at a new Minecraft version
 ---
 
-Retarget Heartstead at: $ARGUMENTS
+Retarget Sigilstead at: $ARGUMENTS
 
 **Query the meta APIs directly — do not trust search results or mod-listing sites.** One of them
 reported the wrong Fabric Loader version during initial setup.

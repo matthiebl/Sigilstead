@@ -33,7 +33,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: heartstead-dev-build
+          name: sigilstead-dev-build
           path: build/libs/*.jar
           if-no-files-found: error
 

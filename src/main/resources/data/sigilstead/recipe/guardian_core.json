@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "PSP",
+    " C ",
+    "P P"
+  ],
+  "key": {
+    "P": "minecraft:prismarine_bricks",
+    "S": "minecraft:wet_sponge",
+    "C": "sigilstead:core_sigil"
+  },
+  "result": {
+    "id": "sigilstead:primed_soul_core",
+    "components": {
+      "sigilstead:attunement": { "family": "soul", "target": "sigilstead:guardian" }
+    }
+  }
+}

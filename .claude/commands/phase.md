@@ -1,5 +1,5 @@
 ---
-description: Implement a Heartstead design-wiki section
+description: Implement a Sigilstead design-wiki section
 ---
 
 Implement the section(s) of `docs/DESIGN.md` named in: $ARGUMENTS
@@ -17,7 +17,7 @@ Before writing anything:
 
 While building:
 
-- Namespace `heartstead`, package `com.heartstead`. Ids via `Heartstead.id()`.
+- Namespace `sigilstead`, package `com.sigilstead`. Ids via `Sigilstead.id()`.
 - Real registered items and blocks — no `custom_data` identity markers, no marker entities standing
   in for blocks, no base-item table.
 - Per-stack state → data components. Per-player → attachments. All persisted state → versioned codec.

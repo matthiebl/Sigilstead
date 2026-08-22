@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "UOU",
+    " C ",
+    "U U"
+  ],
+  "key": {
+    "U": "minecraft:purpur_block",
+    "O": "minecraft:shulker_shell",
+    "C": "sigilstead:core_sigil"
+  },
+  "result": {
+    "id": "sigilstead:primed_soul_core",
+    "components": {
+      "sigilstead:attunement": { "family": "soul", "target": "sigilstead:shulker" }
+    }
+  }
+}

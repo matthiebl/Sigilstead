@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "com.sigilstead.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "AnimalBreedMixin",
+    "PiglinBarterMixin",
+    "RaidVictoryMixin",
+    "SealedTomeTeachMixin",
+    "VillagerTradePersistenceMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "RBR",
+    "BCB",
+    "RBR"
+  ],
+  "key": {
+    "R": "minecraft:rotten_flesh",
+    "B": "minecraft:bone",
+    "C": "sigilstead:core_sigil"
+  },
+  "result": {
+    "id": "sigilstead:primed_soul_core"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    "sigilstead:vault_sigil",
+    "minecraft:echo_shard"
+  ],
+  "result": {
+    "id": "sigilstead:overworld_vault_sigil"
+  }
+}
