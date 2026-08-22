@@ -15,8 +15,8 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.gamerules.GameRules;
 
 /**
- * DESIGN.md §6: consuming a Life Heart raises max health by one heart, capped at 20; dying costs
- * one heart, floored at 5. Both numbers are config fields (CONVENTIONS.md §5).
+ * DESIGN.md §6: consuming a Life Heart raises max health by two hearts, capped at 20; dying costs
+ * one heart, floored at 8. Both numbers are config fields (CONVENTIONS.md §5).
  *
  * <p>The player attachment {@link HsAttachments#HEART_LEVEL} is the source of truth. The
  * {@code max_health} attribute modifier is a derived value recomputed from it — on join (in case
@@ -87,7 +87,7 @@ public final class LivesSystem {
     }
 
     /**
-     * Consumes a Heart Sigil's worth of healing: +1 heart, capped. Returns {@code false} (and
+     * Consumes a Heart Sigil's worth of healing: +2 hearts, capped. Returns {@code false} (and
      * changes nothing) if the player is already at the configured cap, so the item isn't wasted
      * on a no-op — the caller decides whether that refusal consumes the stack.
      */
@@ -101,13 +101,13 @@ public final class LivesSystem {
         int hearts = heartsAfterConsume(level.hearts(), config.heartCap());
         player.setAttached(HsAttachments.HEART_LEVEL, level.withHearts(hearts));
         applyModifier(player, hearts);
-        player.heal(2.0f);
+        player.heal(4.0f);
         return true;
     }
 
     /** Pure clamp math, split out so it's testable without a running server (CONVENTIONS.md §8). */
     static int heartsAfterConsume(int hearts, int cap) {
-        return Math.min(cap, hearts + 1);
+        return Math.min(cap, hearts + 2);
     }
 
     private static void applyModifier(ServerPlayer player, int hearts) {

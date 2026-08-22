@@ -67,7 +67,7 @@ public record HsConfig(
                   .apply(instance, HsConfig::new));
 
   /**
-   * DESIGN.md §12.1 for the Sigil table; §12.6 for lives — 20-heart cap, floor of 5, -1 heart per
+   * DESIGN.md §12.1 for the Sigil table; §12.6 for lives — 20-heart cap, floor of 8, -1 heart per
    * death. Operators wanting §12.6's harder mode lower {@code heart_floor} to 3 or raise {@code
    * heart_loss_on_death} to 2.
    *
@@ -88,7 +88,7 @@ public record HsConfig(
    */
   public static final HsConfig DEFAULT =
       new HsConfig(
-          SigilConfig.DEFAULT, 20, 5, 1, true, VaultConfig.DEFAULT, false, EnchantmentConfig.DEFAULT,
+          SigilConfig.DEFAULT, 20, 8, 1, true, VaultConfig.DEFAULT, false, EnchantmentConfig.DEFAULT,
           CodexConfig.DEFAULT, 1.0, 24, AttunementConfig.DEFAULT, CoreConfig.DEFAULT,
           ClassicCoreConfig.DEFAULT);
 }

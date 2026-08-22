@@ -24,8 +24,8 @@ class LivesSystemTest {
     }
 
     @Test
-    void consumeGainsOneHeart() {
-        assertEquals(11, LivesSystem.heartsAfterConsume(10, 20));
+    void consumeGainsTwoHearts() {
+        assertEquals(12, LivesSystem.heartsAfterConsume(10, 20));
     }
 
     @Test

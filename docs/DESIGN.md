@@ -50,7 +50,7 @@ Sigil  ──── craft ───────┼─ Heart Sigil   → extra ma
 |---|---|---|
 | **Sigil** | Structure chests, trial vaults, fishing treasure, any hostile mob at a low rate, and **bosses and mini-bosses at a high rate** — full table in §12.1. Never craftable | The only currency |
 | **Core Sigil** | Sigil + iron + redstone (§12.2) | Primed and imprinted into a farm core (§4.1) |
-| **Heart Sigil** | Sigil + gold + golden apple (§12.2) | Consumed for +1 max heart (§6) |
+| **Heart Sigil** | Sigil + gold + golden apple (§12.2) | Consumed for +2 max hearts (§6) |
 | **Vault Sigil** | Sigil + amethyst + ender eye (§12.2) | Vault capacity (§2.3), the Vault Pouch (§2.2), re-anchoring (§2.1) |
 | **Overworld / Nether / End Vault Sigil** | Vault Sigil + a proof item from that dimension (§12.2) | Vault withdrawal reach into that dimension (§2.3) |
 
@@ -564,7 +564,7 @@ it), skipping it if `keep_inventory_on_death` is `false` (§12.7). It is not re-
 an operator running `/gamerule keepInventory false` mid-session gets what they asked for, and the
 config field is how that choice survives a restart.
 
-- Consume a **Heart Sigil** → +1 max heart via a `max_health` attribute modifier.
+- Consume a **Heart Sigil** → +2 max hearts via a `max_health` attribute modifier.
 - There is a cap, a per-death loss and a **floor below which death never takes you** — pillar 4.
   Numbers and the harder-mode toggles are in §12.6.
 - Recovery: consume more Heart Sigils. The loop is *go explore, find Sigils, come back stronger.*
@@ -1108,7 +1108,7 @@ usually ceilings at 64.
 |---|---|---|
 | Max hearts | 20 (40 HP) | — |
 | Loss per death | 1 heart | 2 hearts |
-| Floor | 5 hearts (10 HP) | 3 hearts (6 HP) |
+| Floor | 8 hearts (16 HP) | 3 hearts (6 HP) |
 
 ### 12.7 Config fields
 
